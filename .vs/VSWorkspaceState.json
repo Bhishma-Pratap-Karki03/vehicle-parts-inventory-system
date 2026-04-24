@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\backend",
+    "\\backend\\Coursework.Application",
+    "\\backend\\Coursework.Domain",
+    "\\backend\\Coursework.Infrastructure",
+    "\\backend\\Coursework.Infrastructure\\Migrations",
+    "\\frontend"
+  ],
+  "SelectedNode": "\\backend\\Coursework.Application",
+  "PreviewInSolutionExplorer": false
+}

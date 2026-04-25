@@ -47,19 +47,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             {
                 Id = "1",
                 Name = "Admin",
-                NormalizedName = "ADMIN"
+                NormalizedName = "ADMIN",
+                ConcurrencyStamp = "admin-role-stamp"
             },
             new IdentityRole
             {
                 Id = "2",
                 Name = "Staff",
-                NormalizedName = "STAFF"
+                NormalizedName = "STAFF",
+                ConcurrencyStamp = "staff-role-stamp"
             },
             new IdentityRole
             {
                 Id = "3",
                 Name = "Customer",
-                NormalizedName = "CUSTOMER"
+                NormalizedName = "CUSTOMER",
+                ConcurrencyStamp = "customer-role-stamp"
             }
         );
     }

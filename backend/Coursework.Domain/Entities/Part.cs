@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Coursework.Domain.Entities;
@@ -8,7 +8,8 @@ public class Part
     public int PartId { get; set; }
 
     public int VendorId { get; set; }
-    public Vendor? Vendor { get; set; }
+
+    public Vendor Vendor { get; set; } = null!;
 
     [Required]
     [MaxLength(100)]
@@ -18,19 +19,33 @@ public class Part
     [MaxLength(100)]
     public string PartNumber { get; set; } = string.Empty;
 
+    [MaxLength(100)]
+    public string? Category { get; set; }
+
     [MaxLength(500)]
     public string? Description { get; set; }
 
+    [Range(0.01, double.MaxValue)]
     [Column(TypeName = "decimal(18,2)")]
-    public decimal PurchasePrice { get; set; }
+    public decimal CostPricePerUnit { get; set; }
 
+    [Range(0.01, double.MaxValue)]
     [Column(TypeName = "decimal(18,2)")]
-    public decimal SellingPrice { get; set; }
+    public decimal SellingPricePerUnit { get; set; }
 
+    [Range(0, int.MaxValue)]
     public int StockQuantity { get; set; }
 
-    public int ReorderLevel { get; set; } = 10;
+    [Range(1, int.MaxValue)]
+    public int MinimumStockLevel { get; set; } = 10;
+
+    public bool IsActive { get; set; } = true;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? UpdatedAt { get; set; }
 
     public ICollection<SalesInvoiceItem> SalesInvoiceItems { get; set; } = new List<SalesInvoiceItem>();
-    public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = new List<PurchaseOrderItem>();
+
+    public ICollection<PurchaseInvoiceItem> PurchaseInvoiceItems { get; set; } = new List<PurchaseInvoiceItem>();
 }

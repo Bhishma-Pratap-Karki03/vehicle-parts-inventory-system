@@ -3,13 +3,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Coursework.Domain.Entities;
 
-public class SalesInvoiceItem
+public class PurchaseInvoiceItem
 {
-    public int SalesInvoiceItemId { get; set; }
+    public int PurchaseInvoiceItemId { get; set; }
 
-    public int SalesInvoiceId { get; set; }
+    public int PurchaseInvoiceId { get; set; }
 
-    public SalesInvoice SalesInvoice { get; set; } = null!;
+    public PurchaseInvoice PurchaseInvoice { get; set; } = null!;
 
     public int PartId { get; set; }
 
@@ -20,7 +20,7 @@ public class SalesInvoiceItem
 
     [Range(0.01, double.MaxValue)]
     [Column(TypeName = "decimal(18,2)")]
-    public decimal PricePerUnit { get; set; }
+    public decimal CostPricePerUnit { get; set; }
 
     [Range(0.01, double.MaxValue)]
     [Column(TypeName = "decimal(18,2)")]

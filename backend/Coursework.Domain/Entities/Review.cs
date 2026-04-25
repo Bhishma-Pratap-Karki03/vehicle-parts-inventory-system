@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Coursework.Domain.Entities;
 
@@ -6,8 +6,14 @@ public class Review
 {
     public int ReviewId { get; set; }
 
-    public int CustomerId { get; set; }
-    public User? Customer { get; set; }
+    [Required]
+    public string CustomerId { get; set; } = string.Empty;
+
+    public ApplicationUser Customer { get; set; } = null!;
+
+    public int? AppointmentId { get; set; }
+
+    public Appointment? Appointment { get; set; }
 
     [Range(1, 5)]
     public int Rating { get; set; }
@@ -17,4 +23,6 @@ public class Review
     public string Comment { get; set; } = string.Empty;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? UpdatedAt { get; set; }
 }

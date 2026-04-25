@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using Coursework.Domain.Enums;
 
 namespace Coursework.Domain.Entities;
 
@@ -6,8 +7,10 @@ public class PartRequest
 {
     public int PartRequestId { get; set; }
 
-    public int CustomerId { get; set; }
-    public User? Customer { get; set; }
+    [Required]
+    public string CustomerId { get; set; } = string.Empty;
+
+    public ApplicationUser Customer { get; set; } = null!;
 
     [Required]
     [MaxLength(100)]
@@ -16,9 +19,12 @@ public class PartRequest
     [MaxLength(500)]
     public string? Description { get; set; }
 
-    [Required]
-    [MaxLength(50)]
-    public string Status { get; set; } = "Pending";
+    public PartRequestStatus Status { get; set; } = PartRequestStatus.Pending;
+
+    [MaxLength(500)]
+    public string? AdminResponse { get; set; }
 
     public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? UpdatedAt { get; set; }
 }

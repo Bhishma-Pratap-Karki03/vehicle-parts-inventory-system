@@ -1,6 +1,7 @@
-﻿namespace Coursework.Services
+﻿namespace Coursework.Services;
+
+public interface INotificationService
 {
-    public interface INotificationService
-    {
-    }
+    Task<int> CreateLowStockNotificationsAsync();
+    Task<int> SendOverdueCreditRemindersAsync();
 }

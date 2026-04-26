@@ -281,6 +281,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     private static void ConfigureEnumConversions(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Part>()
+            .Property(p => p.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+        
         modelBuilder.Entity<SalesInvoice>()
             .Property(s => s.PaymentStatus)
             .HasConversion<string>()

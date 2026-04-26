@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Coursework.Domain.Enums;
 
 namespace Coursework.Domain.Entities;
 
@@ -24,6 +25,12 @@ public class Part
 
     [MaxLength(500)]
     public string? Description { get; set; }
+    
+    [MaxLength(500)]
+    public string? ImageUrl { get; set; }
+
+    [MaxLength(255)]
+    public string? ImagePublicId { get; set; }
 
     [Range(0.01, double.MaxValue)]
     [Column(TypeName = "decimal(18,2)")]
@@ -38,6 +45,12 @@ public class Part
 
     [Range(1, int.MaxValue)]
     public int MinimumStockLevel { get; set; } = 10;
+    
+    public PartStatus Status { get; set; } = PartStatus.Available;
+
+    public bool IsDeleted { get; set; } = false;
+
+    public DateTime? DeletedAt { get; set; }
 
     public bool IsActive { get; set; } = true;
 

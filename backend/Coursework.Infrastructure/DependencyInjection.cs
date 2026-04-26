@@ -1,4 +1,10 @@
+using Coursework.Application.Interfaces;
+using Coursework.Domain.Entities;
+using Coursework.Application.Services;
+using Coursework.Infrastructure.Services;
 using Coursework.Infrastructure.Data;
+using Coursework.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +19,24 @@ public static class DependencyInjection
     {
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        services.AddIdentityCore<ApplicationUser>(options =>
+            {
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 6;
+
+                options.User.RequireUniqueEmail = true;
+            })
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+            // .AddDefaultTokenProviders();
+
+        services.AddScoped<IPartRepository, PartRepository>();
+        services.AddScoped<IVendorRepository, VendorRepository>();
+        services.AddScoped<IPartService, PartService>();
+        services.AddScoped<ICloudinaryService, CloudinaryService>();
 
         return services;
     }

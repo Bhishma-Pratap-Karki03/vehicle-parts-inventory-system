@@ -200,16 +200,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Review>()
-            .HasOne(r => r.Customer)
-            .WithMany(u => u.Reviews)
-            .HasForeignKey(r => r.CustomerId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasOne(r => r.Appointment)
+            .WithOne(a => a.Review)
+            .HasForeignKey<Review>(r => r.AppointmentId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Review>()
-            .HasOne(r => r.Appointment)
-            .WithMany(a => a.Reviews)
-            .HasForeignKey(r => r.AppointmentId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .HasIndex(r => r.AppointmentId)
+            .IsUnique();
 
         modelBuilder.Entity<PartRequest>()
             .HasOne(p => p.Customer)
@@ -222,6 +220,18 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany(u => u.Notifications)
             .HasForeignKey(n => n.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<PartRequest>()
+            .HasOne(p => p.Customer)
+            .WithMany(u => u.PartRequests)
+            .HasForeignKey(p => p.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PartRequest>()
+            .HasOne(p => p.Vehicle)
+            .WithMany()
+            .HasForeignKey(p => p.VehicleId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 
     private static void ConfigureMoneyPrecision(ModelBuilder modelBuilder)
@@ -317,6 +327,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasMaxLength(50);
 
         modelBuilder.Entity<PurchaseInvoice>()
+            .Property(p => p.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<PartRequest>()
             .Property(p => p.Status)
             .HasConversion<string>()
             .HasMaxLength(50);

@@ -1,4 +1,7 @@
+using Coursework.Application.Interfaces;
+using Coursework.Application.Services;
 using Coursework.Infrastructure.Data;
+using Coursework.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +16,18 @@ public static class DependencyInjection
     {
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+
+        // Repositories
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<IServiceRecordRepository, ServiceRecordRepository>();
+        services.AddScoped<IPartRequestRepository, PartRequestRepository>();
+
+        // Application Services
+        services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<IPartRequestService, PartRequestService>();
 
         return services;
     }

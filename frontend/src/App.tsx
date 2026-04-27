@@ -1,10 +1,19 @@
+import { Navigate, Route, Routes } from 'react-router-dom'
+import NotFoundPage from './pages/NotFoundPage'
+import PartDetailsPage from './pages/parts/PartDetailsPage'
+import PartEditorPage from './pages/parts/PartEditorPage'
+import PartsManagementPage from './pages/parts/PartsManagementPage'
+
 function App() {
   return (
-    <div className="min-h-screen bg-slate-100 p-8">
-      <div className="mx-auto max-w-4xl rounded-2xl bg-white p-8 shadow">
-        <h1 className="text-3xl font-bold text-slate-800">Team A</h1>
-      </div>
-    </div>
+    <Routes>
+      <Route element={<Navigate replace to="/parts" />} path="/" />
+      <Route element={<PartsManagementPage />} path="/parts" />
+      <Route element={<PartEditorPage />} path="/parts/new" />
+      <Route element={<PartDetailsPage />} path="/parts/:partId" />
+      <Route element={<PartEditorPage />} path="/parts/:partId/edit" />
+      <Route element={<NotFoundPage />} path="*" />
+    </Routes>
   )
 }
 

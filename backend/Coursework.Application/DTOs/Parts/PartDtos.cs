@@ -22,9 +22,6 @@ public class CreatePartDto
     [MaxLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
     public string? Description { get; set; }
 
-    [Range(0.01, double.MaxValue, ErrorMessage = "Cost price must be greater than 0.")]
-    public decimal CostPricePerUnit { get; set; }
-
     [Range(0.01, double.MaxValue, ErrorMessage = "Selling price must be greater than 0.")]
     public decimal SellingPricePerUnit { get; set; }
 
@@ -53,14 +50,11 @@ public class UpdatePartDto
     [Required(ErrorMessage = "Vendor is required.")]
     public int VendorId { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Minimum stock level must be greater than 0.")]
-    public int MinimumStockLevel { get; set; } = 10;
-
-    [Range(0.01, double.MaxValue, ErrorMessage = "Cost price must be greater than 0.")]
-    public decimal CostPricePerUnit { get; set; }
-
     [Range(0.01, double.MaxValue, ErrorMessage = "Selling price must be greater than 0.")]
     public decimal SellingPricePerUnit { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Minimum stock level must be greater than 0.")]
+    public int MinimumStockLevel { get; set; } = 10;
 
     [Required(ErrorMessage = "Part status is required.")]
     public PartStatus Status { get; set; }

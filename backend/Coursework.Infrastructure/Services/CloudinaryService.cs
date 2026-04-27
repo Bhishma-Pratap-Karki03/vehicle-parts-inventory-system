@@ -54,7 +54,6 @@ public class CloudinaryService : ICloudinaryService
 
         return new CloudinaryUploadResultDto
         {
-            ImageUrl = uploadResult.SecureUrl.ToString(),
             PublicId = uploadResult.PublicId
         };
     }

@@ -25,14 +25,11 @@ public class Part
 
     [MaxLength(500)]
     public string? Description { get; set; }
-    
-    [MaxLength(500)]
-    public string? ImageUrl { get; set; }
 
     [MaxLength(255)]
     public string? ImagePublicId { get; set; }
 
-    [Range(0.01, double.MaxValue)]
+    [Range(0, double.MaxValue)]
     [Column(TypeName = "decimal(18,2)")]
     public decimal CostPricePerUnit { get; set; }
 

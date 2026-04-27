@@ -16,6 +16,27 @@ public class PartsController(IPartService partService) : ControllerBase
         var response = await partService.GetAllAsync(query);
         return StatusCode(response.StatusCode, response);
     }
+    
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetPartsSummary()
+    {
+        var response = await partService.GetSummaryAsync();
+        return StatusCode(response.StatusCode, response);
+    }
+    
+    [HttpGet("vendors/options")]
+    public async Task<IActionResult> GetVendorOptions()
+    {
+        var response = await partService.GetVendorOptionsAsync();
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpGet("categories/options")]
+    public async Task<IActionResult> GetCategoryOptions()
+    {
+        var response = await partService.GetCategoryOptionsAsync();
+        return StatusCode(response.StatusCode, response);
+    }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetPartById([FromRoute] int id)
@@ -85,7 +106,30 @@ public class PartsController(IPartService partService) : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
-    
+
+    [HttpPatch("{id:int}/image")]
+    public async Task<IActionResult> ReplacePartImage(
+        [FromRoute] int id,
+        [FromForm] IFormFile image)
+    {
+        if (image.Length == 0)
+        {
+            return BadRequest("Image file is required.");
+        }
+
+        var fileDto = new FileUploadDto
+        {
+            Content = image.OpenReadStream(),
+            FileName = image.FileName,
+            ContentType = image.ContentType,
+            Length = image.Length
+        };
+
+        var response = await partService.ReplaceImageAsync(id, fileDto);
+
+        return StatusCode(response.StatusCode, response);
+    }
+
     [HttpDelete("{id:int}/image")]
     public async Task<IActionResult> DeletePartImage([FromRoute] int id)
     {

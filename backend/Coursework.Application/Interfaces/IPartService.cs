@@ -1,6 +1,7 @@
 using Coursework.Application.Common;
 using Coursework.Application.DTOs.Parts;
 using Coursework.Application.DTOs.Cloudinary;
+using Coursework.Application.DTOs.Common;
 
 namespace Coursework.Application.Interfaces;
 
@@ -21,6 +22,16 @@ public interface IPartService
     Task<ApiResponse<UploadPartImageResultDto>> UploadImageAsync(
         int id,
         FileUploadDto file);
-    
+
+    Task<ApiResponse<UploadPartImageResultDto>> ReplaceImageAsync(
+        int id,
+        FileUploadDto file);
+
     Task<ApiResponse<string>> DeleteImageAsync(int id);
+    
+    Task<ApiResponse<PartSummaryDto>> GetSummaryAsync();
+    
+    Task<ApiResponse<List<DropdownOptionDto>>> GetVendorOptionsAsync();
+
+    Task<ApiResponse<List<StringDropdownOptionDto>>> GetCategoryOptionsAsync();
 }

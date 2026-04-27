@@ -2,7 +2,9 @@ using Coursework.Application.Common;
 using Coursework.Application.DTOs.Parts;
 using Coursework.Application.Interfaces;
 using Coursework.Application.DTOs.Cloudinary;
+using Coursework.Application.DTOs.Common;
 using Coursework.Domain.Entities;
+using Coursework.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -116,26 +118,26 @@ public class PartService(
             return ApiResponse<PartDto>.ConflictResponse("Part number already exists.");
         }
 
-        if (dto.SellingPricePerUnit <= dto.CostPricePerUnit)
-        {
-            return ApiResponse<PartDto>.FailureResponse(
-                "Selling price must be greater than cost price.",
-                400);
-        }
-
         var part = new Part
         {
             VendorId = dto.VendorId,
             PartName = dto.PartName.Trim(),
             PartNumber = dto.PartNumber.Trim(),
-            Category = dto.Category?.Trim(),
-            Description = dto.Description?.Trim(),
-            CostPricePerUnit = dto.CostPricePerUnit,
+            Category = string.IsNullOrWhiteSpace(dto.Category)
+                ? null
+                : dto.Category.Trim(),
+            Description = string.IsNullOrWhiteSpace(dto.Description)
+                ? null
+                : dto.Description.Trim(),
+            
+            CostPricePerUnit = 0,
+            StockQuantity = 0,
+
             SellingPricePerUnit = dto.SellingPricePerUnit,
-            StockQuantity = dto.StockQuantity,
             MinimumStockLevel = dto.MinimumStockLevel,
             Status = dto.Status,
             IsDeleted = false,
+            IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -189,21 +191,17 @@ public class PartService(
             return ApiResponse<PartDto>.ConflictResponse("Part number already exists.");
         }
 
-        if (dto.SellingPricePerUnit <= dto.CostPricePerUnit)
-        {
-            return ApiResponse<PartDto>.FailureResponse(
-                "Selling price must be greater than cost price.",
-                400);
-        }
-
         part.VendorId = dto.VendorId;
         part.PartName = dto.PartName.Trim();
         part.PartNumber = dto.PartNumber.Trim();
-        part.Category = dto.Category?.Trim();
-        part.Description = dto.Description?.Trim();
-        part.CostPricePerUnit = dto.CostPricePerUnit;
+        part.Category = string.IsNullOrWhiteSpace(dto.Category)
+            ? null
+            : dto.Category.Trim();
+        part.Description = string.IsNullOrWhiteSpace(dto.Description)
+            ? null
+            : dto.Description.Trim();
+        
         part.SellingPricePerUnit = dto.SellingPricePerUnit;
-        part.StockQuantity = dto.StockQuantity;
         part.MinimumStockLevel = dto.MinimumStockLevel;
         part.Status = dto.Status;
         part.UpdatedAt = DateTime.UtcNow;
@@ -265,8 +263,8 @@ public class PartService(
     }
     
     public async Task<ApiResponse<UploadPartImageResultDto>> UploadImageAsync(
-    int id,
-    FileUploadDto file)
+        int id,
+        FileUploadDto file)
     {
         var part = await partRepository
             .FindByCondition(p => p.PartId == id && !p.IsDeleted, trackChanges: true)
@@ -277,6 +275,133 @@ public class PartService(
             return ApiResponse<UploadPartImageResultDto>.NotFoundResponse("Part not found.");
         }
 
+        if (!string.IsNullOrWhiteSpace(part.ImagePublicId))
+        {
+            return ApiResponse<UploadPartImageResultDto>.ConflictResponse(
+                "Part already has an image. Use PATCH to replace it.");
+        }
+
+        var validationResponse = ValidateImageFile(file);
+        if (validationResponse is not null)
+        {
+            return validationResponse;
+        }
+
+        var publicId = $"part-{part.PartId}";
+        const string folder = "autocareims_parts";
+
+        var uploadResult = await cloudinaryService.UploadImageAsync(
+            file,
+            publicId,
+            folder);
+
+        part.ImagePublicId = uploadResult.PublicId;
+        part.UpdatedAt = DateTime.UtcNow;
+
+        await partRepository.SaveChangesAsync();
+
+        logger.LogInformation(
+            "Part image uploaded successfully. PartId: {PartId}, PublicId: {PublicId}",
+            part.PartId,
+            part.ImagePublicId);
+
+        return ApiResponse<UploadPartImageResultDto>.SuccessResponse(
+            new UploadPartImageResultDto
+            {
+                PartId = part.PartId,
+                ImagePublicId = part.ImagePublicId
+            },
+            "Part image uploaded successfully.");
+    }
+    
+    public async Task<ApiResponse<UploadPartImageResultDto>> ReplaceImageAsync(
+        int id,
+        FileUploadDto file)
+    {
+        var part = await partRepository
+            .FindByCondition(p => p.PartId == id && !p.IsDeleted, trackChanges: true)
+            .FirstOrDefaultAsync();
+
+        if (part is null)
+        {
+            return ApiResponse<UploadPartImageResultDto>.NotFoundResponse("Part not found.");
+        }
+
+        if (string.IsNullOrWhiteSpace(part.ImagePublicId))
+        {
+            return ApiResponse<UploadPartImageResultDto>.FailureResponse(
+                "Part does not have an image to replace. Use POST to upload a new image.",
+                400);
+        }
+
+        var validationResponse = ValidateImageFile(file);
+        if (validationResponse is not null)
+        {
+            return validationResponse;
+        }
+
+        await cloudinaryService.DeleteImageAsync(part.ImagePublicId);
+
+        var publicId = $"part-{part.PartId}";
+        const string folder = "autocareims_parts";
+
+        var uploadResult = await cloudinaryService.UploadImageAsync(
+            file,
+            publicId,
+            folder);
+
+        part.ImagePublicId = uploadResult.PublicId;
+        part.UpdatedAt = DateTime.UtcNow;
+
+        await partRepository.SaveChangesAsync();
+
+        logger.LogInformation(
+            "Part image replaced successfully. PartId: {PartId}, PublicId: {PublicId}",
+            part.PartId,
+            part.ImagePublicId);
+
+        return ApiResponse<UploadPartImageResultDto>.SuccessResponse(
+            new UploadPartImageResultDto
+            {
+                PartId = part.PartId,
+                ImagePublicId = part.ImagePublicId
+            },
+            "Part image replaced successfully.");
+    }
+    public async Task<ApiResponse<string>> DeleteImageAsync(int id)
+    {
+        var part = await partRepository
+            .FindByCondition(p => p.PartId == id && !p.IsDeleted, trackChanges: true)
+            .FirstOrDefaultAsync();
+
+        if (part is null)
+        {
+            return ApiResponse<string>.NotFoundResponse("Part not found.");
+        }
+
+        if (string.IsNullOrWhiteSpace(part.ImagePublicId))
+        {
+            return ApiResponse<string>.FailureResponse(
+                "This part does not have an image to delete.",
+                400);
+        }
+
+        await cloudinaryService.DeleteImageAsync(part.ImagePublicId);
+
+        part.ImagePublicId = null;
+        part.UpdatedAt = DateTime.UtcNow;
+
+        await partRepository.SaveChangesAsync();
+
+        logger.LogInformation("Part image deleted successfully. PartId: {PartId}", part.PartId);
+
+        return ApiResponse<string>.SuccessResponse(
+            $"Image deleted for PartId: {part.PartId}",
+            "Part image deleted successfully.");
+    }
+    
+    private static ApiResponse<UploadPartImageResultDto>? ValidateImageFile(FileUploadDto file)
+    {
         if (file.Length == 0)
         {
             return ApiResponse<UploadPartImageResultDto>.FailureResponse(
@@ -307,70 +432,72 @@ public class PartService(
                 400);
         }
 
-        if (!string.IsNullOrWhiteSpace(part.ImagePublicId))
-        {
-            await cloudinaryService.DeleteImageAsync(part.ImagePublicId);
-        }
-
-        var publicId = $"part-{part.PartId}";
-        const string folder = "autocareims/parts";
-
-        var uploadResult = await cloudinaryService.UploadImageAsync(
-            file,
-            publicId,
-            folder);
-
-        part.ImageUrl = uploadResult.ImageUrl;
-        part.ImagePublicId = uploadResult.PublicId;
-        part.UpdatedAt = DateTime.UtcNow;
-
-        await partRepository.SaveChangesAsync();
-
-        logger.LogInformation(
-            "Part image uploaded successfully. PartId: {PartId}, PublicId: {PublicId}",
-            part.PartId,
-            part.ImagePublicId);
-
-        return ApiResponse<UploadPartImageResultDto>.SuccessResponse(
-            new UploadPartImageResultDto
-            {
-                PartId = part.PartId,
-                ImageUrl = part.ImageUrl,
-                ImagePublicId = part.ImagePublicId
-            },
-            "Part image uploaded successfully.");
+        return null;
     }
-    public async Task<ApiResponse<string>> DeleteImageAsync(int id)
+    
+    public async Task<ApiResponse<PartSummaryDto>> GetSummaryAsync()
     {
-        var part = await partRepository
-            .FindByCondition(p => p.PartId == id && !p.IsDeleted, trackChanges: true)
-            .FirstOrDefaultAsync();
+        var partsQuery = partRepository
+            .FindByCondition(p => !p.IsDeleted);
 
-        if (part is null)
+        var summary = new PartSummaryDto
         {
-            return ApiResponse<string>.NotFoundResponse("Part not found.");
-        }
+            TotalParts = await partsQuery.CountAsync(),
 
-        if (string.IsNullOrWhiteSpace(part.ImagePublicId))
-        {
-            return ApiResponse<string>.FailureResponse(
-                "This part does not have an image to delete.",
-                400);
-        }
+            AvailableParts = await partsQuery
+                .CountAsync(p => p.Status == PartStatus.Available),
 
-        await cloudinaryService.DeleteImageAsync(part.ImagePublicId);
+            LowStockParts = await partsQuery
+                .CountAsync(p => p.StockQuantity < p.MinimumStockLevel),
 
-        part.ImageUrl = null;
-        part.ImagePublicId = null;
-        part.UpdatedAt = DateTime.UtcNow;
+            UnavailableParts = await partsQuery
+                .CountAsync(p =>
+                    p.Status == PartStatus.Unavailable ||
+                    p.Status == PartStatus.Discontinued)
+        };
 
-        await partRepository.SaveChangesAsync();
+        return ApiResponse<PartSummaryDto>.SuccessResponse(
+            summary,
+            "Parts summary retrieved successfully.");
+    }
+    
+    public async Task<ApiResponse<List<DropdownOptionDto>>> GetVendorOptionsAsync()
+    {
+        var vendors = await vendorRepository
+            .FindByCondition(v => v.IsActive)
+            .OrderBy(v => v.VendorName)
+            .Select(v => new DropdownOptionDto
+            {
+                Id = v.VendorId,
+                Name = v.VendorName
+            })
+            .ToListAsync();
 
-        logger.LogInformation("Part image deleted successfully. PartId: {PartId}", part.PartId);
+        return ApiResponse<List<DropdownOptionDto>>.SuccessResponse(
+            vendors,
+            "Vendor options retrieved successfully.");
+    }
 
-        return ApiResponse<string>.SuccessResponse(
-            $"Image deleted for PartId: {part.PartId}",
-            "Part image deleted successfully.");
+    public async Task<ApiResponse<List<StringDropdownOptionDto>>> GetCategoryOptionsAsync()
+    {
+        var categories = await partRepository
+            .FindByCondition(p =>
+                !p.IsDeleted &&
+                p.Category != null &&
+                p.Category != "")
+            .Select(p => p.Category!)
+            .Distinct()
+            .OrderBy(category => category)
+            .Select(category => new StringDropdownOptionDto
+            {
+                Value = category,
+                Label = category
+            })
+            .ToListAsync();
+
+        return ApiResponse<List<StringDropdownOptionDto>>.SuccessResponse(
+            categories,
+            "Category options retrieved successfully.");
     }
 
     private static PartDto MapToDto(Part part)
@@ -384,7 +511,6 @@ public class PartService(
             PartNumber = part.PartNumber,
             Category = part.Category,
             Description = part.Description,
-            ImageUrl = part.ImageUrl,
             ImagePublicId = part.ImagePublicId,
             CostPricePerUnit = part.CostPricePerUnit,
             SellingPricePerUnit = part.SellingPricePerUnit,

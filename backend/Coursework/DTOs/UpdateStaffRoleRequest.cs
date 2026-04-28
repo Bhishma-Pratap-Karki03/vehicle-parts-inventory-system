@@ -1,6 +1,9 @@
-﻿namespace Coursework.DTOs
+using System.ComponentModel.DataAnnotations;
+
+namespace Coursework.DTOs;
+
+public class UpdateStaffRoleRequest
 {
-    public class UpdateStaffRoleRequest
-    {
-    }
+    [Required]
+    public string Role { get; set; } = string.Empty;
 }

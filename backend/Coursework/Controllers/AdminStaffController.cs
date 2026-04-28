@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Coursework.Controllers;
 
 [ApiController]
-[Route("api/admin/staff")]
+[Route("api/legacy/admin/staff")]
 public class AdminStaffController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Coursework.Controllers;
 
 [ApiController]
-[Route("api/notifications")]
+[Route("api/legacy/notifications")]
 public class NotificationsController : ControllerBase
 {
     private readonly INotificationService _notificationService;

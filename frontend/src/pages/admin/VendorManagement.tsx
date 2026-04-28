@@ -366,15 +366,17 @@ export default function VendorManagement() {
                             />
                         </label>
 
-                        <label className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-                            Active vendor
-                            <input
-                                className="h-5 w-5 accent-[#0b4f86]"
-                                type="checkbox"
-                                checked={form.isActive}
-                                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                            />
-                        </label>
+                        {editingId !== null && (
+                            <label className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+                                Active vendor
+                                <input
+                                    className="h-5 w-5 accent-[#0b4f86]"
+                                    type="checkbox"
+                                    checked={form.isActive}
+                                    onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                                />
+                            </label>
+                        )}
 
                         {editingId && (
                             <button

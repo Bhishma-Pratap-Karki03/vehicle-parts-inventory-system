@@ -2,7 +2,7 @@ import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from "re
 import { apiRequest } from "../../api/apiClient";
 import type { Staff } from "../../types/staff";
 
-type IconName = "users" | "shield" | "userPlus" | "mail" | "phone" | "map" | "key" | "search";
+type IconName = "users" | "shield" | "userPlus" | "mail" | "phone" | "map" | "key" | "search" | "edit" | "x";
 
 function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: string }) {
     const paths: Record<IconName, ReactNode> = {
@@ -56,6 +56,18 @@ function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: str
                 <path d="m21 21-4.35-4.35" />
             </>
         ),
+        edit: (
+            <>
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </>
+        ),
+        x: (
+            <>
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+            </>
+        ),
     };
 
     return (
@@ -76,6 +88,7 @@ function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: str
 
 export default function StaffManagement() {
     const [staff, setStaff] = useState<Staff[]>([]);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [message, setMessage] = useState("");
     const [search, setSearch] = useState("");
 
@@ -135,41 +148,80 @@ export default function StaffManagement() {
         return () => clearTimeout(timer);
     }, []);
 
-    async function createStaff(e: FormEvent) {
+    function resetForm() {
+        setEditingId(null);
+        setForm({
+            fullName: "",
+            email: "",
+            phoneNumber: "",
+            address: "",
+            password: "",
+        });
+    }
+
+    async function handleSubmit(e: FormEvent) {
         e.preventDefault();
 
         try {
-            await apiRequest("/admin/staff", {
-                method: "POST",
-                body: JSON.stringify(form),
-            });
+            const payload =
+                editingId && !form.password
+                    ? {
+                          fullName: form.fullName,
+                          email: form.email,
+                          phoneNumber: form.phoneNumber,
+                          address: form.address,
+                      }
+                    : form;
 
-            setForm({
-                fullName: "",
-                email: "",
-                phoneNumber: "",
-                address: "",
-                password: "",
-            });
+            if (editingId) {
+                await apiRequest(`/admin/staff/${editingId}`, {
+                    method: "PUT",
+                    body: JSON.stringify(payload),
+                });
 
-            setMessage("Staff created successfully.");
+                setMessage("Staff updated successfully.");
+            } else {
+                await apiRequest("/admin/staff", {
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                });
+
+                setMessage("Staff created successfully.");
+            }
+
+            resetForm();
             await loadStaff();
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "Failed to create staff.");
+            setMessage(error instanceof Error ? error.message : "Failed to save staff.");
         }
     }
 
-    async function updateRole(id: string, role: string) {
-        try {
-            await apiRequest(`/admin/staff/${id}/role`, {
-                method: "PUT",
-                body: JSON.stringify({ role }),
-            });
+    function startEdit(member: Staff) {
+        setEditingId(member.id);
+        setForm({
+            fullName: member.fullName || "",
+            email: member.email || "",
+            phoneNumber: member.phoneNumber || "",
+            address: member.address || "",
+            password: "",
+        });
+    }
 
-            setMessage("Role updated successfully.");
+    async function deleteStaff(id: string) {
+        if (!window.confirm("Delete this staff member?")) {
+            return;
+        }
+
+        try {
+            await apiRequest(`/admin/staff/${id}`, { method: "DELETE" });
+
+            setMessage("Staff deleted successfully.");
+            if (editingId === id) {
+                resetForm();
+            }
             await loadStaff();
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "Failed to update role.");
+            setMessage(error instanceof Error ? error.message : "Failed to delete staff.");
         }
     }
 
@@ -211,7 +263,7 @@ export default function StaffManagement() {
                     className="flex h-14 items-center gap-3 rounded-lg bg-[#0b4f86] px-7 text-lg font-bold text-white shadow-lg shadow-slate-300 transition hover:bg-[#073d6a]"
                 >
                     <Icon name="userPlus" className="h-6 w-6" />
-                    Create Staff
+                    {editingId ? "Update Staff" : "Create Staff"}
                 </button>
             </div>
 
@@ -261,7 +313,7 @@ export default function StaffManagement() {
             <div className="grid gap-8 xl:grid-cols-[420px_1fr]">
                 <form
                     id="staff-registration-form"
-                    onSubmit={createStaff}
+                    onSubmit={handleSubmit}
                     className="overflow-hidden rounded-xl bg-white shadow-sm"
                 >
                     <div className="border-b border-slate-100 px-7 py-6">
@@ -269,7 +321,9 @@ export default function StaffManagement() {
                             <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-[#0b4f86]">
                                 <Icon name="userPlus" />
                             </span>
-                            <h2 className="text-2xl font-semibold text-[#071936]">Register Staff</h2>
+                            <h2 className="text-2xl font-semibold text-[#071936]">
+                                {editingId ? "Edit Staff" : "Register Staff"}
+                            </h2>
                         </div>
                     </div>
 
@@ -346,11 +400,20 @@ export default function StaffManagement() {
                                     type="password"
                                     value={form.password}
                                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                    required
+                                    required={!editingId}
                                 />
                             </div>
                         </label>
 
+                        {editingId && (
+                            <button
+                                type="button"
+                                onClick={resetForm}
+                                className="h-12 rounded-lg border border-slate-300 font-bold text-slate-700 transition hover:bg-slate-50"
+                            >
+                                Cancel Edit
+                            </button>
+                        )}
                     </div>
                 </form>
 
@@ -382,7 +445,7 @@ export default function StaffManagement() {
                                     <th className="px-7 py-5">Contact</th>
                                     <th className="px-7 py-5">Address</th>
                                     <th className="px-7 py-5">Role</th>
-                                    <th className="px-7 py-5">Change Role</th>
+                                    <th className="px-7 py-5">Actions</th>
                                 </tr>
                             </thead>
 
@@ -420,14 +483,24 @@ export default function StaffManagement() {
                                                 </span>
                                             </td>
                                             <td className="px-7 py-6">
-                                                <select
-                                                    className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#0b4f86] focus:ring-4 focus:ring-blue-50"
-                                                    value={role}
-                                                    onChange={(e) => updateRole(s.id, e.target.value)}
-                                                >
-                                                    <option value="Admin">Admin</option>
-                                                    <option value="Staff">Staff</option>
-                                                </select>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => startEdit(s)}
+                                                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-blue-200 px-3 text-sm font-bold text-[#0b4f86] hover:bg-blue-50"
+                                                    >
+                                                        <Icon name="edit" className="h-4 w-4" />
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => deleteStaff(s.id)}
+                                                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-bold text-red-700 hover:bg-red-50"
+                                                    >
+                                                        <Icon name="x" className="h-4 w-4" />
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     );

@@ -88,7 +88,7 @@ export default function AdminDashboard() {
 
     const navItems: Array<{ id: AdminPage; label: string; icon: IconName }> = [
         { id: "vendors", label: "Vendor Management", icon: "truck" },
-        { id: "staff", label: "Staff & Roles", icon: "users" },
+        { id: "staff", label: "Staff Management", icon: "users" },
         { id: "notifications", label: "Notifications", icon: "bell" },
     ];
 

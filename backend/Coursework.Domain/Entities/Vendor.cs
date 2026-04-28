@@ -24,6 +24,10 @@ public class Vendor
     [MaxLength(250)]
     public string? Address { get; set; }
 
+    [Required]
+    [MaxLength(50)]
+    public string Role { get; set; } = "Vendor";
+
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

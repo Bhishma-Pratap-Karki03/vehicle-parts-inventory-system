@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Coursework.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class SetupMigration : Migration
+    public partial class AdminVendorNotificationUpdate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -69,6 +69,7 @@ namespace Coursework.Infrastructure.Migrations
                     Email = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
                     Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     Address = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: true),
+                    Role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -563,9 +564,10 @@ namespace Coursework.Infrastructure.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "1", "6ae66bc5-feef-414f-a989-9b61e3240acc", "Admin", "ADMIN" },
-                    { "2", "cc621f57-bc64-446d-86be-850f6f45110f", "Staff", "STAFF" },
-                    { "3", "38b1f1ef-7be5-46cc-86b1-68929fa27c82", "Customer", "CUSTOMER" }
+                    { "1", "admin-role-stamp", "Admin", "ADMIN" },
+                    { "2", "staff-role-stamp", "Staff", "STAFF" },
+                    { "3", "customer-role-stamp", "Customer", "CUSTOMER" },
+                    { "4", "vendor-role-stamp", "Vendor", "VENDOR" }
                 });
 
             migrationBuilder.CreateIndex(

@@ -714,6 +714,11 @@ namespace Coursework.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -775,6 +780,13 @@ namespace Coursework.Infrastructure.Migrations
                             ConcurrencyStamp = "customer-role-stamp",
                             Name = "Customer",
                             NormalizedName = "CUSTOMER"
+                        },
+                        new
+                        {
+                            Id = "4",
+                            ConcurrencyStamp = "vendor-role-stamp",
+                            Name = "Vendor",
+                            NormalizedName = "VENDOR"
                         });
                 });
 

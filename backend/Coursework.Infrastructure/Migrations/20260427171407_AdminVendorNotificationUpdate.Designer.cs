@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Coursework.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260425065752_SetupMigration")]
-    partial class SetupMigration
+    [Migration("20260427171407_AdminVendorNotificationUpdate")]
+    partial class AdminVendorNotificationUpdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -717,6 +717,11 @@ namespace Coursework.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -761,23 +766,30 @@ namespace Coursework.Infrastructure.Migrations
                         new
                         {
                             Id = "1",
-                            ConcurrencyStamp = "6ae66bc5-feef-414f-a989-9b61e3240acc",
+                            ConcurrencyStamp = "admin-role-stamp",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = "2",
-                            ConcurrencyStamp = "cc621f57-bc64-446d-86be-850f6f45110f",
+                            ConcurrencyStamp = "staff-role-stamp",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
                             Id = "3",
-                            ConcurrencyStamp = "38b1f1ef-7be5-46cc-86b1-68929fa27c82",
+                            ConcurrencyStamp = "customer-role-stamp",
                             Name = "Customer",
                             NormalizedName = "CUSTOMER"
+                        },
+                        new
+                        {
+                            Id = "4",
+                            ConcurrencyStamp = "vendor-role-stamp",
+                            Name = "Vendor",
+                            NormalizedName = "VENDOR"
                         });
                 });
 

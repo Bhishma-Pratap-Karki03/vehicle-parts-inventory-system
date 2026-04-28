@@ -63,6 +63,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 Name = "Customer",
                 NormalizedName = "CUSTOMER",
                 ConcurrencyStamp = "customer-role-stamp"
+            },
+            new IdentityRole
+            {
+                Id = "4",
+                Name = "Vendor",
+                NormalizedName = "VENDOR",
+                ConcurrencyStamp = "vendor-role-stamp"
             }
         );
     }
@@ -87,6 +94,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<Vendor>()
             .HasIndex(v => v.Email);
+
+        modelBuilder.Entity<Vendor>()
+            .Property(v => v.Role)
+            .HasMaxLength(50);
     }
 
     private static void ConfigureRelationships(ModelBuilder modelBuilder)

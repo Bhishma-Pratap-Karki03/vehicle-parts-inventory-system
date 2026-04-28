@@ -12,3 +12,10 @@ obj/
 
 # Rider
 .idea/
+.vs/
+frontend/.vs/
+backend/.dotnet-home/
+frontend/.env
+**/bin/
+**/obj/
+frontend/node_modules/

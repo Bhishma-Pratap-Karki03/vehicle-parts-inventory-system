@@ -1,4 +1,10 @@
+using Coursework.Application.Interfaces;
+using Coursework.Application.Services;
+using Coursework.Domain.Entities;
+using Coursework.Infrastructure.BackgroundServices;
 using Coursework.Infrastructure.Data;
+using Coursework.Infrastructure.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +19,17 @@ public static class DependencyInjection
     {
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+
+        services.AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
+        services.AddScoped<IStaffService, StaffService>();
+        services.AddScoped<IVendorService, VendorService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IEmailService, EmailService>();
+
+        services.AddHostedService<NotificationBackgroundService>();
 
         return services;
     }

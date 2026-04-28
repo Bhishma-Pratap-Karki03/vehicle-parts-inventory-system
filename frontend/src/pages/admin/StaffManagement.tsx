@@ -91,6 +91,7 @@ export default function StaffManagement() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [message, setMessage] = useState("");
     const [search, setSearch] = useState("");
+    const [staffStatusFilter, setStaffStatusFilter] = useState<"active" | "inactive">("active");
 
     const [form, setForm] = useState({
         fullName: "",
@@ -216,6 +217,11 @@ export default function StaffManagement() {
             await apiRequest(`/admin/staff/${id}`, { method: "DELETE" });
 
             setMessage("Staff deleted successfully.");
+            setStaff((currentStaff) =>
+                currentStaff.map((member) =>
+                    member.id === id ? { ...member, isActive: false } : member
+                )
+            );
             if (editingId === id) {
                 resetForm();
             }
@@ -228,23 +234,29 @@ export default function StaffManagement() {
     const filteredStaff = useMemo(() => {
         const term = search.trim().toLowerCase();
 
+        const statusFilteredStaff = staff.filter((member) =>
+            staffStatusFilter === "active" ? member.isActive !== false : member.isActive === false
+        );
+
         if (!term) {
-            return staff;
+            return statusFilteredStaff;
         }
 
-        return staff.filter((member) =>
+        return statusFilteredStaff.filter((member) =>
             [member.fullName, member.email, member.phoneNumber, member.address, member.roles?.[0]]
                 .filter(Boolean)
                 .some((value) => String(value).toLowerCase().includes(term))
         );
-    }, [search, staff]);
+    }, [search, staff, staffStatusFilter]);
 
-    const adminCount = staff.filter((member) => member.roles?.[0] === "Admin").length;
-    const staffCount = staff.length - adminCount;
+    const activeStaffCount = staff.filter((member) => member.isActive !== false).length;
+    const inactiveStaffCount = staff.length - activeStaffCount;
+    const currentStatusStaffCount =
+        staffStatusFilter === "active" ? activeStaffCount : inactiveStaffCount;
 
     return (
         <div className="min-h-[calc(100vh-5rem)] bg-[#f4f7fb] px-10 py-10 text-[#071936]">
-            <div className="mb-10 flex flex-wrap items-start justify-between gap-6">
+            <div className="mb-10">
                 <div>
                     <p className="mb-2 text-sm font-semibold tracking-[0.18em] text-slate-500">
                         DASHBOARD / STAFF
@@ -256,15 +268,6 @@ export default function StaffManagement() {
                         Register service staff and keep role access aligned with the admin portal.
                     </p>
                 </div>
-
-                <button
-                    type="submit"
-                    form="staff-registration-form"
-                    className="flex h-14 items-center gap-3 rounded-lg bg-[#0b4f86] px-7 text-lg font-bold text-white shadow-lg shadow-slate-300 transition hover:bg-[#073d6a]"
-                >
-                    <Icon name="userPlus" className="h-6 w-6" />
-                    {editingId ? "Update Staff" : "Create Staff"}
-                </button>
             </div>
 
             {message && (
@@ -280,7 +283,7 @@ export default function StaffManagement() {
                             <Icon name="users" className="h-7 w-7" />
                         </div>
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                            Active
+                            All
                         </span>
                     </div>
                     <p className="text-sm font-semibold uppercase tracking-widest text-slate-500">
@@ -294,19 +297,19 @@ export default function StaffManagement() {
                         <Icon name="shield" className="h-7 w-7" />
                     </div>
                     <p className="text-sm font-semibold uppercase tracking-widest text-slate-500">
-                        Admin Roles
+                        Active Staff
                     </p>
-                    <p className="mt-2 text-4xl font-bold text-blue-700">{adminCount}</p>
+                    <p className="mt-2 text-4xl font-bold text-blue-700">{activeStaffCount}</p>
                 </div>
 
                 <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-green-50 text-green-700">
-                        <Icon name="userPlus" className="h-7 w-7" />
+                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-red-50 text-red-700">
+                        <Icon name="x" className="h-7 w-7" />
                     </div>
                     <p className="text-sm font-semibold uppercase tracking-widest text-slate-500">
-                        Service Staff
+                        Inactive Staff
                     </p>
-                    <p className="mt-2 text-4xl font-bold text-green-700">{staffCount}</p>
+                    <p className="mt-2 text-4xl font-bold text-red-700">{inactiveStaffCount}</p>
                 </div>
             </div>
 
@@ -334,7 +337,7 @@ export default function StaffManagement() {
                             </span>
                             <input
                                 className="h-12 rounded-lg border border-slate-300 px-4 text-base outline-none transition placeholder:text-slate-400 focus:border-[#0b4f86] focus:ring-4 focus:ring-blue-50"
-                                placeholder="Example: James Miller"
+                                placeholder="Example: Ram Narayan"
                                 value={form.fullName}
                                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                                 required
@@ -366,7 +369,7 @@ export default function StaffManagement() {
                                 <Icon name="phone" className="h-5 w-5 text-slate-400" />
                                 <input
                                     className="w-full outline-none placeholder:text-slate-400"
-                                    placeholder="+1 (555) 012-3456"
+                                    placeholder="+977 98XXXXXXXX"
                                     value={form.phoneNumber}
                                     onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
                                 />
@@ -393,7 +396,7 @@ export default function StaffManagement() {
                                 Password
                             </span>
                             <div className="flex h-12 items-center gap-3 rounded-lg border border-slate-300 px-4 focus-within:border-[#0b4f86] focus-within:ring-4 focus-within:ring-blue-50">
-                                <Icon name="key" className="h-5 w-5 text-slate-400" />
+                                
                                 <input
                                     className="w-full outline-none placeholder:text-slate-400"
                                     placeholder="Create password"
@@ -405,11 +408,22 @@ export default function StaffManagement() {
                             </div>
                         </label>
 
+                    </div>
+
+                    <div className="grid gap-3 border-t border-slate-100 bg-slate-50 px-7 py-6">
+                        <button
+                            type="submit"
+                            className="flex h-12 items-center justify-center gap-3 rounded-lg bg-[#0b4f86] px-5 font-bold text-white shadow transition hover:bg-[#073d6a]"
+                        >
+                            <Icon name="userPlus" className="h-5 w-5" />
+                            {editingId ? "Update Staff" : "Create Staff"}
+                        </button>
+
                         {editingId && (
                             <button
                                 type="button"
                                 onClick={resetForm}
-                                className="h-12 rounded-lg border border-slate-300 font-bold text-slate-700 transition hover:bg-slate-50"
+                                className="h-12 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 transition hover:bg-slate-50"
                             >
                                 Cancel Edit
                             </button>
@@ -422,19 +436,46 @@ export default function StaffManagement() {
                         <div>
                             <h2 className="text-2xl font-semibold text-[#071936]">Staff Directory</h2>
                             <p className="mt-1 text-sm text-slate-500">
-                                Showing {filteredStaff.length} of {staff.length} staff records
+                                Showing {filteredStaff.length} of {currentStatusStaffCount} {staffStatusFilter} staff records
                             </p>
                         </div>
 
-                        <label className="flex h-12 min-w-[320px] items-center gap-3 rounded-lg border border-slate-300 px-4 text-slate-500">
-                            <Icon name="search" className="h-5 w-5" />
-                            <input
-                                className="w-full outline-none placeholder:text-slate-400"
-                                placeholder="Search staff, email, or role..."
-                                value={search}
-                                onChange={(event) => setSearch(event.target.value)}
-                            />
-                        </label>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex h-12 rounded-lg bg-slate-100 p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setStaffStatusFilter("active")}
+                                    className={`rounded-md px-4 text-sm font-bold transition ${
+                                        staffStatusFilter === "active"
+                                            ? "bg-white text-[#0b4f86] shadow-sm"
+                                            : "text-slate-500 hover:text-slate-700"
+                                    }`}
+                                >
+                                    Active
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setStaffStatusFilter("inactive")}
+                                    className={`rounded-md px-4 text-sm font-bold transition ${
+                                        staffStatusFilter === "inactive"
+                                            ? "bg-white text-[#0b4f86] shadow-sm"
+                                            : "text-slate-500 hover:text-slate-700"
+                                    }`}
+                                >
+                                    Inactive
+                                </button>
+                            </div>
+
+                            <label className="flex h-12 min-w-[320px] items-center gap-3 rounded-lg border border-slate-300 px-4 text-slate-500">
+                                <Icon name="search" className="h-5 w-5" />
+                                <input
+                                    className="w-full outline-none placeholder:text-slate-400"
+                                    placeholder="Search staff, email, or role..."
+                                    value={search}
+                                    onChange={(event) => setSearch(event.target.value)}
+                                />
+                            </label>
+                        </div>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -492,14 +533,16 @@ export default function StaffManagement() {
                                                         <Icon name="edit" className="h-4 w-4" />
                                                         Edit
                                                     </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => deleteStaff(s.id)}
-                                                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-bold text-red-700 hover:bg-red-50"
-                                                    >
-                                                        <Icon name="x" className="h-4 w-4" />
-                                                        Delete
-                                                    </button>
+                                                    {s.isActive !== false && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => deleteStaff(s.id)}
+                                                            className="inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-bold text-red-700 hover:bg-red-50"
+                                                        >
+                                                            <Icon name="x" className="h-4 w-4" />
+                                                            Delete
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

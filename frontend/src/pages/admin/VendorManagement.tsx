@@ -82,6 +82,7 @@ export default function VendorManagement() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [message, setMessage] = useState("");
     const [search, setSearch] = useState("");
+    const [vendorStatusFilter, setVendorStatusFilter] = useState<"active" | "inactive">("active");
 
     const [form, setForm] = useState({
         vendorName: "",
@@ -204,23 +205,29 @@ export default function VendorManagement() {
     const filteredVendors = useMemo(() => {
         const term = search.trim().toLowerCase();
 
+        const statusFilteredVendors = vendors.filter((vendor) =>
+            vendorStatusFilter === "active" ? vendor.isActive : !vendor.isActive
+        );
+
         if (!term) {
-            return vendors;
+            return statusFilteredVendors;
         }
 
-        return vendors.filter((vendor) =>
+        return statusFilteredVendors.filter((vendor) =>
             [vendor.vendorName, vendor.contactPerson, vendor.email, vendor.phone, vendor.address]
                 .filter(Boolean)
                 .some((value) => String(value).toLowerCase().includes(term))
         );
-    }, [search, vendors]);
+    }, [search, vendors, vendorStatusFilter]);
 
     const activeCount = vendors.filter((vendor) => vendor.isActive).length;
     const inactiveCount = vendors.length - activeCount;
+    const currentStatusVendorCount =
+        vendorStatusFilter === "active" ? activeCount : inactiveCount;
 
     return (
         <div className="min-h-[calc(100vh-5rem)] bg-[#f4f7fb] px-10 py-10 text-[#071936]">
-            <div className="mb-10 flex flex-wrap items-start justify-between gap-6">
+            <div className="mb-10">
                 <div>
                     <p className="mb-2 text-sm font-semibold tracking-[0.18em] text-slate-500">
                         DASHBOARD / VENDORS
@@ -232,15 +239,6 @@ export default function VendorManagement() {
                         Add suppliers, maintain contact details, and manage vendor availability.
                     </p>
                 </div>
-
-                <button
-                    type="submit"
-                    form="vendor-form"
-                    className="flex h-14 items-center gap-3 rounded-lg bg-[#0b4f86] px-7 text-lg font-bold text-white shadow-lg shadow-slate-300 transition hover:bg-[#073d6a]"
-                >
-                    <Icon name="plus" className="h-6 w-6" />
-                    {editingId ? "Update Vendor" : "Add Vendor"}
-                </button>
             </div>
 
             {message && (
@@ -301,7 +299,7 @@ export default function VendorManagement() {
                             </span>
                             <input
                                 className="h-12 rounded-lg border border-slate-300 px-4 outline-none placeholder:text-slate-400 focus:border-[#0b4f86] focus:ring-4 focus:ring-blue-50"
-                                placeholder="Example: Elite Spares Ltd"
+                                placeholder="Example: ABC Company Ltd"
                                 value={form.vendorName}
                                 onChange={(e) => setForm({ ...form, vendorName: e.target.value })}
                                 required
@@ -347,7 +345,7 @@ export default function VendorManagement() {
                                 <Icon name="phone" className="h-5 w-5 text-slate-400" />
                                 <input
                                     className="w-full outline-none placeholder:text-slate-400"
-                                    placeholder="+1 (555) 012-3456"
+                                    placeholder="+977 98XXXXXXXX"
                                     value={form.phone}
                                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                                 />
@@ -358,12 +356,15 @@ export default function VendorManagement() {
                             <span className="text-xs font-bold uppercase tracking-widest text-slate-600">
                                 Address
                             </span>
-                            <textarea
-                                className="min-h-24 rounded-lg border border-slate-300 px-4 py-3 outline-none placeholder:text-slate-400 focus:border-[#0b4f86] focus:ring-4 focus:ring-blue-50"
-                                placeholder="Vendor service or warehouse address"
-                                value={form.address}
-                                onChange={(e) => setForm({ ...form, address: e.target.value })}
-                            />
+                            <div className="flex min-h-24 items-start gap-3 rounded-lg border border-slate-300 px-4 py-3 focus-within:border-[#0b4f86] focus-within:ring-4 focus-within:ring-blue-50">
+                                <Icon name="map" className="mt-1 h-5 w-5 shrink-0 text-slate-400" />
+                                <textarea
+                                    className="min-h-16 w-full resize-none outline-none placeholder:text-slate-400"
+                                    placeholder="Vendor service or warehouse address"
+                                    value={form.address}
+                                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                                />
+                            </div>
                         </label>
 
                         {editingId !== null && (
@@ -378,11 +379,22 @@ export default function VendorManagement() {
                             </label>
                         )}
 
+                    </div>
+
+                    <div className="grid gap-3 border-t border-slate-100 bg-slate-50 px-7 py-6">
+                        <button
+                            type="submit"
+                            className="flex h-12 items-center justify-center gap-3 rounded-lg bg-[#0b4f86] px-5 font-bold text-white shadow transition hover:bg-[#073d6a]"
+                        >
+                            <Icon name="plus" className="h-5 w-5" />
+                            {editingId ? "Update Vendor" : "Add Vendor"}
+                        </button>
+
                         {editingId && (
                             <button
                                 type="button"
                                 onClick={resetForm}
-                                className="h-12 rounded-lg border border-slate-300 font-bold text-slate-700 transition hover:bg-slate-50"
+                                className="h-12 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 transition hover:bg-slate-50"
                             >
                                 Cancel Edit
                             </button>
@@ -395,18 +407,45 @@ export default function VendorManagement() {
                         <div>
                             <h2 className="text-2xl font-semibold text-[#071936]">Vendor Directory</h2>
                             <p className="mt-1 text-sm text-slate-500">
-                                Showing {filteredVendors.length} of {vendors.length} vendors
+                                Showing {filteredVendors.length} of {currentStatusVendorCount} {vendorStatusFilter} vendors
                             </p>
                         </div>
-                        <label className="flex h-12 min-w-[320px] items-center gap-3 rounded-lg border border-slate-300 px-4 text-slate-500">
-                            <Icon name="search" />
-                            <input
-                                className="w-full outline-none placeholder:text-slate-400"
-                                placeholder="Search vendors or contacts..."
-                                value={search}
-                                onChange={(event) => setSearch(event.target.value)}
-                            />
-                        </label>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex h-12 rounded-lg bg-slate-100 p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setVendorStatusFilter("active")}
+                                    className={`rounded-md px-4 text-sm font-bold transition ${
+                                        vendorStatusFilter === "active"
+                                            ? "bg-white text-[#0b4f86] shadow-sm"
+                                            : "text-slate-500 hover:text-slate-700"
+                                    }`}
+                                >
+                                    Active
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setVendorStatusFilter("inactive")}
+                                    className={`rounded-md px-4 text-sm font-bold transition ${
+                                        vendorStatusFilter === "inactive"
+                                            ? "bg-white text-[#0b4f86] shadow-sm"
+                                            : "text-slate-500 hover:text-slate-700"
+                                    }`}
+                                >
+                                    Inactive
+                                </button>
+                            </div>
+
+                            <label className="flex h-12 min-w-[320px] items-center gap-3 rounded-lg border border-slate-300 px-4 text-slate-500">
+                                <Icon name="search" />
+                                <input
+                                    className="w-full outline-none placeholder:text-slate-400"
+                                    placeholder="Search vendors or contacts..."
+                                    value={search}
+                                    onChange={(event) => setSearch(event.target.value)}
+                                />
+                            </label>
+                        </div>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -454,13 +493,15 @@ export default function VendorManagement() {
                                                     <Icon name="edit" className="h-4 w-4" />
                                                     Edit
                                                 </button>
-                                                <button
-                                                    onClick={() => deleteVendor(vendor.vendorId)}
-                                                    className="inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-bold text-red-700 hover:bg-red-50"
-                                                >
-                                                    <Icon name="x" className="h-4 w-4" />
-                                                    Deactivate
-                                                </button>
+                                                {vendor.isActive && (
+                                                    <button
+                                                        onClick={() => deleteVendor(vendor.vendorId)}
+                                                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-bold text-red-700 hover:bg-red-50"
+                                                    >
+                                                        <Icon name="x" className="h-4 w-4" />
+                                                        Deactivate
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

@@ -12,9 +12,7 @@ import type {
   VendorOption,
 } from '../../shared/interfaces/parts.interface'
 import { getCloudinaryImageUrl } from '../../shared/utils/cloudinary'
-import Icon from '../icons/Icon'
 import ConfirmationDialog from './ConfirmationDialog'
-import PartEditorGuidelines from './PartEditorGuidelines'
 import PartFormField from './PartFormField'
 import PartFormSection from './PartFormSection'
 import PartImageUploader from './PartImageUploader'
@@ -41,11 +39,6 @@ const textareaClassName =
 
 const selectClassName = `${inputClassName} appearance-none pr-11`
 
-const partEditorGuidelines = [
-  'Use technical names consistent with OEM or supplier catalogs.',
-  'Double-check the part number before publishing to avoid duplicates.',
-  'Primary images look best at a wide ratio with a clean background.',
-]
 
 const editablePartStatuses: PartBaseStatus[] = ['Available', 'Unavailable', 'Discontinued']
 
@@ -54,7 +47,14 @@ function parseInteger(value: string) {
 }
 
 function SelectChevron() {
-  return <Icon name="expandMore" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[22px] text-[#607389]" />
+  return (
+    <span
+      aria-hidden
+      className="material-symbols-outlined pointer-events-none absolute right-4 top-1/2 inline-flex -translate-y-1/2 select-none items-center justify-center leading-none text-[22px] text-[#607389] not-italic"
+    >
+      expand_more
+    </span>
+  )
 }
 
 function EditorLoadingState() {
@@ -190,6 +190,7 @@ function PartEditorForm({
   const previewStatus: PartDisplayStatus = useMemo(() => {
     if (mode === 'edit' && part) {
       return getPartDisplayStatus({
+        isDeleted: part.isDeleted,
         status: watchedStatus || part.status,
         isLowStock: part.isLowStock,
       })
@@ -250,7 +251,9 @@ function PartEditorForm({
                 className="inline-flex items-center gap-2 text-[15px] font-medium text-[#45637F] transition hover:text-[#163E66]"
                 to="/parts"
               >
-                <Icon name="arrowBack" className="text-[18px]" />
+                <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+                  arrow_back
+                </span>
                 Back to Parts Management
               </Link>
 
@@ -386,7 +389,9 @@ function PartEditorForm({
                             title="Add a new category"
                             type="button"
                           >
-                            <Icon name="plus" className="text-[20px]" />
+                            <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
+                              add
+                            </span>
                           </button>
                         </div>
                       ) : (
@@ -481,7 +486,7 @@ function PartEditorForm({
 
               <PartFormSection
                 description={mode === 'edit' ? 'Set the reorder threshold and review the current stock.' : 'Set the reorder threshold for this part.'}
-                icon="box"
+                icon="inventory_2"
                 title="Inventory Controls"
               >
                 <div className={`grid gap-5 ${mode === 'edit' ? 'md:grid-cols-2' : 'max-w-xl'}`}>
@@ -534,7 +539,7 @@ function PartEditorForm({
                 title={watchedName || 'Primary image'}
               />
 
-              <PartEditorGuidelines guidelines={partEditorGuidelines} />
+             
             </aside>
           </div>
         </div>

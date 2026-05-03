@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import Icon from '../icons/Icon'
-import type { IconName } from '../icons/Icon'
+
+type PartSectionIcon = 'image' | 'info' | 'inventory_2' | 'payments'
 
 type PartFormSectionProps = {
-  icon: IconName
+  icon: PartSectionIcon
   title: string
   description?: string
   children: ReactNode
@@ -15,7 +15,9 @@ function PartFormSection({ icon, title, description, children }: PartFormSection
       <div className="flex flex-col gap-3 border-b border-[#E6EEF5] pb-4">
         <div className="flex items-center gap-3">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#EEF5FC] text-[#15558D]">
-            <Icon name={icon} className="text-[20px]" />
+            <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
+              {icon}
+            </span>
           </span>
           <div>
             <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-[#102B49] [font-family:var(--font-display)]">{title}</h2>

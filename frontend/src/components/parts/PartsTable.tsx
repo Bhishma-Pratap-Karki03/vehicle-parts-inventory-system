@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import Icon from '../icons/Icon'
 import type { PartDisplayStatus, PartRecord } from '../../shared/interfaces/parts.interface'
 import { formatPartCode, getPartDisplayStatus } from './parts.helpers'
 
@@ -13,6 +12,7 @@ type PartsTableProps = {
 
 const statusClasses: Record<PartDisplayStatus, string> = {
   Available: 'border border-[#C9E7D4] bg-[#EEFCF3] text-[#16784A]',
+  Deleted: 'border border-[#DADFE7] bg-[#F4F7FA] text-[#5B6D80]',
   'Low Stock': 'border border-[#F0C7AF] bg-[#FFF3EB] text-[#9A3E0B]',
   Discontinued: 'border border-[#F0C4C4] bg-[#FFF1F1] text-[#C54141]',
   Unavailable: 'border border-[#D9E3EE] bg-[#F4F7FA] text-[#516579]',
@@ -20,6 +20,7 @@ const statusClasses: Record<PartDisplayStatus, string> = {
 
 const stockBarClasses: Record<PartDisplayStatus, string> = {
   Available: 'bg-[#2AA364]',
+  Deleted: 'bg-[#93A3B5]',
   'Low Stock': 'bg-[#D27A2A]',
   Discontinued: 'bg-[#D06060]',
   Unavailable: 'bg-[#8D9BAB]',
@@ -27,7 +28,7 @@ const stockBarClasses: Record<PartDisplayStatus, string> = {
 
 const actionButtons = [
   {
-    icon: 'view' as const,
+    icon: 'visibility' as const,
     label: 'View',
     className: 'border-[#D8E3EF] bg-white text-[#5A7190] hover:bg-[#F5F8FC] hover:text-[#2E4C70]',
   },
@@ -65,6 +66,14 @@ function ActionStrip({
   deletingPartId?: null | number
   onDeletePart: (part: PartRecord) => void
 }) {
+  if (part.isDeleted) {
+    return (
+      <span className="inline-flex min-h-9 items-center justify-center rounded-full border border-[#DCE5EF] bg-[#F8FAFC] px-4 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#6B7D8F]">
+        Deleted record
+      </span>
+    )
+  }
+
   return (
     <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E7EEF5] bg-[#FCFDFE] p-1.5 shadow-[0_8px_18px_rgba(20,43,74,0.035)]">
       {actionButtons.map((action) => {
@@ -79,7 +88,9 @@ function ActionStrip({
               title={deletingPartId === part.partId ? 'Deleting...' : action.label}
               type="button"
             >
-              <Icon name={action.icon} className="text-[16px]" />
+              <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[16px] not-italic">
+                {action.icon}
+              </span>
             </button>
           )
         }
@@ -92,7 +103,9 @@ function ActionStrip({
             title={action.label}
             to={action.label === 'View' ? `/parts/${part.partId}` : `/parts/${part.partId}/edit`}
           >
-            <Icon name={action.icon} className="text-[16px]" />
+            <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[16px] not-italic">
+              {action.icon}
+            </span>
           </Link>
         )
       })}
@@ -119,7 +132,7 @@ function StockHealth({ part }: { part: PartRecord }) {
 function PartStatusPill({ status }: { status: PartDisplayStatus }) {
   return (
     <span
-      className={`inline-flex min-h-8 items-center justify-center rounded-full px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] ${statusClasses[status]}`}
+      className={`inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] ${statusClasses[status]}`}
     >
       {status}
     </span>
@@ -136,9 +149,15 @@ function MobilePartCard({
   onDeletePart: (part: PartRecord) => void
 }) {
   const displayStatus = getPartDisplayStatus(part)
+  const cardClasses =
+    displayStatus === 'Low Stock'
+      ? 'border-[#F0C7AF] bg-[#FFF9F5]'
+      : displayStatus === 'Deleted'
+        ? 'border-[#DCE5EF] bg-[#F8FAFC]'
+        : 'border-[#E5EDF4] bg-white'
 
   return (
-    <article className={`rounded-[22px] border p-4 shadow-[0_10px_24px_rgba(20,43,74,0.05)] ${displayStatus === 'Low Stock' ? 'border-[#F0C7AF] bg-[#FFF9F5]' : 'border-[#E5EDF4] bg-white'}`}>
+    <article className={`rounded-[22px] border p-4 shadow-[0_10px_24px_rgba(20,43,74,0.05)] ${cardClasses}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF4FA] text-[11px] font-semibold text-[#2B4A67]">
@@ -149,7 +168,15 @@ function MobilePartCard({
               <h3 className="truncate text-[17px] font-semibold text-[#112B49]" title={part.partName}>
                 {part.partName}
               </h3>
-              {displayStatus === 'Low Stock' ? <Icon name="warning" className="shrink-0 text-[18px] text-[#9A3E0B]" title="Low stock" /> : null}
+              {displayStatus === 'Low Stock' ? (
+                <span
+                  aria-label="Low stock"
+                  className="material-symbols-outlined inline-flex shrink-0 select-none items-center justify-center leading-none text-[18px] text-[#9A3E0B] not-italic"
+                  role="img"
+                >
+                  warning
+                </span>
+              ) : null}
             </div>
             <p className="mt-1 text-[13px] text-[#58708A]">{part.partNumber}</p>
           </div>
@@ -232,7 +259,13 @@ function PartsTable({ parts, isLoading, errorMessage, deletingPartId, onDeletePa
 
               return (
                 <tr
-                  className={`border-b border-[#EDF2F7] transition hover:bg-[#FBFDFF] ${displayStatus === 'Low Stock' ? 'bg-[#FFF9F5]' : 'bg-white'}`}
+                  className={`border-b border-[#EDF2F7] transition hover:bg-[#FBFDFF] ${
+                    displayStatus === 'Low Stock'
+                      ? 'bg-[#FFF9F5]'
+                      : displayStatus === 'Deleted'
+                        ? 'bg-[#F8FAFC]'
+                        : 'bg-white'
+                  }`}
                   key={part.partId}
                 >
                   <td className="px-6 py-5 align-middle">
@@ -246,7 +279,13 @@ function PartsTable({ parts, isLoading, errorMessage, deletingPartId, onDeletePa
                             {part.partName}
                           </span>
                           {displayStatus === 'Low Stock' ? (
-                            <Icon name="warning" className="shrink-0 text-[18px] text-[#9A3E0B]" title="Low stock" />
+                            <span
+                              aria-label="Low stock"
+                              className="material-symbols-outlined inline-flex shrink-0 select-none items-center justify-center leading-none text-[18px] text-[#9A3E0B] not-italic"
+                              role="img"
+                            >
+                              warning
+                            </span>
                           ) : null}
                         </div>
                         <p className="mt-1 text-[13px] text-[#58708A]">{part.partNumber}</p>

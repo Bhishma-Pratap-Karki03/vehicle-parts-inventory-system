@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
-import Icon, { type IconName } from '../icons/Icon'
+
+type DialogIcon = 'delete' | 'image' | 'mail' | 'warning'
 
 type ConfirmationDialogProps = {
   eyebrow: string
@@ -9,7 +10,7 @@ type ConfirmationDialogProps = {
   confirmLabel: string
   cancelLabel?: string
   confirmTone?: 'danger' | 'primary'
-  icon?: IconName
+  icon?: DialogIcon
   isBusy?: boolean
   onCancel: () => void
   onConfirm: () => void
@@ -18,6 +19,13 @@ type ConfirmationDialogProps = {
 const confirmToneClasses: Record<NonNullable<ConfirmationDialogProps['confirmTone']>, string> = {
   danger: 'bg-[#B84C45] text-white shadow-[0_14px_30px_rgba(184,76,69,0.2)] hover:bg-[#A23F39]',
   primary: 'bg-[#15558D] text-white shadow-[0_14px_30px_rgba(21,85,141,0.2)] hover:bg-[#0E487C]',
+}
+
+const iconToneClasses: Record<DialogIcon, string> = {
+  delete: 'bg-[#FFF1E8] text-[#9A3E0B]',
+  image: 'bg-[#FFF1E8] text-[#9A3E0B]',
+  mail: 'bg-[#EEF5FC] text-[#15558D]',
+  warning: 'bg-[#FFF1E8] text-[#9A3E0B]',
 }
 
 function ConfirmationDialog({
@@ -63,13 +71,15 @@ function ConfirmationDialog({
     >
       <div
         aria-modal="true"
-        className="w-full max-w-[580px] rounded-[30px] border border-[#DCE5EF] bg-white p-6 shadow-[0_28px_70px_rgba(8,25,48,0.22)] sm:p-7"
+        className="w-full max-w-145 rounded-[30px] border border-[#DCE5EF] bg-white p-6 shadow-[0_28px_70px_rgba(8,25,48,0.22)] sm:p-7"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
       >
         <div className="flex items-center gap-4">
-          <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-[#FFF1E8] text-[#9A3E0B]">
-            <Icon className="text-[24px]" name={icon} />
+          <span className={`inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] ${iconToneClasses[icon]}`}>
+            <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[24px] not-italic">
+              {icon}
+            </span>
           </span>
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7A8DA3]">{eyebrow}</p>
@@ -82,7 +92,7 @@ function ConfirmationDialog({
         <div className="mt-5 text-[15px] leading-7 text-[#556E88] sm:text-[16px]">{description}</div>
 
         {details ? (
-          <div className="mt-6 rounded-[24px] border border-[#E3EAF2] bg-[#F8FBFE] p-5">
+          <div className="mt-6 rounded-3xl border border-[#E3EAF2] bg-[#F8FBFE] p-5">
             {details}
           </div>
         ) : null}

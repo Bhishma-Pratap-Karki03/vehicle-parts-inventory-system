@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import Icon from '../../components/icons/Icon'
 import { formatPartCode, formatRupees, getApiErrorMessage, getPartDisplayStatus, getRequestErrorMessage, mapPartFromApi, readApiResponse } from '../../components/parts/parts.helpers'
 import NotFoundPage from '../../pages/NotFoundPage'
 import type { PartApiModel, PartRecord } from '../../shared/interfaces/parts.interface'
 import { getCloudinaryImageUrl } from '../../shared/utils/cloudinary'
 
-const backendUrl = (import.meta.env.VITE_BACKEND_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+import backendUrl from '../../config';
 
 const statusClasses = {
   Available: 'border border-[#C9E7D4] bg-[#EEFCF3] text-[#16784A]',
+  Deleted: 'border border-[#DADFE7] bg-[#F4F7FA] text-[#5B6D80]',
   'Low Stock': 'border border-[#F0C7AF] bg-[#FFF3EB] text-[#9A3E0B]',
   Discontinued: 'border border-[#F0C4C4] bg-[#FFF1F1] text-[#C54141]',
   Unavailable: 'border border-[#D9E3EE] bg-[#F4F7FA] text-[#516579]',
@@ -148,7 +148,9 @@ function PartDetailsPage() {
               className="inline-flex items-center gap-2 text-[15px] font-medium text-[#45637F] transition hover:text-[#163E66]"
               to="/parts"
             >
-              <Icon name="arrowBack" className="text-[18px]" />
+              <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+                arrow_back
+              </span>
               Back to Parts Management
             </Link>
 
@@ -156,7 +158,7 @@ function PartDetailsPage() {
               <h1 className="text-[30px] font-semibold leading-tight tracking-[-0.03em] text-[#0C2544] [font-family:var(--font-display)] sm:text-[42px]">
                 {part.partName}
               </h1>
-              <span className={`inline-flex min-h-9 items-center justify-center rounded-full px-4 py-1.5 text-[12px] font-semibold uppercase tracking-[0.08em] ${statusClasses[displayStatus]}`}>
+              <span className={`inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-full px-4 py-1.5 text-[12px] font-semibold uppercase tracking-[0.08em] ${statusClasses[displayStatus]}`}>
                 {displayStatus}
               </span>
             </div>
@@ -173,10 +175,21 @@ function PartDetailsPage() {
               Close
             </Link>
             <Link
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-5 text-[14px] font-semibold text-[#2E4C70] no-underline shadow-[0_10px_24px_rgba(18,43,74,0.05)] transition hover:bg-[#F7FBFE]"
+              to={`/purchase-invoices/create?vendorId=${part.vendorId}&partId=${part.partId}`}
+            >
+              <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+                inventory
+              </span>
+              Restock This Part
+            </Link>
+            <Link
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#15558D] px-5 text-[14px] font-semibold text-white no-underline shadow-[0_14px_30px_rgba(21,85,141,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0E487C]"
               to={`/parts/${part.partId}/edit`}
             >
-              <Icon name="edit" className="text-[18px]" />
+              <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+                edit
+              </span>
               Edit Part
             </Link>
           </div>
@@ -187,7 +200,9 @@ function PartDetailsPage() {
             <div className="rounded-[28px] border border-[#DCE5EF] bg-white p-6 shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
               <div className="mb-5 flex items-center gap-3 border-b border-[#E6EEF5] pb-4">
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#EEF5FC] text-[#15558D]">
-                  <Icon name="info" className="text-[20px]" />
+                  <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
+                    info
+                  </span>
                 </span>
                 <div>
                   <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-[#102B49] [font-family:var(--font-display)]">Part Details</h2>
@@ -223,7 +238,9 @@ function PartDetailsPage() {
             <div className="rounded-[28px] border border-[#DCE5EF] bg-white p-6 shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
               <div className="mb-5 flex items-center gap-3 border-b border-[#E6EEF5] pb-4">
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#EEF5FC] text-[#15558D]">
-                  <Icon name="payments" className="text-[20px]" />
+                  <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
+                    payments
+                  </span>
                 </span>
                 <div>
                   <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-[#102B49] [font-family:var(--font-display)]">Pricing & Stock</h2>
@@ -249,6 +266,27 @@ function PartDetailsPage() {
                   <p className="mt-2 text-[20px] font-semibold text-[#112B49]">{part.minimumStockLevel} units</p>
                 </div>
               </div>
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-4 text-[13px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
+                  to={`/part-transactions?partId=${part.partId}`}
+                >
+                  <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+                    history
+                  </span>
+                  View Stock History
+                </Link>
+                <Link
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-4 text-[13px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
+                  to={`/part-transactions/create?partId=${part.partId}`}
+                >
+                  <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+                    sync_alt
+                  </span>
+                  Adjust Stock
+                </Link>
+              </div>
             </div>
           </section>
 
@@ -267,12 +305,14 @@ function PartDetailsPage() {
               <div className="p-5">
                 {partImageUrl ? (
                   <div className="overflow-hidden rounded-3xl border border-[#D8E3EE] bg-[#F7FAFD]">
-                    <img alt={part.partName} className="aspect-[5/3] w-full object-cover" src={partImageUrl} />
+                    <img alt={part.partName} className="aspect-5/3 w-full object-cover" src={partImageUrl} />
                   </div>
                 ) : (
-                  <div className="flex aspect-[5/3] items-center justify-center rounded-3xl border border-[#D8E3EE] bg-[linear-gradient(135deg,#0F2949_0%,#22466D_42%,#A7BED5_100%)] text-white">
+                  <div className="flex aspect-5/3 items-center justify-center rounded-3xl border border-[#D8E3EE] bg-[linear-gradient(135deg,#0F2949_0%,#22466D_42%,#A7BED5_100%)] text-white">
                     <div className="text-center">
-                      <Icon name="box" className="mx-auto text-[34px]" />
+                      <span aria-hidden className="material-symbols-outlined mx-auto inline-flex select-none items-center justify-center leading-none text-[34px] not-italic">
+                        inventory_2
+                      </span>
                       <p className="mt-3 text-[14px] font-medium text-white/86">No image uploaded yet</p>
                     </div>
                   </div>

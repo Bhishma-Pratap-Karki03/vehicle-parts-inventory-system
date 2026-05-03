@@ -9,5 +9,14 @@ public interface ICloudinaryService
         string publicId,
         string folder);
 
+    Task<CloudinaryUploadResultDto> UploadPdfAsync(
+        FileUploadDto file,
+        string publicId,
+        string folder);
+
     Task DeleteImageAsync(string publicId);
+
+    Task DeletePdfAsync(string publicId);
+    
+    string GetPdfUrl(string publicId);
 }

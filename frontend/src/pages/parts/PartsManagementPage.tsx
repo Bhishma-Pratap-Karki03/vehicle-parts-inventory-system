@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import Icon from '../../components/icons/Icon'
 import DeletePartModal from '../../components/parts/DeletePartModal'
 import PartsInventoryPanel from '../../components/parts/PartsInventoryPanel'
 import PartsSidebar from '../../components/parts/PartsSidebar'
@@ -27,7 +26,7 @@ import type {
   VendorOption,
 } from '../../shared/interfaces/parts.interface'
 
-const backendUrl = (import.meta.env.VITE_BACKEND_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+import backendUrl from '../../config';
 
 function createEmptyPagination(pageNumber: number, pageSize: number): PagedResult<PartRecord> {
   return {
@@ -369,20 +368,27 @@ function PartsManagementPage() {
                 Parts Management
               </h1>
               <p className="mt-3 max-w-3xl text-[15px] leading-7 text-[#52677F] sm:text-[16px]">
-                Keep inventory readable at a glance, catch low-stock risk early, and move quickly on the parts that need attention.
+                Manage the parts of the inventory.
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#D6E1EC] bg-white px-4 py-2 text-[13px] font-medium text-[#4E6781] shadow-[0_10px_24px_rgba(18,43,74,0.04)]">
-                <span className={`h-2.5 w-2.5 rounded-full ${summaryError ? 'bg-[#C54141]' : 'bg-[#2AA364]'}`} />
-                {summaryError ? 'Backend summary needs attention' : 'Live inventory snapshot'}
-              </div>
+            <div className="grid w-full max-w-98 grid-cols-2 gap-3 xl:justify-items-end">
               <Link
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#15558D] px-5 text-[14px] font-semibold text-white no-underline shadow-[0_14px_30px_rgba(21,85,141,0.25)] transition hover:-translate-y-0.5 hover:bg-[#0B4376]"
+                className="inline-flex h-12 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#D7E2ED] bg-white px-4 text-[13px] font-semibold text-[#2E4C70] no-underline shadow-[0_10px_24px_rgba(18,43,74,0.05)] transition hover:bg-[#F7FBFE] sm:px-5 sm:text-[14px]"
+                to="/purchase-invoices"
+              >
+                <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
+                  receipt_long
+                </span>
+                Purchase Invoices
+              </Link>
+              <Link
+                className="inline-flex h-12 w-full min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#15558D] px-4 text-[13px] font-semibold text-white no-underline shadow-[0_14px_30px_rgba(21,85,141,0.25)] transition hover:-translate-y-0.5 hover:bg-[#0B4376] sm:px-5 sm:text-[14px]"
                 to="/parts/new"
               >
-                <Icon name="plus" className="text-[20px]" />
+                <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
+                  add
+                </span>
                 Add New Part
               </Link>
             </div>

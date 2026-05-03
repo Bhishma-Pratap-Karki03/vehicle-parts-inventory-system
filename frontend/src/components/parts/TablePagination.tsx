@@ -1,5 +1,3 @@
-import Icon from '../icons/Icon'
-
 type TablePaginationProps = {
   pageNumber: number
   pageSize: number
@@ -8,6 +6,9 @@ type TablePaginationProps = {
   hasPreviousPage: boolean
   hasNextPage: boolean
   isLoading?: boolean
+  emptyLabel?: string
+  itemLabelSingular?: string
+  itemLabelPlural?: string
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
 }
@@ -36,6 +37,9 @@ function TablePagination({
   hasPreviousPage,
   hasNextPage,
   isLoading = false,
+  emptyLabel = 'No parts found',
+  itemLabelSingular = 'part',
+  itemLabelPlural = 'parts',
   onPageChange,
   onPageSizeChange,
 }: TablePaginationProps) {
@@ -59,16 +63,20 @@ function TablePagination({
             <option value={20}>20</option>
             <option value={50}>50</option>
           </select>
-          <Icon
-            name="expandMore"
-            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[20px] text-[#607389]"
-          />
+          <span
+            aria-hidden
+            className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 inline-flex -translate-y-1/2 select-none items-center justify-center leading-none text-[20px] text-[#607389] not-italic"
+          >
+            expand_more
+          </span>
         </div>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:gap-5">
         <span>
-          {totalRecords === 0 ? 'No parts found' : `Showing ${rangeStart}-${rangeEnd} of ${totalRecords.toLocaleString()} parts`}
+          {totalRecords === 0
+            ? emptyLabel
+            : `Showing ${rangeStart}-${rangeEnd} of ${totalRecords.toLocaleString()} ${totalRecords === 1 ? itemLabelSingular : itemLabelPlural}`}
         </span>
         <div className="flex items-center gap-2">
           <button
@@ -78,7 +86,9 @@ function TablePagination({
             onClick={() => onPageChange(pageNumber - 1)}
             type="button"
           >
-            <Icon name="chevronLeft" className="text-[18px]" />
+            <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+              chevron_left
+            </span>
           </button>
 
           {pageNumbers.map((page) => (
@@ -104,7 +114,9 @@ function TablePagination({
             onClick={() => onPageChange(pageNumber + 1)}
             type="button"
           >
-            <Icon name="chevronRight" className="text-[18px]" />
+            <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+              chevron_right
+            </span>
           </button>
         </div>
       </div>

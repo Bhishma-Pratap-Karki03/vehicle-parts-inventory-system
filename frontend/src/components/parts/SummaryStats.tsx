@@ -1,4 +1,3 @@
-import Icon from '../icons/Icon'
 import type { SummaryCard } from '../../shared/interfaces/parts.interface'
 
 type SummaryStatsProps = {
@@ -32,6 +31,13 @@ const toneStyles = {
   },
 }
 
+const summaryCardMaterialIcons: Record<SummaryCard['icon'], string> = {
+  alert: 'error',
+  box: 'inventory_2',
+  checkCircle: 'check_circle',
+  warning: 'warning',
+}
+
 function SummaryStats({ cards }: SummaryStatsProps) {
   return (
     <section className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:mb-10 xl:grid-cols-4" aria-label="Inventory summary">
@@ -49,7 +55,9 @@ function SummaryStats({ cards }: SummaryStatsProps) {
                 <strong className={`block text-[30px] font-semibold leading-none ${tone.value} [font-family:var(--font-display)]`}>{card.value}</strong>
               </div>
               <span className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${tone.iconWrap}`}>
-                <Icon name={card.icon} className="text-[24px]" />
+                <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[24px] not-italic">
+                  {summaryCardMaterialIcons[card.icon]}
+                </span>
               </span>
             </div>
             <p className={`max-w-[22ch] text-[14px] leading-6 ${tone.detail}`}>{card.detail}</p>

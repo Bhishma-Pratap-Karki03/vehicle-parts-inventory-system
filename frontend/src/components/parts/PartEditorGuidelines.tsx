@@ -1,11 +1,10 @@
-import Icon from '../icons/Icon'
-import type { IconName } from '../icons/Icon'
-
 type PartEditorGuidelinesProps = {
   guidelines: string[]
 }
 
-const guidelineIcons: IconName[] = ['checkCircle', 'warning', 'image']
+type GuidelineIcon = 'check_circle' | 'image' | 'warning'
+
+const guidelineIcons: GuidelineIcon[] = ['check_circle', 'warning', 'image']
 
 function PartEditorGuidelines({ guidelines }: PartEditorGuidelinesProps) {
   return (
@@ -14,7 +13,7 @@ function PartEditorGuidelines({ guidelines }: PartEditorGuidelinesProps) {
 
       <div className="mt-5 space-y-4">
         {guidelines.map((guideline, index) => {
-          const iconName = guidelineIcons[index] ?? 'checkCircle'
+          const iconName = guidelineIcons[index] ?? 'check_circle'
 
           return (
             <div className="flex gap-3" key={guideline}>
@@ -23,7 +22,9 @@ function PartEditorGuidelines({ guidelines }: PartEditorGuidelinesProps) {
                   iconName === 'warning' ? 'bg-[#FFF3EB] text-[#9A3E0B]' : 'bg-[#EEF5FC] text-[#15558D]'
                 }`}
               >
-                <Icon name={iconName} className="text-[18px]" />
+                <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+                  {iconName}
+                </span>
               </span>
               <p className="text-[15px] leading-7 text-[#4A6280]">{guideline}</p>
             </div>

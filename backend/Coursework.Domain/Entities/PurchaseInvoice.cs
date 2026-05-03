@@ -28,7 +28,16 @@ public class PurchaseInvoice
 
     public PurchaseInvoiceStatus Status { get; set; } = PurchaseInvoiceStatus.Completed;
 
+    [MaxLength(255)]
+    public string? PdfPublicId { get; set; }
+
+    public bool IsEmailSent { get; set; }
+
+    public DateTime? EmailSentAt { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<PurchaseInvoiceItem> Items { get; set; } = new List<PurchaseInvoiceItem>();
+    
+    public ICollection<PartTransaction> PartTransactions { get; set; } = new List<PartTransaction>();
 }

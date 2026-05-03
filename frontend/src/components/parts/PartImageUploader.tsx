@@ -1,5 +1,4 @@
 import type { UseFormRegisterReturn } from 'react-hook-form'
-import Icon from '../icons/Icon'
 import PartArtwork from './PartArtwork'
 
 type PartImageUploaderProps = {
@@ -25,7 +24,9 @@ function PartImageUploader({
     <section className="rounded-[28px] border border-[#DCE5EF] bg-white p-5 shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
       <div className="flex items-center gap-3">
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#EEF5FC] text-[#15558D]">
-          <Icon name="image" className="text-[20px]" />
+          <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
+            image
+          </span>
         </span>
         <div>
           <h2 className="text-[23px] font-semibold tracking-[-0.02em] text-[#102B49] [font-family:var(--font-display)]">Part Image</h2>
@@ -34,7 +35,7 @@ function PartImageUploader({
       </div>
 
       <div className="mt-5">
-        <PartArtwork category={category || 'Uploader'} className="aspect-[5/3]" resolvedImageUrl={resolvedImageUrl} title={title || 'Primary image'} />
+        <PartArtwork category={category || 'Uploader'} className="aspect-5/3" resolvedImageUrl={resolvedImageUrl} title={title || 'Primary image'} />
       </div>
 
       <div className="relative mt-5">
@@ -43,7 +44,9 @@ function PartImageUploader({
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <span className="inline-flex w-fit items-center gap-2 rounded-full bg-[#15558D] px-4 py-2 text-[13px] font-semibold text-white shadow-[0_12px_24px_rgba(21,85,141,0.2)]">
-              <Icon name="image" className="text-[18px]" />
+              <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+                image
+              </span>
               Choose Image
             </span>
           </div>
@@ -61,7 +64,9 @@ function PartImageUploader({
             onClick={onDeleteCurrentImage}
             type="button"
           >
-            <Icon name="delete" className="text-[16px]" />
+            <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[16px] not-italic">
+              delete
+            </span>
             {isDeletingImage ? 'Deleting...' : 'Delete'}
           </button>
         ) : null}

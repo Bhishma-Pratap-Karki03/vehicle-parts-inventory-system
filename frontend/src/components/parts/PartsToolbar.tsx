@@ -1,4 +1,3 @@
-import Icon from '../icons/Icon'
 import type { CategoryOption, PartStatusFilter, VendorOption } from '../../shared/interfaces/parts.interface'
 
 type PartsToolbarProps = {
@@ -47,10 +46,12 @@ function PartsToolbar({
           </div>
 
           <label className="relative block">
-            <Icon
-              name="search"
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[22px] text-[#7A8798]"
-            />
+            <span
+              aria-hidden
+              className="material-symbols-outlined pointer-events-none absolute left-4 top-1/2 inline-flex -translate-y-1/2 select-none items-center justify-center leading-none text-[22px] text-[#7A8798] not-italic"
+            >
+              search
+            </span>
             <input
               className="h-13 w-full rounded-[20px] border border-[#DDE6EF] bg-[#F7FAFC] pl-12 pr-4 text-[15px] text-[#1F3551] outline-none transition placeholder:text-[#7A8798] focus:border-[#9CB9D8] focus:bg-white focus:ring-4 focus:ring-[#15558D]/10"
               onChange={(event) => onSearchTermChange(event.target.value)}
@@ -77,7 +78,9 @@ function PartsToolbar({
             onClick={onResetFilters}
             type="button"
           >
-            <Icon name="filterOff" className="text-[20px]" />
+            <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
+              filter_alt_off
+            </span>
             Clear filters
           </button>
         </div>
@@ -85,7 +88,7 @@ function PartsToolbar({
 
       <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_220px]">
         <label className="block">
-          <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6A7A8A]">Vendor ID</span>
+          <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6A7A8A]">Vendor Name</span>
           <div className="relative">
             <select
               aria-label="Vendor filter"
@@ -100,10 +103,12 @@ function PartsToolbar({
                 </option>
               ))}
             </select>
-            <Icon
-              name="expandMore"
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[22px] text-[#607389]"
-            />
+            <span
+              aria-hidden
+              className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 inline-flex -translate-y-1/2 select-none items-center justify-center leading-none text-[22px] text-[#607389] not-italic"
+            >
+              expand_more
+            </span>
           </div>
         </label>
 
@@ -123,10 +128,12 @@ function PartsToolbar({
                 </option>
               ))}
             </select>
-            <Icon
-              name="expandMore"
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[22px] text-[#607389]"
-            />
+            <span
+              aria-hidden
+              className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 inline-flex -translate-y-1/2 select-none items-center justify-center leading-none text-[22px] text-[#607389] not-italic"
+            >
+              expand_more
+            </span>
           </div>
         </label>
 
@@ -145,10 +152,12 @@ function PartsToolbar({
                 </option>
               ))}
             </select>
-            <Icon
-              name="expandMore"
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[22px] text-[#607389]"
-            />
+            <span
+              aria-hidden
+              className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 inline-flex -translate-y-1/2 select-none items-center justify-center leading-none text-[22px] text-[#607389] not-italic"
+            >
+              expand_more
+            </span>
           </div>
         </label>
       </div>

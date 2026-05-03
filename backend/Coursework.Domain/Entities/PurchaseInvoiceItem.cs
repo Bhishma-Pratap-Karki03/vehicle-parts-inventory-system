@@ -25,4 +25,6 @@ public class PurchaseInvoiceItem
     [Range(0.01, double.MaxValue)]
     [Column(TypeName = "decimal(18,2)")]
     public decimal LineTotal { get; set; }
+
+    public ICollection<PartTransaction> PartTransactions { get; set; } = new List<PartTransaction>();
 }

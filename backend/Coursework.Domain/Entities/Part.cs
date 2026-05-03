@@ -56,6 +56,8 @@ public class Part
     public DateTime? UpdatedAt { get; set; }
 
     public ICollection<SalesInvoiceItem> SalesInvoiceItems { get; set; } = new List<SalesInvoiceItem>();
-
+    
     public ICollection<PurchaseInvoiceItem> PurchaseInvoiceItems { get; set; } = new List<PurchaseInvoiceItem>();
+
+    public ICollection<PartTransaction> PartTransactions { get; set; } = new List<PartTransaction>();
 }

@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import Icon from '../icons/Icon'
 import type { LowStockAlert } from '../../shared/interfaces/parts.interface'
 
 type PartsSidebarProps = {
@@ -9,17 +8,19 @@ type PartsSidebarProps = {
   onReviewAllAlerts: () => void
 }
 
-function PartsSidebar({ alerts, guidelines, isLoading = false, onReviewAllAlerts }: PartsSidebarProps) {
+function PartsSidebar({ alerts, isLoading = false, onReviewAllAlerts }: PartsSidebarProps) {
   return (
     <aside className="grid gap-6 lg:grid-cols-2 xl:block xl:space-y-6" aria-label="Parts insights">
-      <section className="rounded-[24px] border border-[#DCE5EF] bg-white p-5 shadow-[0_18px_36px_rgba(18,43,74,0.07)]">
+      <section className="rounded-3xl border border-[#DCE5EF] bg-white p-5 shadow-[0_18px_36px_rgba(18,43,74,0.07)]">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6B7D8F]">Watchlist</p>
             <h2 className="text-[19px] font-semibold text-[#102B49] [font-family:var(--font-display)]">Low stock alerts</h2>
           </div>
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FFF1E8] text-[#9A3E0B]">
-            <Icon name="bell" className="text-[22px]" />
+            <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[22px] not-italic">
+              notifications_active
+            </span>
           </span>
         </div>
 
@@ -58,29 +59,6 @@ function PartsSidebar({ alerts, guidelines, isLoading = false, onReviewAllAlerts
         >
           Review all low-stock items
         </button>
-      </section>
-
-      <section className="rounded-[24px] border border-[#DCE5EF] bg-white p-5 shadow-[0_18px_36px_rgba(18,43,74,0.07)]">
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6B7D8F]">Playbook</p>
-            <h2 className="text-[19px] font-semibold text-[#102B49] [font-family:var(--font-display)]">Inventory guidelines</h2>
-          </div>
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#EEF4FA] text-[#35506B]">
-            <Icon name="book" className="text-[22px]" />
-          </span>
-        </div>
-
-        <ul className="space-y-4">
-          {guidelines.map((guideline) => (
-            <li className="flex items-start gap-3 text-[14px] leading-6 text-[#52677F]" key={guideline}>
-              <span className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ECFAF1] text-[#1D8F56]">
-                <Icon name="check" className="text-[16px]" />
-              </span>
-              <span>{guideline}</span>
-            </li>
-          ))}
-        </ul>
       </section>
     </aside>
   )

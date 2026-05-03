@@ -2,9 +2,9 @@ export type BackendPartStatus = 1 | 2 | 3
 
 export type PartBaseStatus = 'Available' | 'Unavailable' | 'Discontinued'
 
-export type PartDisplayStatus = PartBaseStatus | 'Low Stock'
+export type PartDisplayStatus = PartBaseStatus | 'Deleted' | 'Low Stock'
 
-export type PartStatusFilter = 'all' | PartDisplayStatus
+export type PartStatusFilter = 'all' | 'Available' | 'Low Stock' | 'Unavailable' | 'Discontinued'
 
 export type PartEditorMode = 'create' | 'edit'
 

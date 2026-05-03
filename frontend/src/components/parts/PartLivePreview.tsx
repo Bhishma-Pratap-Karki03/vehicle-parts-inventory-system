@@ -16,6 +16,7 @@ type PartLivePreviewProps = {
 
 const statusLabelClasses: Record<PartDisplayStatus, string> = {
   Available: 'bg-[#EEFCF3] text-[#16784A]',
+  Deleted: 'bg-[#F4F7FA] text-[#5B6D80]',
   'Low Stock': 'bg-[#FFF3EB] text-[#9A3E0B]',
   Discontinued: 'bg-[#FFF1F1] text-[#C54141]',
   Unavailable: 'bg-[#F4F7FA] text-[#516579]',
@@ -62,7 +63,7 @@ function PartLivePreview({
           <p className="mt-1 text-[14px] text-[#6F849B]">{vendor || 'Choose a supplier to complete the preview card.'}</p>
         </div>
 
-        <div className="grid gap-4 rounded-[24px] border border-[#E3EAF2] bg-[#F8FBFE] p-4 sm:grid-cols-2">
+        <div className="grid gap-4 rounded-3xl border border-[#E3EAF2] bg-[#F8FBFE] p-4 sm:grid-cols-2">
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#74879A]">Retail Price</p>
             <p className="mt-2 text-[28px] font-semibold tracking-[-0.03em] text-[#0F4275] [font-family:var(--font-display)]">

@@ -12,7 +12,7 @@ import {
 import NotFoundPage from '../../pages/NotFoundPage'
 import type { CategoryOption, PartApiModel, PartEditorFormValues, PartRecord, UploadPartImageResult, VendorOption } from '../../shared/interfaces/parts.interface'
 
-const backendUrl = (import.meta.env.VITE_BACKEND_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+import backendUrl from '../../config';
 
 function PartEditorPage() {
   const navigate = useNavigate()

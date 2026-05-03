@@ -56,7 +56,11 @@ export function mapPartFromApi(part: PartApiModel): PartRecord {
   }
 }
 
-export function getPartDisplayStatus(part: Pick<PartRecord, 'isLowStock' | 'status'>): PartDisplayStatus {
+export function getPartDisplayStatus(part: Pick<PartRecord, 'isDeleted' | 'isLowStock' | 'status'>): PartDisplayStatus {
+  if (part.isDeleted) {
+    return 'Deleted'
+  }
+
   if (part.isLowStock && part.status === 'Available') {
     return 'Low Stock'
   }
@@ -108,14 +112,14 @@ export function buildSummaryCards(summary: InventorySummaryData): SummaryCard[] 
     {
       label: 'Total Parts',
       value: summary.totalParts.toLocaleString(),
-      detail: 'Active catalog records currently available in the backend.',
+      detail: 'Active total parts.',
       icon: 'box',
       tone: 'primary',
     },
     {
       label: 'Available',
       value: summary.availableParts.toLocaleString(),
-      detail: 'Parts currently marked available in the backend catalog.',
+      detail: 'Parts currently available.',
       icon: 'checkCircle',
       tone: 'success',
     },
@@ -129,7 +133,7 @@ export function buildSummaryCards(summary: InventorySummaryData): SummaryCard[] 
     {
       label: 'Unavailable',
       value: summary.unavailableParts.toLocaleString(),
-      detail: 'Parts marked unavailable or discontinued in the backend catalog.',
+      detail: 'Parts currently unavailable.',
       icon: 'alert',
       tone: 'danger',
     },

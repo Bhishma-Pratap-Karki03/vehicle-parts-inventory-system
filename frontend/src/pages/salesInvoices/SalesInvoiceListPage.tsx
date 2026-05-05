@@ -1,31 +1,33 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import PurchaseInvoicesTable from '../../components/purchaseInvoices/PurchaseInvoicesTable'
-import PurchaseInvoiceToolbar from '../../components/purchaseInvoices/PurchaseInvoiceToolbar'
-import SendPurchaseInvoiceEmailModal from '../../components/purchaseInvoices/SendPurchaseInvoiceEmailModal'
 import TablePagination from '../../components/parts/TablePagination'
+import SalesInvoiceToolbar from '../../components/salesInvoices/SalesInvoiceToolbar'
+import SalesInvoicesTable from '../../components/salesInvoices/SalesInvoicesTable'
+import SendSalesInvoiceEmailModal from '../../components/salesInvoices/SendSalesInvoiceEmailModal'
 import {
-  buildPurchaseInvoiceQueryString,
-  createDefaultPurchaseInvoiceFilters,
+  buildSalesInvoiceQueryString,
+  buildSendSalesInvoiceEmailPayload,
+  createDefaultSalesInvoiceFilters,
   getApiErrorMessage,
+  getPaymentFilterFromQueryValue,
   getRequestErrorMessage,
-  mapPurchaseInvoiceDetailFromApi,
-  mapPurchaseInvoiceListFromApi,
+  mapSalesInvoiceDetailFromApi,
+  mapSalesInvoiceListFromApi,
   readApiResponse,
-} from '../../components/purchaseInvoices/purchaseInvoices.helpers'
+} from '../../components/salesInvoices/salesInvoices.helpers'
+import backendUrl from '../../config'
 import type { PagedResult } from '../../shared/interfaces/api.interface'
 import type {
-  PurchaseInvoiceDetailApiModel,
-  PurchaseInvoiceDetailRecord,
-  PurchaseInvoiceFiltersState,
-  PurchaseInvoiceListItemApiModel,
-  PurchaseInvoiceListItemRecord,
-} from '../../shared/interfaces/purchaseInvoices.interface'
+  SalesInvoiceDetailApiModel,
+  SalesInvoiceDetailRecord,
+  SalesInvoiceEmailFormValues,
+  SalesInvoiceFiltersState,
+  SalesInvoiceListItemApiModel,
+  SalesInvoiceListItemRecord,
+} from '../../shared/interfaces/salesInvoices.interface'
 
-import backendUrl from '../../config';
-
-function createEmptyPagination(pageNumber: number, pageSize: number): PagedResult<PurchaseInvoiceListItemRecord> {
+function createEmptyPagination(pageNumber: number, pageSize: number): PagedResult<SalesInvoiceListItemRecord> {
   return {
     items: [],
     pageNumber,
@@ -53,24 +55,25 @@ function useDebouncedValue<T>(value: T, delay = 350) {
   return debouncedValue
 }
 
-function PurchaseInvoiceListPage() {
-  const [filters, setFilters] = useState<PurchaseInvoiceFiltersState>(() => createDefaultPurchaseInvoiceFilters())
-  const [invoicePage, setInvoicePage] = useState<PagedResult<PurchaseInvoiceListItemRecord>>(() => createEmptyPagination(1, 10))
+function SalesInvoiceListPage() {
+  const [filters, setFilters] = useState<SalesInvoiceFiltersState>(() => createDefaultSalesInvoiceFilters())
+  const [invoicePage, setInvoicePage] = useState<PagedResult<SalesInvoiceListItemRecord>>(() => createEmptyPagination(1, 10))
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<null | string>(null)
   const [reloadToken, setReloadToken] = useState(0)
   const [sendingInvoiceId, setSendingInvoiceId] = useState<null | number>(null)
   const [preparingInvoiceId, setPreparingInvoiceId] = useState<null | number>(null)
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<null | number>(null)
-  const [invoicePendingEmail, setInvoicePendingEmail] = useState<null | PurchaseInvoiceDetailRecord>(null)
+  const [invoicePendingEmail, setInvoicePendingEmail] = useState<null | SalesInvoiceDetailRecord>(null)
 
   const debouncedSearchTerm = useDebouncedValue(filters.searchTerm, 350)
 
-  const queryString = useMemo(() => buildPurchaseInvoiceQueryString({
+  const queryString = useMemo(() => buildSalesInvoiceQueryString({
     pageNumber: filters.pageNumber,
     pageSize: filters.pageSize,
+    paymentStatus: filters.paymentStatus,
     searchTerm: debouncedSearchTerm,
-  }), [debouncedSearchTerm, filters.pageNumber, filters.pageSize])
+  }), [debouncedSearchTerm, filters.pageNumber, filters.pageSize, filters.paymentStatus])
 
   useEffect(() => {
     let isCancelled = false
@@ -80,8 +83,8 @@ function PurchaseInvoiceListPage() {
       setErrorMessage(null)
 
       try {
-        const response = await fetch(`${backendUrl}/api/purchase-invoices${queryString}`)
-        const result = await readApiResponse<PagedResult<PurchaseInvoiceListItemApiModel>>(response)
+        const response = await fetch(`${backendUrl}/api/sales-invoices${queryString}`)
+        const result = await readApiResponse<PagedResult<SalesInvoiceListItemApiModel>>(response)
 
         if (isCancelled) {
           return
@@ -95,7 +98,7 @@ function PurchaseInvoiceListPage() {
 
         setInvoicePage({
           ...result.data,
-          items: result.data.items.map(mapPurchaseInvoiceListFromApi),
+          items: result.data.items.map(mapSalesInvoiceListFromApi),
         })
       } catch (error) {
         if (isCancelled) {
@@ -103,7 +106,7 @@ function PurchaseInvoiceListPage() {
         }
 
         setInvoicePage(createEmptyPagination(filters.pageNumber, filters.pageSize))
-        setErrorMessage(getRequestErrorMessage(error, 'Unable to load purchase invoices right now.'))
+        setErrorMessage(getRequestErrorMessage(error, 'Unable to load sales invoices right now.'))
       } finally {
         if (!isCancelled) {
           setIsLoading(false)
@@ -118,36 +121,40 @@ function PurchaseInvoiceListPage() {
     }
   }, [filters.pageNumber, filters.pageSize, queryString, reloadToken])
 
-  async function handleRequestSendEmail(invoice: PurchaseInvoiceListItemRecord) {
-    setPreparingInvoiceId(invoice.purchaseInvoiceId)
+  async function handleRequestSendEmail(invoice: SalesInvoiceListItemRecord) {
+    setPreparingInvoiceId(invoice.salesInvoiceId)
 
     try {
-      const response = await fetch(`${backendUrl}/api/purchase-invoices/${invoice.purchaseInvoiceId}`)
-      const result = await readApiResponse<PurchaseInvoiceDetailApiModel>(response)
+      const response = await fetch(`${backendUrl}/api/sales-invoices/${invoice.salesInvoiceId}`)
+      const result = await readApiResponse<SalesInvoiceDetailApiModel>(response)
 
       if (!result.success || !result.data) {
         toast.error(getApiErrorMessage(result.message, result.errors))
         return
       }
 
-      setInvoicePendingEmail(mapPurchaseInvoiceDetailFromApi(result.data))
+      setInvoicePendingEmail(mapSalesInvoiceDetailFromApi(result.data))
     } catch (error) {
-      toast.error(getRequestErrorMessage(error, 'Unable to load invoice details for email confirmation.'))
+      toast.error(getRequestErrorMessage(error, 'Unable to load invoice details for email preparation.'))
     } finally {
       setPreparingInvoiceId(null)
     }
   }
 
-  async function handleConfirmSendEmail() {
+  async function handleConfirmSendEmail(values: SalesInvoiceEmailFormValues) {
     if (!invoicePendingEmail) {
       return
     }
 
-    setSendingInvoiceId(invoicePendingEmail.purchaseInvoiceId)
+    setSendingInvoiceId(invoicePendingEmail.salesInvoiceId)
 
     try {
-      const response = await fetch(`${backendUrl}/api/purchase-invoices/${invoicePendingEmail.purchaseInvoiceId}/send-email`, {
+      const response = await fetch(`${backendUrl}/api/sales-invoices/${invoicePendingEmail.salesInvoiceId}/email`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(buildSendSalesInvoiceEmailPayload(values)),
       })
 
       const result = await readApiResponse<string>(response)
@@ -157,21 +164,21 @@ function PurchaseInvoiceListPage() {
         return
       }
 
-      toast.success(result.message || 'Purchase invoice email sent successfully.')
+      toast.success(result.message || 'Sales invoice email sent successfully.')
       setInvoicePendingEmail(null)
       setReloadToken((current) => current + 1)
     } catch (error) {
-      toast.error(getRequestErrorMessage(error, 'Unable to send this purchase invoice email.'))
+      toast.error(getRequestErrorMessage(error, 'Unable to send this sales invoice email.'))
     } finally {
       setSendingInvoiceId(null)
     }
   }
 
-  async function handleDownloadPdf(invoice: PurchaseInvoiceListItemRecord) {
-    setDownloadingInvoiceId(invoice.purchaseInvoiceId)
+  async function handleDownloadPdf(invoice: SalesInvoiceListItemRecord) {
+    setDownloadingInvoiceId(invoice.salesInvoiceId)
 
     try {
-      const response = await fetch(`${backendUrl}/api/purchase-invoices/${invoice.purchaseInvoiceId}/download-pdf`)
+      const response = await fetch(`${backendUrl}/api/sales-invoices/${invoice.salesInvoiceId}/download-pdf`)
 
       if (!response.ok) {
         const result = await readApiResponse<never>(response)
@@ -183,13 +190,13 @@ function PurchaseInvoiceListPage() {
       const downloadLink = document.createElement('a')
 
       downloadLink.href = objectUrl
-      downloadLink.download = `${invoice.invoiceNumber || `purchase-invoice-${invoice.purchaseInvoiceId}`}.pdf`
+      downloadLink.download = `${invoice.invoiceNumber || `sales-invoice-${invoice.salesInvoiceId}`}.pdf`
       document.body.appendChild(downloadLink)
       downloadLink.click()
       downloadLink.remove()
       window.URL.revokeObjectURL(objectUrl)
     } catch (error) {
-      toast.error(getRequestErrorMessage(error, 'Unable to download this purchase invoice PDF.'))
+      toast.error(getRequestErrorMessage(error, 'Unable to download this sales invoice PDF.'))
     } finally {
       setDownloadingInvoiceId(null)
     }
@@ -201,16 +208,16 @@ function PurchaseInvoiceListPage() {
         <section className="mb-8 rounded-4xl border border-[#DCE5EF] bg-[linear-gradient(135deg,#FFFFFF_0%,#F6FAFD_58%,#EEF5FC_100%)] px-5 py-6 shadow-[0_28px_60px_rgba(18,43,74,0.08)] sm:px-7 sm:py-7">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-4xl">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#6D8197]">Inventory transactions</p>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#6D8197]">Customer billing</p>
               <h1 className="text-[28px] font-semibold leading-tight text-[#0C2544] [font-family:var(--font-display)] sm:text-[38px]">
-                Purchase Invoices
+                Sales Invoices
               </h1>
               <p className="mt-3 max-w-3xl text-[15px] leading-7 text-[#52677F] sm:text-[16px]">
-                Track restock history, inspect invoice details, and manually send vendor copies whenever you need them.
+                Track completed sales, review customer billing details, and access invoice PDFs whenever you need them.
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap sm:justify-end">
               <Link
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-5 text-[14px] font-semibold text-[#2E4C70] no-underline shadow-[0_10px_24px_rgba(18,43,74,0.05)] transition hover:bg-[#F7FBFE]"
                 to="/parts"
@@ -222,97 +229,100 @@ function PurchaseInvoiceListPage() {
               </Link>
               <Link
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-5 text-[14px] font-semibold text-[#2E4C70] no-underline shadow-[0_10px_24px_rgba(18,43,74,0.05)] transition hover:bg-[#F7FBFE]"
-                to="/sales-invoices"
+                to="/purchase-invoices"
               >
                 <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
-                  request_quote
+                  receipt_long
                 </span>
-                Sales Invoices
+                Purchase Invoices
               </Link>
               <Link
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#15558D] px-5 text-[14px] font-semibold text-white no-underline shadow-[0_14px_30px_rgba(21,85,141,0.25)] transition hover:-translate-y-0.5 hover:bg-[#0B4376]"
-                to="/purchase-invoices/create"
+                to="/sales-invoices/create"
               >
                 <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
                   add
                 </span>
-                Create Purchase Invoice
+                Create Sales Invoice
               </Link>
             </div>
           </div>
         </section>
 
-        <div>
-          <section className="overflow-hidden rounded-[28px] border border-[#DCE5EF] bg-white shadow-[0_22px_48px_rgba(18,43,74,0.08)]">
-            <PurchaseInvoiceToolbar
-              isLoading={isLoading}
-              onResetFilters={() => setFilters(createDefaultPurchaseInvoiceFilters())}
-              onSearchTermChange={(value) =>
-                setFilters((current) => ({
-                  ...current,
-                  pageNumber: 1,
-                  searchTerm: value,
-                }))
-              }
-              searchTerm={filters.searchTerm}
-            />
-            <PurchaseInvoicesTable
-              downloadingInvoiceId={downloadingInvoiceId}
-              errorMessage={errorMessage}
-              invoices={invoicePage.items}
-              isLoading={isLoading}
-              onDownloadPdf={handleDownloadPdf}
-              onRequestSendEmail={handleRequestSendEmail}
-              preparingInvoiceId={preparingInvoiceId}
-              sendingInvoiceId={sendingInvoiceId}
-            />
-            <TablePagination
-              emptyLabel="No purchase invoices found"
-              hasNextPage={invoicePage.hasNextPage}
-              hasPreviousPage={invoicePage.hasPreviousPage}
-              isLoading={isLoading}
-              itemLabelPlural="purchase invoices"
-              itemLabelSingular="purchase invoice"
-              onPageChange={(page) =>
-                setFilters((current) => ({
-                  ...current,
-                  pageNumber: page,
-                }))
-              }
-              onPageSizeChange={(pageSize) =>
-                setFilters((current) => ({
-                  ...current,
-                  pageNumber: 1,
-                  pageSize,
-                }))
-              }
-              pageNumber={invoicePage.pageNumber}
-              pageSize={invoicePage.pageSize}
-              totalPages={invoicePage.totalPages}
-              totalRecords={invoicePage.totalRecords}
-            />
-          </section>
-        </div>
+        <section className="overflow-hidden rounded-[28px] border border-[#DCE5EF] bg-white shadow-[0_22px_48px_rgba(18,43,74,0.08)]">
+          <SalesInvoiceToolbar
+            onPaymentStatusChange={(value) =>
+              setFilters((current) => ({
+                ...current,
+                pageNumber: 1,
+                paymentStatus: getPaymentFilterFromQueryValue(value),
+              }))
+            }
+            onResetFilters={() => setFilters(createDefaultSalesInvoiceFilters())}
+            onSearchTermChange={(value) =>
+              setFilters((current) => ({
+                ...current,
+                pageNumber: 1,
+                searchTerm: value,
+              }))
+            }
+            paymentStatus={filters.paymentStatus}
+            searchTerm={filters.searchTerm}
+          />
+          <SalesInvoicesTable
+            downloadingInvoiceId={downloadingInvoiceId}
+            errorMessage={errorMessage}
+            invoices={invoicePage.items}
+            isLoading={isLoading}
+            onDownloadPdf={handleDownloadPdf}
+            onRequestSendEmail={handleRequestSendEmail}
+            preparingInvoiceId={preparingInvoiceId}
+            sendingInvoiceId={sendingInvoiceId}
+          />
+          <TablePagination
+            emptyLabel="No sales invoices found"
+            hasNextPage={invoicePage.hasNextPage}
+            hasPreviousPage={invoicePage.hasPreviousPage}
+            isLoading={isLoading}
+            itemLabelPlural="sales invoices"
+            itemLabelSingular="sales invoice"
+            onPageChange={(page) =>
+              setFilters((current) => ({
+                ...current,
+                pageNumber: page,
+              }))
+            }
+            onPageSizeChange={(pageSize) =>
+              setFilters((current) => ({
+                ...current,
+                pageNumber: 1,
+                pageSize,
+              }))
+            }
+            pageNumber={invoicePage.pageNumber}
+            pageSize={invoicePage.pageSize}
+            totalPages={invoicePage.totalPages}
+            totalRecords={invoicePage.totalRecords}
+          />
+        </section>
       </div>
 
       {invoicePendingEmail ? (
-        <SendPurchaseInvoiceEmailModal
-          emailSentAt={invoicePendingEmail.emailSentAt}
+        <SendSalesInvoiceEmailModal
+          customerEmail={invoicePendingEmail.customerEmail}
+          customerName={invoicePendingEmail.customerName}
           invoiceNumber={invoicePendingEmail.invoiceNumber}
-          isBusy={sendingInvoiceId === invoicePendingEmail.purchaseInvoiceId}
-          isEmailSent={invoicePendingEmail.isEmailSent}
+          isBusy={sendingInvoiceId === invoicePendingEmail.salesInvoiceId}
           onCancel={() => {
             if (!sendingInvoiceId) {
               setInvoicePendingEmail(null)
             }
           }}
           onConfirm={handleConfirmSendEmail}
-          vendorEmail={invoicePendingEmail.vendorEmail || 'the vendor on file'}
-          vendorName={invoicePendingEmail.vendorName}
         />
       ) : null}
     </main>
   )
 }
 
-export default PurchaseInvoiceListPage
+export default SalesInvoiceListPage

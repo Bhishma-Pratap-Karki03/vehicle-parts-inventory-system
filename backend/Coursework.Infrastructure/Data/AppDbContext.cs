@@ -39,6 +39,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         ConfigureIndexes(modelBuilder);
         ConfigureRelationships(modelBuilder);
         ConfigureMoneyPrecision(modelBuilder);
+        ConfigureStringLengths(modelBuilder);
         ConfigureEnumConversions(modelBuilder);
     }
 
@@ -110,6 +111,27 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<SalesInvoice>()
             .HasIndex(s => s.InvoiceNumber)
             .IsUnique();
+        
+        modelBuilder.Entity<SalesInvoice>()
+            .HasIndex(s => s.CustomerId);
+
+        modelBuilder.Entity<SalesInvoice>()
+            .HasIndex(s => s.StaffId);
+
+        modelBuilder.Entity<SalesInvoice>()
+            .HasIndex(s => s.VehicleId);
+
+        modelBuilder.Entity<SalesInvoice>()
+            .HasIndex(s => s.InvoiceDate);
+
+        modelBuilder.Entity<SalesInvoice>()
+            .HasIndex(s => s.PaymentStatus);
+
+        modelBuilder.Entity<PartTransaction>()
+            .HasIndex(t => t.SalesInvoiceId);
+
+        modelBuilder.Entity<PartTransaction>()
+            .HasIndex(t => t.SalesInvoiceItemId);
 
         modelBuilder.Entity<Vendor>()
             .HasIndex(v => v.Email);
@@ -175,6 +197,18 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(t => t.CreatedBy)
             .WithMany(u => u.CreatedPartTransactions)
             .HasForeignKey(t => t.CreatedById)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<PartTransaction>()
+            .HasOne(t => t.SalesInvoice)
+            .WithMany(s => s.PartTransactions)
+            .HasForeignKey(t => t.SalesInvoiceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PartTransaction>()
+            .HasOne(t => t.SalesInvoiceItem)
+            .WithMany(i => i.PartTransactions)
+            .HasForeignKey(t => t.SalesInvoiceItemId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<SalesInvoice>()
@@ -331,6 +365,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<PartTransaction>()
             .Property(t => t.CostPricePerUnit)
             .HasPrecision(18, 2);
+    }
+    
+    private static void ConfigureStringLengths(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SalesInvoice>()
+            .Property(s => s.InvoicePdfPublicId)
+            .HasMaxLength(500);
     }
 
     private static void ConfigureEnumConversions(ModelBuilder modelBuilder)

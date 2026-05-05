@@ -37,14 +37,20 @@ public static class DependencyInjection
         services.AddScoped<IVendorRepository, VendorRepository>();
         services.AddScoped<IPurchaseInvoiceRepository, PurchaseInvoiceRepository>();
         services.AddScoped<IPartTransactionRepository, PartTransactionRepository>();
+        services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
+        services.AddScoped<IVehicleRepository, VehicleRepository>();
         
         services.AddScoped<IPartService, PartService>();
         services.AddScoped<IPurchaseInvoiceService, PurchaseInvoiceService>();
         services.AddScoped<IPartTransactionService, PartTransactionService>();
+        services.AddScoped<ISalesInvoiceService, SalesInvoiceService>();
         
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IInvoicePdfService, InvoicePdfService>();
+        services.AddScoped<ISalesInvoicePdfService, SalesInvoicePdfService>();
         services.AddScoped<IEmailService, SendGridEmailService>();
+        
+        
         
 
         return services;

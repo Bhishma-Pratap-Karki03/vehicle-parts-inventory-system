@@ -9,6 +9,9 @@ import StockAdjustmentPage from './pages/partTransactions/StockAdjustmentPage'
 import PurchaseInvoiceCreatePage from './pages/purchaseInvoices/PurchaseInvoiceCreatePage'
 import PurchaseInvoiceDetailsPage from './pages/purchaseInvoices/PurchaseInvoiceDetailsPage'
 import PurchaseInvoiceListPage from './pages/purchaseInvoices/PurchaseInvoiceListPage'
+import SalesInvoiceCreatePage from './pages/salesInvoices/SalesInvoiceCreatePage'
+import SalesInvoiceDetailsPage from './pages/salesInvoices/SalesInvoiceDetailsPage'
+import SalesInvoiceListPage from './pages/salesInvoices/SalesInvoiceListPage'
 
 function App() {
   return (
@@ -24,6 +27,9 @@ function App() {
       <Route element={<PurchaseInvoiceListPage />} path="/purchase-invoices" />
       <Route element={<PurchaseInvoiceCreatePage />} path="/purchase-invoices/create" />
       <Route element={<PurchaseInvoiceDetailsPage />} path="/purchase-invoices/:purchaseInvoiceId" />
+      <Route element={<SalesInvoiceListPage />} path="/sales-invoices" />
+      <Route element={<SalesInvoiceCreatePage />} path="/sales-invoices/create" />
+      <Route element={<SalesInvoiceDetailsPage />} path="/sales-invoices/:salesInvoiceId" />
       <Route element={<NotFoundPage />} path="*" />
     </Routes>
   )

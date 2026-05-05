@@ -30,6 +30,14 @@ public class PartTransaction
     public int? PurchaseInvoiceItemId { get; set; }
 
     public PurchaseInvoiceItem? PurchaseInvoiceItem { get; set; }
+    
+    public int? SalesInvoiceId { get; set; }
+
+    public SalesInvoice? SalesInvoice { get; set; }
+
+    public int? SalesInvoiceItemId { get; set; }
+
+    public SalesInvoiceItem? SalesInvoiceItem { get; set; }
 
     [MaxLength(500)]
     public string? Remarks { get; set; }

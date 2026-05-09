@@ -6,28 +6,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coursework.Infrastructure.Repositories;
 
-public class PurchaseInvoiceRepository 
-    : RepositoryBase<PurchaseInvoice>, IPurchaseInvoiceRepository
+public class PurchaseInvoiceRepository(ApplicationDbContext context)
+    : RepositoryBase<PurchaseInvoice>(context), IPurchaseInvoiceRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public PurchaseInvoiceRepository(ApplicationDbContext context)
-        : base(context)
-    {
-        _context = context;
-    }
-
     
     public async Task<Vendor?> GetVendorByIdAsync(int vendorId)
     {
-        return await _context.Vendors
+        return await Context.Vendors
             .AsNoTracking()
             .FirstOrDefaultAsync(v => v.VendorId == vendorId);
     }
 
     public async Task<List<Part>> GetPartsByIdsAsync(List<int> partIds)
     {
-        return await _context.Parts
+        return await Context.Parts
             .Where(p => partIds.Contains(p.PartId))
             .ToListAsync();
     }
@@ -37,8 +29,8 @@ public class PurchaseInvoiceRepository
         bool trackChanges = false)
     {
         var query = trackChanges
-            ? _context.PurchaseInvoices
-            : _context.PurchaseInvoices.AsNoTracking();
+            ? Context.PurchaseInvoices
+            : Context.PurchaseInvoices.AsNoTracking();
 
         return await query
             .Include(p => p.Vendor)
@@ -52,7 +44,7 @@ public class PurchaseInvoiceRepository
     public async Task<(IReadOnlyList<PurchaseInvoice> Items, int TotalRecords)> GetPurchaseInvoicesAsync(
         PurchaseInvoiceQueryDto queryDto)
     {
-        var query = _context.PurchaseInvoices
+        var query = Context.PurchaseInvoices
             .AsNoTracking()
             .Include(p => p.Vendor)
             .AsQueryable();
@@ -79,19 +71,19 @@ public class PurchaseInvoiceRepository
 
     public async Task<bool> InvoiceNumberExistsAsync(string invoiceNumber)
     {
-        return await _context.PurchaseInvoices
+        return await Context.PurchaseInvoices
             .AsNoTracking()
             .AnyAsync(p => p.InvoiceNumber == invoiceNumber);
     }
 
     public void AddPartTransactions(IEnumerable<PartTransaction> transactions)
     {
-        _context.PartTransactions.AddRange(transactions);
+        Context.PartTransactions.AddRange(transactions);
     }
     
     public async Task ExecuteInTransactionAsync(Func<Task> operation)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync();
+        await using var transaction = await Context.Database.BeginTransactionAsync();
 
         try
         {

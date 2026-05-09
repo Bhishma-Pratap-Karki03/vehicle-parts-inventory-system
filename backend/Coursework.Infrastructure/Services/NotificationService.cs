@@ -1,33 +1,39 @@
-﻿using Coursework.Application.Interfaces;
+using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
 using Coursework.Domain.Enums;
-using Coursework.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace Coursework.Infrastructure.Services;
 
 public class NotificationService : INotificationService
 {
-    private readonly ApplicationDbContext _context;
+    private const int LowStockThreshold = 10;
+    private const string PartEntityType = "Part";
+    private const string SalesInvoiceEntityType = "SalesInvoice";
+
+    private readonly INotificationRepository _notificationRepository;
+    private readonly IPartRepository _partRepository;
+    private readonly ISalesInvoiceRepository _salesInvoiceRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IEmailService _emailService;
 
     public NotificationService(
-        ApplicationDbContext context,
+        INotificationRepository notificationRepository,
+        IPartRepository partRepository,
+        ISalesInvoiceRepository salesInvoiceRepository,
         UserManager<ApplicationUser> userManager,
         IEmailService emailService)
     {
-        _context = context;
+        _notificationRepository = notificationRepository;
+        _partRepository = partRepository;
+        _salesInvoiceRepository = salesInvoiceRepository;
         _userManager = userManager;
         _emailService = emailService;
     }
 
     public async Task<List<object>> GetAllAsync()
     {
-        var notifications = await _context.Notifications
-            .OrderByDescending(n => n.CreatedAt)
-            .ToListAsync();
+        var notifications = await _notificationRepository.GetLatestAsync();
 
         return notifications
             .Select(n => new
@@ -58,60 +64,55 @@ public class NotificationService : INotificationService
             return 0;
         }
 
-        var lowStockParts = await _context.Parts
-            .Where(p => p.StockQuantity < 10 && p.IsActive)
-            .ToListAsync();
-
+        var utcNow = DateTime.UtcNow;
+        var lowStockParts = await _partRepository.GetLowStockPartsAsync(LowStockThreshold);
         var count = 0;
 
         foreach (var part in lowStockParts)
         {
             foreach (var admin in adminUsers)
             {
-                var alreadyExists = await _context.Notifications.AnyAsync(n =>
-                    n.UserId == admin.Id &&
-                    n.NotificationType == NotificationType.LowStock &&
-                    n.RelatedEntityType == "Part" &&
-                    n.RelatedEntityId == part.PartId &&
-                    n.CreatedAt.Date == DateTime.UtcNow.Date);
+                var alreadyExists = await _notificationRepository.ExistsForUserEntityTodayAsync(
+                    admin.Id,
+                    NotificationType.LowStock,
+                    PartEntityType,
+                    part.PartId,
+                    utcNow);
 
                 if (alreadyExists)
                 {
                     continue;
                 }
 
-                var notification = new Notification
+                _notificationRepository.Create(new Notification
                 {
                     UserId = admin.Id,
                     Title = "Low Stock Alert",
                     Message = $"{part.PartName} stock is below 10. Current stock: {part.StockQuantity}",
                     NotificationType = NotificationType.LowStock,
                     DeliveryMethod = DeliveryMethod.InApp,
-                    RelatedEntityType = "Part",
+                    RelatedEntityType = PartEntityType,
                     RelatedEntityId = part.PartId,
-                    CreatedAt = DateTime.UtcNow
-                };
+                    CreatedAt = utcNow
+                });
 
-                _context.Notifications.Add(notification);
                 count++;
             }
         }
 
-        await _context.SaveChangesAsync();
+        if (count > 0)
+        {
+            await _notificationRepository.SaveChangesAsync();
+        }
 
         return count;
     }
 
     public async Task<int> SendCreditRemindersAsync()
     {
-        var overdueInvoices = await _context.SalesInvoices
-            .Include(i => i.Customer)
-            .Where(i =>
-                i.PaymentStatus != PaymentStatus.Paid &&
-                i.DueDate != null &&
-                i.DueDate < DateTime.UtcNow.AddMonths(-1))
-            .ToListAsync();
-
+        var utcNow = DateTime.UtcNow;
+        var overdueInvoices =
+            await _salesInvoiceRepository.GetUnpaidCreditsOlderThanAsync(utcNow.AddMonths(-1));
         var count = 0;
 
         foreach (var invoice in overdueInvoices)
@@ -121,12 +122,12 @@ public class NotificationService : INotificationService
                 continue;
             }
 
-            var alreadySentToday = await _context.Notifications.AnyAsync(n =>
-                n.UserId == invoice.CustomerId &&
-                n.NotificationType == NotificationType.CreditReminder &&
-                n.RelatedEntityType == "SalesInvoice" &&
-                n.RelatedEntityId == invoice.SalesInvoiceId &&
-                n.CreatedAt.Date == DateTime.UtcNow.Date);
+            var alreadySentToday = await _notificationRepository.ExistsForUserEntityTodayAsync(
+                invoice.CustomerId,
+                NotificationType.CreditReminder,
+                SalesInvoiceEntityType,
+                invoice.SalesInvoiceId,
+                utcNow);
 
             if (alreadySentToday)
             {
@@ -134,7 +135,6 @@ public class NotificationService : INotificationService
             }
 
             var subject = "Unpaid Credit Reminder";
-
             var body =
                 $"Dear {invoice.Customer.FullName},\n\n" +
                 $"Your invoice {invoice.InvoiceNumber} is unpaid for more than one month.\n" +
@@ -146,7 +146,7 @@ public class NotificationService : INotificationService
 
             await _emailService.SendEmailAsync(invoice.Customer.Email, subject, body);
 
-            var notification = new Notification
+            _notificationRepository.Create(new Notification
             {
                 UserId = invoice.CustomerId,
                 Title = "Unpaid Credit Reminder",
@@ -154,17 +154,19 @@ public class NotificationService : INotificationService
                 NotificationType = NotificationType.CreditReminder,
                 DeliveryMethod = DeliveryMethod.Email,
                 IsSent = true,
-                SentAt = DateTime.UtcNow,
-                RelatedEntityType = "SalesInvoice",
+                SentAt = utcNow,
+                RelatedEntityType = SalesInvoiceEntityType,
                 RelatedEntityId = invoice.SalesInvoiceId,
-                CreatedAt = DateTime.UtcNow
-            };
+                CreatedAt = utcNow
+            });
 
-            _context.Notifications.Add(notification);
             count++;
         }
 
-        await _context.SaveChangesAsync();
+        if (count > 0)
+        {
+            await _notificationRepository.SaveChangesAsync();
+        }
 
         return count;
     }

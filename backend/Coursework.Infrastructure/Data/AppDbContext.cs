@@ -18,6 +18,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<PurchaseInvoice> PurchaseInvoices => Set<PurchaseInvoice>();
     public DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems => Set<PurchaseInvoiceItem>();
+    
+    public DbSet<PartTransaction> PartTransactions => Set<PartTransaction>();
 
     public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
     public DbSet<SalesInvoiceItem> SalesInvoiceItems => Set<SalesInvoiceItem>();
@@ -37,6 +39,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         ConfigureIndexes(modelBuilder);
         ConfigureRelationships(modelBuilder);
         ConfigureMoneyPrecision(modelBuilder);
+        ConfigureStringLengths(modelBuilder);
         ConfigureEnumConversions(modelBuilder);
     }
 
@@ -65,6 +68,30 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 ConcurrencyStamp = "customer-role-stamp"
             }
         );
+        modelBuilder.Entity<ApplicationUser>().HasData(
+            new ApplicationUser
+            {
+                Id = "dev-admin-user",
+                FullName = "Development Admin",
+                UserName = "admin@autocareims.com",
+                NormalizedUserName = "ADMIN@AUTOCAREIMS.COM",
+                Email = "admin@autocareims.com",
+                NormalizedEmail = "ADMIN@AUTOCAREIMS.COM",
+                EmailConfirmed = true,
+                IsActive = true,
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                SecurityStamp = "dev-admin-security-stamp",
+                ConcurrencyStamp = "dev-admin-concurrency-stamp"
+            }
+        );
+
+        modelBuilder.Entity<IdentityUserRole<string>>().HasData(
+            new IdentityUserRole<string>
+            {
+                UserId = "dev-admin-user",
+                RoleId = "1"
+            }
+        );
     }
 
     private static void ConfigureIndexes(ModelBuilder modelBuilder)
@@ -84,6 +111,27 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<SalesInvoice>()
             .HasIndex(s => s.InvoiceNumber)
             .IsUnique();
+        
+        modelBuilder.Entity<SalesInvoice>()
+            .HasIndex(s => s.CustomerId);
+
+        modelBuilder.Entity<SalesInvoice>()
+            .HasIndex(s => s.StaffId);
+
+        modelBuilder.Entity<SalesInvoice>()
+            .HasIndex(s => s.VehicleId);
+
+        modelBuilder.Entity<SalesInvoice>()
+            .HasIndex(s => s.InvoiceDate);
+
+        modelBuilder.Entity<SalesInvoice>()
+            .HasIndex(s => s.PaymentStatus);
+
+        modelBuilder.Entity<PartTransaction>()
+            .HasIndex(t => t.SalesInvoiceId);
+
+        modelBuilder.Entity<PartTransaction>()
+            .HasIndex(t => t.SalesInvoiceItemId);
 
         modelBuilder.Entity<Vendor>()
             .HasIndex(v => v.Email);
@@ -111,7 +159,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<PurchaseInvoice>()
             .HasOne(p => p.CreatedBy)
-            .WithMany()
+            .WithMany(u => u.CreatedPurchaseInvoices)
             .HasForeignKey(p => p.CreatedById)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -125,6 +173,42 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(i => i.Part)
             .WithMany(p => p.PurchaseInvoiceItems)
             .HasForeignKey(i => i.PartId)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<PartTransaction>()
+            .HasOne(t => t.Part)
+            .WithMany(p => p.PartTransactions)
+            .HasForeignKey(t => t.PartId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PartTransaction>()
+            .HasOne(t => t.PurchaseInvoice)
+            .WithMany(p => p.PartTransactions)
+            .HasForeignKey(t => t.PurchaseInvoiceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PartTransaction>()
+            .HasOne(t => t.PurchaseInvoiceItem)
+            .WithMany(i => i.PartTransactions)
+            .HasForeignKey(t => t.PurchaseInvoiceItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PartTransaction>()
+            .HasOne(t => t.CreatedBy)
+            .WithMany(u => u.CreatedPartTransactions)
+            .HasForeignKey(t => t.CreatedById)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<PartTransaction>()
+            .HasOne(t => t.SalesInvoice)
+            .WithMany(s => s.PartTransactions)
+            .HasForeignKey(t => t.SalesInvoiceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PartTransaction>()
+            .HasOne(t => t.SalesInvoiceItem)
+            .WithMany(i => i.PartTransactions)
+            .HasForeignKey(t => t.SalesInvoiceItemId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<SalesInvoice>()
@@ -287,10 +371,26 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<ServiceRecord>()
             .Property(s => s.LaborCost)
             .HasPrecision(18, 2);
+        
+        modelBuilder.Entity<PartTransaction>()
+            .Property(t => t.CostPricePerUnit)
+            .HasPrecision(18, 2);
+    }
+    
+    private static void ConfigureStringLengths(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SalesInvoice>()
+            .Property(s => s.InvoicePdfPublicId)
+            .HasMaxLength(500);
     }
 
     private static void ConfigureEnumConversions(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Part>()
+            .Property(p => p.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+        
         modelBuilder.Entity<SalesInvoice>()
             .Property(s => s.PaymentStatus)
             .HasConversion<string>()
@@ -335,5 +435,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .Property(p => p.Status)
             .HasConversion<string>()
             .HasMaxLength(50);
+        
+        modelBuilder.Entity<PartTransaction>()
+            .Property(t => t.TransactionType)
+            .HasConversion<string>()
+            .HasMaxLength(50);
     }
+    
 }

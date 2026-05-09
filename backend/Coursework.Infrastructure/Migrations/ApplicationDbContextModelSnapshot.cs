@@ -102,6 +102,26 @@ namespace Coursework.Infrastructure.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "dev-admin-user",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "dev-admin-concurrency-stamp",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "admin@autocareims.com",
+                            EmailConfirmed = true,
+                            FullName = "Development Admin",
+                            IsActive = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@AUTOCAREIMS.COM",
+                            NormalizedUserName = "ADMIN@AUTOCAREIMS.COM",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "dev-admin-security-stamp",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@autocareims.com"
+                        });
                 });
 
             modelBuilder.Entity("Coursework.Domain.Entities.Appointment", b =>
@@ -241,11 +261,21 @@ namespace Coursework.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("ImagePublicId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
                     b.Property<int>("MinimumStockLevel")
@@ -264,6 +294,11 @@ namespace Coursework.Infrastructure.Migrations
                     b.Property<decimal>("SellingPricePerUnit")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("StockQuantity")
                         .HasColumnType("integer");
@@ -346,6 +381,75 @@ namespace Coursework.Infrastructure.Migrations
                     b.ToTable("PartRequests");
                 });
 
+            modelBuilder.Entity("Coursework.Domain.Entities.PartTransaction", b =>
+                {
+                    b.Property<int>("PartTransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PartTransactionId"));
+
+                    b.Property<decimal?>("CostPricePerUnit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PartId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PurchaseInvoiceId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PurchaseInvoiceItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("QuantityChanged")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int?>("SalesInvoiceId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SalesInvoiceItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StockAfter")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StockBefore")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("PartTransactionId");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("PartId");
+
+                    b.HasIndex("PurchaseInvoiceId");
+
+                    b.HasIndex("PurchaseInvoiceItemId");
+
+                    b.HasIndex("SalesInvoiceId");
+
+                    b.HasIndex("SalesInvoiceItemId");
+
+                    b.ToTable("PartTransactions");
+                });
+
             modelBuilder.Entity("Coursework.Domain.Entities.Payment", b =>
                 {
                     b.Property<int>("PaymentId")
@@ -398,10 +502,20 @@ namespace Coursework.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("EmailSentAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsEmailSent")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PdfPublicId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("PurchaseDate")
                         .HasColumnType("timestamp with time zone");
@@ -537,6 +651,10 @@ namespace Coursework.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("InvoicePdfPublicId")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<decimal>("PaidAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -561,8 +679,12 @@ namespace Coursework.Infrastructure.Migrations
 
                     b.HasIndex("CustomerId");
 
+                    b.HasIndex("InvoiceDate");
+
                     b.HasIndex("InvoiceNumber")
                         .IsUnique();
+
+                    b.HasIndex("PaymentStatus");
 
                     b.HasIndex("StaffId");
 
@@ -896,6 +1018,13 @@ namespace Coursework.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "dev-admin-user",
+                            RoleId = "1"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -976,6 +1105,53 @@ namespace Coursework.Infrastructure.Migrations
                     b.Navigation("Vehicle");
                 });
 
+            modelBuilder.Entity("Coursework.Domain.Entities.PartTransaction", b =>
+                {
+                    b.HasOne("Coursework.Domain.Entities.ApplicationUser", "CreatedBy")
+                        .WithMany("CreatedPartTransactions")
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Coursework.Domain.Entities.Part", "Part")
+                        .WithMany("PartTransactions")
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Coursework.Domain.Entities.PurchaseInvoice", "PurchaseInvoice")
+                        .WithMany("PartTransactions")
+                        .HasForeignKey("PurchaseInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Coursework.Domain.Entities.PurchaseInvoiceItem", "PurchaseInvoiceItem")
+                        .WithMany("PartTransactions")
+                        .HasForeignKey("PurchaseInvoiceItemId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Coursework.Domain.Entities.SalesInvoice", "SalesInvoice")
+                        .WithMany("PartTransactions")
+                        .HasForeignKey("SalesInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Coursework.Domain.Entities.SalesInvoiceItem", "SalesInvoiceItem")
+                        .WithMany("PartTransactions")
+                        .HasForeignKey("SalesInvoiceItemId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Part");
+
+                    b.Navigation("PurchaseInvoice");
+
+                    b.Navigation("PurchaseInvoiceItem");
+
+                    b.Navigation("SalesInvoice");
+
+                    b.Navigation("SalesInvoiceItem");
+                });
+
             modelBuilder.Entity("Coursework.Domain.Entities.Payment", b =>
                 {
                     b.HasOne("Coursework.Domain.Entities.SalesInvoice", "SalesInvoice")
@@ -990,7 +1166,7 @@ namespace Coursework.Infrastructure.Migrations
             modelBuilder.Entity("Coursework.Domain.Entities.PurchaseInvoice", b =>
                 {
                     b.HasOne("Coursework.Domain.Entities.ApplicationUser", "CreatedBy")
-                        .WithMany()
+                        .WithMany("CreatedPurchaseInvoices")
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1190,6 +1366,10 @@ namespace Coursework.Infrastructure.Migrations
                 {
                     b.Navigation("Appointments");
 
+                    b.Navigation("CreatedPartTransactions");
+
+                    b.Navigation("CreatedPurchaseInvoices");
+
                     b.Navigation("Notifications");
 
                     b.Navigation("PartRequests");
@@ -1206,6 +1386,8 @@ namespace Coursework.Infrastructure.Migrations
 
             modelBuilder.Entity("Coursework.Domain.Entities.Part", b =>
                 {
+                    b.Navigation("PartTransactions");
+
                     b.Navigation("PurchaseInvoiceItems");
 
                     b.Navigation("SalesInvoiceItems");
@@ -1214,13 +1396,27 @@ namespace Coursework.Infrastructure.Migrations
             modelBuilder.Entity("Coursework.Domain.Entities.PurchaseInvoice", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("PartTransactions");
+                });
+
+            modelBuilder.Entity("Coursework.Domain.Entities.PurchaseInvoiceItem", b =>
+                {
+                    b.Navigation("PartTransactions");
                 });
 
             modelBuilder.Entity("Coursework.Domain.Entities.SalesInvoice", b =>
                 {
                     b.Navigation("Items");
 
+                    b.Navigation("PartTransactions");
+
                     b.Navigation("Payments");
+                });
+
+            modelBuilder.Entity("Coursework.Domain.Entities.SalesInvoiceItem", b =>
+                {
+                    b.Navigation("PartTransactions");
                 });
 
             modelBuilder.Entity("Coursework.Domain.Entities.Vendor", b =>

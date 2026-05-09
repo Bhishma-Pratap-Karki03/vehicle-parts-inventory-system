@@ -1,7 +1,7 @@
-import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminDashboard from "./features/admin/AdminDashboard";
 
 function App() {
-    return <AdminDashboard />;
+  return <AdminDashboard />;
 }
 
 export default App;

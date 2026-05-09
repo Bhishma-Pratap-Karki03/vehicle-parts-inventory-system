@@ -1,4 +1,4 @@
-﻿namespace Coursework.Application.Common;
+namespace Coursework.Application.Common;
 
 public class ApiResponse<T>
 {

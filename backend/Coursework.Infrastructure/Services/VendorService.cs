@@ -24,6 +24,11 @@ public class VendorService : IVendorService
             .ToListAsync();
     }
 
+    public async Task<Vendor?> GetById(int id)
+    {
+        return await _context.Vendors.FindAsync(id);
+    }
+
     public async Task<Vendor> Create(VendorDto dto)
     {
         var vendor = new Vendor

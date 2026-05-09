@@ -1,11 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Coursework.DTOs;
+namespace Coursework.Application.DTOs.Staff;
 
-public class CreateStaffRequest
+public class UpdateStaffDto
 {
     [Required]
-    [MaxLength(100)]
     public string FullName { get; set; } = string.Empty;
 
     [Required]
@@ -18,10 +17,6 @@ public class CreateStaffRequest
     [MaxLength(250)]
     public string? Address { get; set; }
 
-    [Required]
     [MinLength(6)]
-    public string Password { get; set; } = string.Empty;
-
-    [Required]
-    public string Role { get; set; } = "Staff";
+    public string? Password { get; set; }
 }

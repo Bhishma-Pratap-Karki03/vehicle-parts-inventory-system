@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Coursework.Application.Common;
 using Coursework.Application.DTOs.Staff;
 using Coursework.Application.Interfaces;
@@ -11,7 +10,7 @@ namespace Coursework.Controllers;
 
 [ApiController]
 [Route("api/admin/staff")]
-[AllowAnonymous]
+[Authorize(Roles = "Admin")]
 public class StaffController : ControllerBase
 {
     private readonly IStaffService _service;
@@ -51,7 +50,7 @@ public class StaffController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, UpdateStaffRequest dto)
+    public async Task<IActionResult> Update(string id, UpdateStaffDto dto)
     {
         var user = await _userManager.FindByIdAsync(id);
 
@@ -127,23 +126,4 @@ public class StaffController : ControllerBase
 
         return Ok(ApiResponse<object>.SuccessResponse(true, "Staff deleted successfully."));
     }
-}
-
-public class UpdateStaffRequest
-{
-    [Required]
-    public string FullName { get; set; } = string.Empty;
-
-    [Required]
-    [EmailAddress]
-    public string Email { get; set; } = string.Empty;
-
-    [Phone]
-    public string? PhoneNumber { get; set; }
-
-    [MaxLength(250)]
-    public string? Address { get; set; }
-
-    [MinLength(6)]
-    public string? Password { get; set; }
 }

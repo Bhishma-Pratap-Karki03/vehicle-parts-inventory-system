@@ -6,24 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coursework.Infrastructure.Repositories;
 
-public class PartTransactionRepository
-    : RepositoryBase<PartTransaction>, IPartTransactionRepository
+public class PartTransactionRepository(ApplicationDbContext context)
+    : RepositoryBase<PartTransaction>(context), IPartTransactionRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public PartTransactionRepository(ApplicationDbContext context)
-        : base(context)
-    {
-        _context = context;
-    }
 
     public async Task<Part?> GetPartByIdAsync(
         int partId,
         bool trackChanges = false)
     {
         var query = trackChanges
-            ? _context.Parts
-            : _context.Parts.AsNoTracking();
+            ? Context.Parts
+            : Context.Parts.AsNoTracking();
 
         return await query.FirstOrDefaultAsync(p => p.PartId == partId);
     }
@@ -33,8 +26,8 @@ public class PartTransactionRepository
         bool trackChanges = false)
     {
         var query = trackChanges
-            ? _context.PartTransactions
-            : _context.PartTransactions.AsNoTracking();
+            ? Context.PartTransactions
+            : Context.PartTransactions.AsNoTracking();
 
         return await query
             .Include(t => t.Part)
@@ -46,7 +39,7 @@ public class PartTransactionRepository
     public async Task<(IReadOnlyList<PartTransaction> Items, int TotalRecords)> GetPartTransactionsAsync(
         PartTransactionQueryDto queryDto)
     {
-        var query = _context.PartTransactions
+        var query = Context.PartTransactions
             .AsNoTracking()
             .Include(t => t.Part)
             .Include(t => t.CreatedBy)

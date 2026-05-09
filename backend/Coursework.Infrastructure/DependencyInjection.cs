@@ -53,6 +53,18 @@ public static class DependencyInjection
         
         
 
+        // Repositories
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<IServiceRecordRepository, ServiceRecordRepository>();
+        services.AddScoped<IPartRequestRepository, PartRequestRepository>();
+
+        // Application Services
+        services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<IPartRequestService, PartRequestService>();
+
         return services;
     }
 }

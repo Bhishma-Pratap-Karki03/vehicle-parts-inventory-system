@@ -136,6 +136,9 @@ namespace Coursework.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<DateTime?>("AlternativeAppointmentDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("AppointmentDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -151,6 +154,11 @@ namespace Coursework.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("ServiceType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -158,6 +166,11 @@ namespace Coursework.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Urgency")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("VehicleId")
                         .HasColumnType("integer");
@@ -318,6 +331,11 @@ namespace Coursework.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("CustomerId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -328,6 +346,10 @@ namespace Coursework.Infrastructure.Migrations
 
                     b.Property<string>("PartName")
                         .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PartNumber")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -342,9 +364,19 @@ namespace Coursework.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Urgency")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("VehicleId")
+                        .HasColumnType("integer");
+
                     b.HasKey("PartRequestId");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("VehicleId");
 
                     b.ToTable("PartRequests");
                 });
@@ -577,7 +609,8 @@ namespace Coursework.Infrastructure.Migrations
 
                     b.HasKey("ReviewId");
 
-                    b.HasIndex("AppointmentId");
+                    b.HasIndex("AppointmentId")
+                        .IsUnique();
 
                     b.HasIndex("CustomerId");
 
@@ -1062,7 +1095,14 @@ namespace Coursework.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Coursework.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Customer");
+
+                    b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("Coursework.Domain.Entities.PartTransaction", b =>
@@ -1164,8 +1204,8 @@ namespace Coursework.Infrastructure.Migrations
             modelBuilder.Entity("Coursework.Domain.Entities.Review", b =>
                 {
                     b.HasOne("Coursework.Domain.Entities.Appointment", "Appointment")
-                        .WithMany("Reviews")
-                        .HasForeignKey("AppointmentId")
+                        .WithOne("Review")
+                        .HasForeignKey("Coursework.Domain.Entities.Review", "AppointmentId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Coursework.Domain.Entities.ApplicationUser", "Customer")
@@ -1341,7 +1381,7 @@ namespace Coursework.Infrastructure.Migrations
 
             modelBuilder.Entity("Coursework.Domain.Entities.Appointment", b =>
                 {
-                    b.Navigation("Reviews");
+                    b.Navigation("Review");
                 });
 
             modelBuilder.Entity("Coursework.Domain.Entities.Part", b =>

@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\api",
+    "\\src\\components",
+    "\\src\\components\\navbars",
+    "\\src\\layouts",
+    "\\src\\pages",
+    "\\src\\pages\\customer",
+    "\\src\\pages\\customer\\appointments",
+    "\\src\\pages\\customer\\parts"
+  ],
+  "SelectedNode": "\\src\\pages\\customer\\appointments\\MyAppointments.tsx",
+  "PreviewInSolutionExplorer": false
+}

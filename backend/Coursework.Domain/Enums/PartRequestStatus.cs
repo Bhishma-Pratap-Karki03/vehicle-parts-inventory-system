@@ -3,8 +3,8 @@ namespace Coursework.Domain.Enums;
 public enum PartRequestStatus
 {
     Pending = 1,
-    Approved = 2,
-    Ordered = 3,
-    Completed = 4,
-    Rejected = 5
+    Reviewed = 2,
+    Available = 3,
+    Unavailable = 4,
+    Cancelled = 5
 }

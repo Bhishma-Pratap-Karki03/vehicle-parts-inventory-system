@@ -1,0 +1,50 @@
+# ========================
+# Visual Studio
+# ========================
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ========================
+# Build folders
+# ========================
+bin/
+obj/
+out/
+
+# ========================
+# Logs
+# ========================
+*.log
+
+# ========================
+# Node / React
+# ========================
+node_modules/
+dist/
+build/
+
+# ========================
+# Environment files
+# ========================
+.env
+.env.*
+
+# ========================
+# OS files
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# Package locks (optional keep)
+# ========================
+# package-lock.json (keep this if required)
+
+# ========================
+# Other
+# ========================
+coverage/
+*.tsbuildinfo

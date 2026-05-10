@@ -1,0 +1,80 @@
+## .NET / C#
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+## NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+
+## Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+[Dd]ebugPS/
+*.cache
+!*.cache/
+*.dbmdl
+*.jfm
+
+## Rider / JetBrains
+.idea/
+*.sln.iml
+
+## VS Code
+.vscode/
+
+## User secrets
+secrets.json
+
+## ASP.NET
+ScaffoldingReadMe.txt
+
+## Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## Linux
+*~
+
+## Environment / config overrides
+appsettings.Development.json
+appsettings.Local.json
+*.env
+.env.*
+
+## EF Core (keep migrations, ignore snapshots only if desired)
+# Uncomment the line below to ignore migration files:
+# **/Migrations/
+
+## Publish output
+publish/
+out/
+
+## Logs
+*.log
+logs/

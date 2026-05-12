@@ -88,61 +88,61 @@ export default function AdminDashboard() {
 
     const navItems: Array<{ id: AdminPage; label: string; icon: IconName }> = [
         { id: "vendors", label: "Vendor Management", icon: "truck" },
-        { id: "staff", label: "Staff Management", icon: "truck" },
+        { id: "staff", label: "Staff Management", icon: "users" },
         { id: "notifications", label: "Notifications", icon: "bell" },
     ];
 
     return (
-        <div className="min-h-screen bg-[#f4f7fb] text-[#071936]">
-            <header className="fixed left-72 right-0 top-0 z-20 flex h-20 items-center justify-between border-b border-slate-200 bg-white px-8 shadow-sm">
-                <label className="flex h-12 w-[420px] items-center gap-3 rounded-full bg-slate-100 px-5 text-sm text-slate-500">
+        <div className="min-h-screen bg-[#f3f6f9] text-[#071936]">
+            <header className="fixed left-44 right-0 top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-7 shadow-sm">
+                <label className="flex h-9 w-[360px] items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-4 text-xs text-slate-500">
                     <Icon name="search" className="h-5 w-5 text-slate-500" />
                     <input
                         className="w-full bg-transparent outline-none placeholder:text-slate-500"
-                        placeholder="Search admin records..."
+                        placeholder="Search staff, vendors, notifications..."
                     />
                 </label>
 
-                <div className="flex items-center gap-5">
-                    <button className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100" aria-label="Notifications">
-                        <Icon name="bell" />
+                <div className="flex items-center gap-4">
+                    <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100" aria-label="Notifications">
+                        <Icon name="bell" className="h-4 w-4" />
                         <span className="absolute right-2 top-1 h-2 w-2 rounded-full bg-red-600" />
                     </button>
-                    <button className="rounded-full p-2 text-slate-600 hover:bg-slate-100" aria-label="Settings">
-                        <Icon name="settings" />
-                    </button>
-                    <div className="flex items-center gap-3 border-l border-slate-200 pl-5">
-                        <div className="h-11 w-11 rounded-full border-2 border-[#0b4f86] bg-[#0b4f86] text-center text-sm font-bold leading-10 text-white">
+                    <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
+                        <div className="h-9 w-9 rounded-full bg-[#005b8f] text-center text-sm font-bold leading-9 text-white">
                             A
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-[#071936]">Admin User</p>
-                            <p className="text-xs uppercase tracking-wider text-slate-500">
-                                System Manager
+                            <p className="text-xs font-bold text-[#073b63]">Admin</p>
+                            <p className="text-[10px] font-medium text-slate-500">
+                                My Account
                             </p>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <aside className="fixed left-0 top-0 z-30 flex h-full w-72 flex-col border-r border-slate-200 bg-white px-5 py-8 shadow-sm">
-                <div className="mb-12 flex items-center gap-4 px-2">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#0b4f86] text-white shadow">
-                        <Icon name="settings" className="h-6 w-6" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-[#002b66]">AutoCare IMS</h1>
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                            Admin Portal
-                        </p>
-                    </div>
+            <aside className="fixed left-0 top-0 z-30 flex h-full w-44 flex-col border-r border-slate-200 bg-white shadow-sm">
+                <div className="flex h-14 items-center border-b border-slate-100 px-5">
+                    <img
+                        src="/autocare-logo.jpg.jpeg"
+                        alt="AutoCare IMS"
+                        className="h-auto w-32 object-contain"
+                    />
                 </div>
 
-                <nav className="grid gap-3">
-                    <button className="flex items-center gap-4 rounded-lg px-5 py-4 text-left font-medium text-slate-700 hover:bg-slate-50">
-                        <Icon name="grid" className="h-6 w-6 text-slate-600" />
-                        Dashboard
+                <nav className="flex-1 overflow-y-auto py-4 text-xs font-semibold">
+                    <p className="px-5 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        Main Menu
+                    </p>
+                    <button className="mb-1 flex w-full items-center gap-3 border-l-4 border-transparent px-4 py-2.5 text-left text-slate-600 hover:border-[#0b5f8f] hover:bg-[#eef6fb] hover:text-[#073b63]">
+                        <Icon name="grid" className="h-4 w-4 text-slate-500" />
+                        <span>Dashboard</span>
                     </button>
+
+                    <p className="px-5 pb-2 pt-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        Administration
+                    </p>
                     {navItems.map((item) => {
                         const active = page === item.id;
 
@@ -150,35 +150,35 @@ export default function AdminDashboard() {
                             <button
                                 key={item.id}
                                 onClick={() => setPage(item.id)}
-                                className={`flex items-center gap-4 rounded-lg px-5 py-4 text-left font-semibold transition ${
+                                className={`mb-1 flex w-full items-center gap-3 border-l-4 px-4 py-2.5 text-left transition ${
                                     active
-                                        ? "border-r-4 border-[#003b8f] bg-[#edf4ff] text-[#002b8f]"
-                                        : "text-slate-700 hover:bg-slate-50"
+                                        ? "border-[#0b5f8f] bg-[#eef6fb] text-[#073b63]"
+                                        : "border-transparent text-slate-600 hover:border-[#0b5f8f] hover:bg-[#eef6fb] hover:text-[#073b63]"
                                 }`}
                             >
                                 <Icon
                                     name={item.icon}
-                                    className={`h-6 w-6 ${active ? "text-[#003b8f]" : "text-slate-600"}`}
+                                    className={`h-4 w-4 ${active ? "text-[#0b5f8f]" : "text-slate-500"}`}
                                 />
-                                {item.label}
+                                <span>{item.label}</span>
                             </button>
                         );
                     })}
                 </nav>
 
-                <div className="mt-auto border-t border-slate-200 pt-6">
-                    <button className="mb-3 flex w-full items-center gap-4 rounded-lg px-5 py-3 text-left font-medium text-slate-700 hover:bg-slate-50">
-                        <Icon name="settings" className="h-5 w-5 text-slate-600" />
+                <div className="border-t border-slate-100 py-4 text-xs font-semibold">
+                    <button className="flex w-full items-center gap-3 border-l-4 border-transparent px-4 py-2.5 text-left text-slate-600 hover:border-[#0b5f8f] hover:bg-[#eef6fb] hover:text-[#073b63]">
+                        <Icon name="settings" className="h-4 w-4 text-slate-500" />
                         Settings
                     </button>
-                    <button className="flex w-full items-center gap-4 rounded-lg px-5 py-3 text-left font-medium text-slate-700 hover:bg-slate-50">
-                        <Icon name="logout" className="h-5 w-5 text-slate-600" />
+                    <button className="flex w-full items-center gap-3 border-l-4 border-transparent px-4 py-2.5 text-left text-red-600 hover:border-red-500 hover:bg-red-50">
+                        <Icon name="logout" className="h-4 w-4" />
                         Logout
                     </button>
                 </div>
             </aside>
 
-            <main className="ml-72 pt-20">
+            <main className="ml-44 pt-14">
                 {page === "vendors" && <VendorManagement />}
                 {page === "staff" && <StaffManagement />}
                 {page === "notifications" && <NotificationsPage />}

@@ -23,10 +23,8 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-// Authentication is temporarily disabled until the login module is integrated.
-// Re-enable these middleware calls when protected endpoints are restored.
-// app.UseAuthentication();
-// app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

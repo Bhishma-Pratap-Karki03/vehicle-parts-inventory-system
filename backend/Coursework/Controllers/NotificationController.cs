@@ -1,10 +1,12 @@
-﻿using Coursework.Application.Interfaces;
+using Coursework.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coursework.Controllers;
 
 [ApiController]
 [Route("api/notifications")]
+[Authorize(Roles = "Admin")]
 public class NotificationController : ControllerBase
 {
     private readonly INotificationService _service;

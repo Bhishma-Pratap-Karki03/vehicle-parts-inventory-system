@@ -1,0 +1,45 @@
+.my-part-requests-page {
+    min-height: 100vh;
+    background: #f7f9fb;
+    color: #191c1e;
+    font-family: Inter, Arial, sans-serif;
+}
+
+.my-part-requests-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px 32px;
+}
+
+.my-part-requests-page h1,
+.my-part-requests-page h2,
+.my-part-requests-page h3 {
+    font-family: Manrope, Inter, Arial, sans-serif;
+}
+
+.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    vertical-align: middle;
+}
+
+.bento-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .bento-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(15, 76, 129, 0.08);
+    }
+
+.line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+}
+
+@media (max-width: 768px) {
+    .my-part-requests-container {
+        padding: 24px 16px;
+    }
+}

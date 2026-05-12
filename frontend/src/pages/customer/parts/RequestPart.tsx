@@ -154,8 +154,8 @@ function RequestPart() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f7f9fb] text-[#191c1e]">
-            <main className="p-8 max-w-7xl mx-auto">
+        <div className="request-part-page">
+            <main className="request-part-container">
                 <div className="mb-10">
                     <nav className="flex items-center gap-2 text-xs font-semibold text-[#727780] mb-4 uppercase tracking-wide">
                         <span

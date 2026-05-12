@@ -1,13 +1,11 @@
 ﻿using Coursework.Application.DTOs.Vendor;
 using Coursework.Application.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coursework.Controllers;
 
 [ApiController]
 [Route("api/admin/vendors")]
-[Authorize(Roles = "Admin")]
 public class VendorsController : ControllerBase
 {
     private readonly IVendorService _vendorService;

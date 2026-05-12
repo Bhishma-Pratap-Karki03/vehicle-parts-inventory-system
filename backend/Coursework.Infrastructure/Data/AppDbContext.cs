@@ -95,9 +95,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<Vendor>()
             .HasIndex(v => v.Email);
 
-        modelBuilder.Entity<Vendor>()
-            .Property(v => v.Role)
-            .HasMaxLength(50);
     }
 
     private static void ConfigureRelationships(ModelBuilder modelBuilder)

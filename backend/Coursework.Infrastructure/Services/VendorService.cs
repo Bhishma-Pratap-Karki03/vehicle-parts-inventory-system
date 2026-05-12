@@ -8,8 +8,6 @@ namespace Coursework.Infrastructure.Services;
 
 public class VendorService : IVendorService
 {
-    private const string VendorRole = "Vendor";
-
     private readonly ApplicationDbContext _context;
 
     public VendorService(ApplicationDbContext context)
@@ -38,7 +36,6 @@ public class VendorService : IVendorService
             Email = dto.Email,
             Phone = dto.Phone,
             Address = dto.Address,
-            Role = VendorRole,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -61,7 +58,6 @@ public class VendorService : IVendorService
         vendor.Email = dto.Email;
         vendor.Phone = dto.Phone;
         vendor.Address = dto.Address;
-        vendor.Role = VendorRole;
         vendor.IsActive = dto.IsActive;
         vendor.UpdatedAt = DateTime.UtcNow;
 

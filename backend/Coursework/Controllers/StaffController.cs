@@ -2,7 +2,6 @@ using Coursework.Application.Common;
 using Coursework.Application.DTOs.Staff;
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +9,6 @@ namespace Coursework.Controllers;
 
 [ApiController]
 [Route("api/admin/staff")]
-[Authorize(Roles = "Admin")]
 public class StaffController : ControllerBase
 {
     private readonly IStaffService _service;

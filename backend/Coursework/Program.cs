@@ -30,10 +30,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+
 app.UseHttpsRedirection();
+
 app.UseCors("AllowAll");
+
 app.UseAuthorization();
+
 app.UseAuthentication();
+
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())

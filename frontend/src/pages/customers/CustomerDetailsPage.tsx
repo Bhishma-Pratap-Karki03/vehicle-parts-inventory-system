@@ -5,11 +5,14 @@ import {
   Car,
   ClipboardList,
 } from 'lucide-react'
+import backendUrl from '../../config'
 
 function CustomerDetailsPage() {
   const { id } = useParams()
 
   const [customer, setCustomer] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     void fetchCustomer()
@@ -17,25 +20,65 @@ function CustomerDetailsPage() {
 
   const fetchCustomer = async () => {
     try {
+      setIsLoading(true)
+
       const response = await fetch(
-        `http://localhost:5220/api/Customers/${id}`,
+        `${backendUrl}/api/Customers/${id}`,
       )
 
-      const data = await response.json()
+      const result = await response.json()
 
-      setCustomer(data)
+      if (!result.success) {
+        setErrorMessage(
+          result.message || 'Customer not found.',
+        )
+
+        setCustomer(null)
+        return
+      }
+
+      setCustomer(result.data)
     } catch (error) {
       console.log(error)
+
+      setErrorMessage(
+        'Failed to load customer details.',
+      )
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  if (!customer) {
+  if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#F5F8FB]">
         <div className="rounded-[30px] border border-[#DCE5EF] bg-white px-10 py-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
           <h2 className="text-[28px] font-semibold text-[#17324F]">
             Loading customer details...
           </h2>
+        </div>
+      </main>
+    )
+  }
+
+  if (errorMessage) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#F5F8FB] px-6">
+        <div className="w-full max-w-2xl rounded-[32px] border border-[#DCE5EF] bg-white p-10 text-center shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+          <h2 className="text-[36px] font-semibold text-[#17324F]">
+            Unable to Load Customer
+          </h2>
+
+          <p className="mt-5 text-[17px] leading-8 text-[#6A8198]">
+            {errorMessage}
+          </p>
+
+          <Link
+            className="mt-8 inline-flex h-14 items-center justify-center rounded-full bg-[#15558D] px-8 text-[15px] font-semibold text-white no-underline transition hover:bg-[#0E4778]"
+            to="/customers/search"
+          >
+            Back to Search
+          </Link>
         </div>
       </main>
     )
@@ -156,64 +199,66 @@ function CustomerDetailsPage() {
             </div>
 
             <div className="mt-10 space-y-6">
-              {customer.vehicles.map((vehicle: any, index: number) => (
-                <div
-                  className="rounded-[28px] border border-[#DCE5EF] bg-[#FBFDFF] p-7"
-                  key={vehicle.vehicleId}
-                >
-                  <div className="mb-6 flex items-center justify-between">
-                    <h3 className="text-[28px] font-semibold text-[#17324F]">
-                      Vehicle {index + 1}
-                    </h3>
+              {customer.vehicles?.map(
+                (vehicle: any, index: number) => (
+                  <div
+                    className="rounded-[28px] border border-[#DCE5EF] bg-[#FBFDFF] p-7"
+                    key={vehicle.vehicleId}
+                  >
+                    <div className="mb-6 flex items-center justify-between">
+                      <h3 className="text-[28px] font-semibold text-[#17324F]">
+                        Vehicle {index + 1}
+                      </h3>
 
-                    <div className="rounded-full bg-[#EDF4FB] px-4 py-2 text-[14px] font-semibold text-[#15558D]">
-                      {vehicle.vehicleNumber}
+                      <div className="rounded-full bg-[#EDF4FB] px-4 py-2 text-[14px] font-semibold text-[#15558D]">
+                        {vehicle.vehicleNumber}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                      <div className="rounded-[22px] border border-[#E3ECF5] bg-white p-5">
+                        <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
+                          Brand
+                        </p>
+
+                        <h4 className="mt-3 text-[22px] font-semibold text-[#17324F]">
+                          {vehicle.brand}
+                        </h4>
+                      </div>
+
+                      <div className="rounded-[22px] border border-[#E3ECF5] bg-white p-5">
+                        <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
+                          Model
+                        </p>
+
+                        <h4 className="mt-3 text-[22px] font-semibold text-[#17324F]">
+                          {vehicle.model}
+                        </h4>
+                      </div>
+
+                      <div className="rounded-[22px] border border-[#E3ECF5] bg-white p-5">
+                        <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
+                          Manufactured Year
+                        </p>
+
+                        <h4 className="mt-3 text-[22px] font-semibold text-[#17324F]">
+                          {vehicle.year}
+                        </h4>
+                      </div>
+
+                      <div className="rounded-[22px] border border-[#E3ECF5] bg-white p-5">
+                        <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
+                          Mileage
+                        </p>
+
+                        <h4 className="mt-3 text-[22px] font-semibold text-[#17324F]">
+                          {vehicle.mileage} km
+                        </h4>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <div className="rounded-[22px] border border-[#E3ECF5] bg-white p-5">
-                      <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
-                        Brand
-                      </p>
-
-                      <h4 className="mt-3 text-[22px] font-semibold text-[#17324F]">
-                        {vehicle.brand}
-                      </h4>
-                    </div>
-
-                    <div className="rounded-[22px] border border-[#E3ECF5] bg-white p-5">
-                      <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
-                        Model
-                      </p>
-
-                      <h4 className="mt-3 text-[22px] font-semibold text-[#17324F]">
-                        {vehicle.model}
-                      </h4>
-                    </div>
-
-                    <div className="rounded-[22px] border border-[#E3ECF5] bg-white p-5">
-                      <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
-                        Manufactured Year
-                      </p>
-
-                      <h4 className="mt-3 text-[22px] font-semibold text-[#17324F]">
-                        {vehicle.year}
-                      </h4>
-                    </div>
-
-                    <div className="rounded-[22px] border border-[#E3ECF5] bg-white p-5">
-                      <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
-                        Mileage
-                      </p>
-
-                      <h4 className="mt-3 text-[22px] font-semibold text-[#17324F]">
-                        {vehicle.mileage} km
-                      </h4>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ),
+              )}
             </div>
           </section>
         </div>

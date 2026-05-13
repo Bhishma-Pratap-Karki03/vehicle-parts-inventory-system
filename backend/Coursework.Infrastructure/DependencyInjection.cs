@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IPartTransactionService, PartTransactionService>();
         services.AddScoped<ISalesInvoiceService, SalesInvoiceService>();
         services.AddScoped<ICustomerService, CustomerService>();
+        services.AddScoped<IAuthService, AuthService>();
 
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IInvoicePdfService, InvoicePdfService>();

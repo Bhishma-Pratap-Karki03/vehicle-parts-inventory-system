@@ -6,39 +6,43 @@ namespace Coursework.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CustomersController : ControllerBase
+public class CustomersController(
+    ICustomerService customerService)
+    : ControllerBase
 {
-    private readonly ICustomerService _customerService;
-
-    public CustomersController(ICustomerService customerService)
-    {
-        _customerService = customerService;
-    }
-
     [HttpPost]
-    public async Task<IActionResult> CreateCustomer(CreateCustomerDto dto)
+    public async Task<IActionResult> CreateCustomer(
+        [FromBody] CreateCustomerDto dto)
     {
-        var result = await _customerService.CreateCustomerAsync(dto);
+        var response =
+            await customerService.CreateCustomerAsync(dto);
 
-        return Ok(result);
+        return StatusCode(
+            response.StatusCode,
+            response);
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> SearchCustomers([FromQuery] string query)
+    public async Task<IActionResult> SearchCustomers(
+        [FromQuery] string query)
     {
-        var result = await _customerService.SearchCustomersAsync(query);
+        var response =
+            await customerService.SearchCustomersAsync(query);
 
-        return Ok(result);
+        return StatusCode(
+            response.StatusCode,
+            response);
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetCustomerById(string id)
+    public async Task<IActionResult> GetCustomerById(
+        [FromRoute] string id)
     {
-        var result = await _customerService.GetCustomerByIdAsync(id);
+        var response =
+            await customerService.GetCustomerByIdAsync(id);
 
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
+        return StatusCode(
+            response.StatusCode,
+            response);
     }
 }

@@ -84,14 +84,18 @@ function CustomerCreatePage() {
         },
       )
 
-      if (!response.ok) {
-        toast.error('Failed to register customer.')
+      const result = await response.json()
+
+      if (!result.success) {
+        toast.error(
+          result.message ||
+            'Failed to register customer.',
+        )
+
         return
       }
 
-      await response.json()
-
-      toast.success('Customer registered successfully.')
+      toast.success(result.message)
 
       setFormData({
         fullName: '',

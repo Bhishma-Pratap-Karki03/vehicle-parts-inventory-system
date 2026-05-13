@@ -1,6 +1,5 @@
 using Coursework.Application.DTOs.Auth;
-using Coursework.Domain.Entities;
-using Microsoft.AspNetCore.Identity;
+using Coursework.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coursework.Controllers;
@@ -9,38 +8,18 @@ namespace Coursework.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IAuthService _authService;
 
-    public AuthController(UserManager<ApplicationUser> userManager)
+    public AuthController(IAuthService authService)
     {
-        _userManager = userManager;
+        _authService = authService;
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto dto)
+    public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var user = await _userManager.FindByEmailAsync(dto.Email);
+        var response = await _authService.LoginAsync(dto);
 
-        if (user == null)
-        {
-            return Unauthorized("Invalid email or password");
-        }
-
-        if (dto.Password != "staff123")
-        {
-            return Unauthorized("Invalid email or password");
-        }
-
-        var roles = await _userManager.GetRolesAsync(user);
-
-        var response = new LoginResponseDto
-        {
-            FullName = user.FullName,
-            Email = user.Email!,
-            Role = roles.FirstOrDefault() ?? "Staff",
-            Token = "login-success"
-        };
-
-        return Ok(response);
+        return StatusCode(response.StatusCode, response);
     }
 }

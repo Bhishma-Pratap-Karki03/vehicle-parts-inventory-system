@@ -5,6 +5,7 @@ import {
   Phone,
   Car,
 } from 'lucide-react'
+import backendUrl from '../../config'
 
 function CustomerSearchPage() {
   const [query, setQuery] = useState('')
@@ -24,12 +25,17 @@ function CustomerSearchPage() {
   const searchCustomers = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5220/api/Customers/search?query=${query}`,
+        `${backendUrl}/api/Customers/search?query=${query}`,
       )
 
-      const data = await response.json()
+      const result = await response.json()
 
-      setCustomers(data)
+      if (!result.success) {
+        setCustomers([])
+        return
+      }
+
+      setCustomers(result.data)
       setCurrentPage(1)
     } catch (error) {
       console.log(error)

@@ -1,9 +1,7 @@
 using Coursework.Application.Common;
 using Coursework.Application.DTOs.Staff;
 using Coursework.Application.Interfaces;
-using Coursework.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coursework.Controllers;
@@ -14,14 +12,10 @@ namespace Coursework.Controllers;
 public class StaffController : ControllerBase
 {
     private readonly IStaffService _service;
-    private readonly UserManager<ApplicationUser> _userManager;
 
-    public StaffController(
-        IStaffService service,
-        UserManager<ApplicationUser> userManager)
+    public StaffController(IStaffService service)
     {
         _service = service;
-        _userManager = userManager;
     }
 
     [HttpPost]
@@ -30,14 +24,17 @@ public class StaffController : ControllerBase
         try
         {
             var result = await _service.CreateStaffAsync(dto);
+            var response = ApiResponse<object>.CreatedResponse(
+                result,
+                "Staff registered successfully.");
 
-            return StatusCode(
-                201,
-                ApiResponse<object>.CreatedResponse(result, "Staff registered successfully."));
+            return StatusCode(response.StatusCode, response);
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            var response = ApiResponse<object>.FailureResponse(ex.Message);
+
+            return StatusCode(response.StatusCode, response);
         }
     }
 
@@ -45,50 +42,37 @@ public class StaffController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var result = await _service.GetAllStaffAsync();
+        var response = ApiResponse<object>.SuccessResponse(result);
 
-        return Ok(ApiResponse<object>.SuccessResponse(result));
+        return StatusCode(response.StatusCode, response);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, UpdateStaffDto dto)
     {
-        var user = await _userManager.FindByIdAsync(id);
-
-        if (user == null)
-            return NotFound(ApiResponse<object>.ErrorResponse("Staff not found."));
-
-        var email = dto.Email.Trim();
-        var existingUser = await _userManager.FindByEmailAsync(email);
-
-        if (existingUser != null && existingUser.Id != user.Id)
-            return BadRequest(ApiResponse<object>.ErrorResponse("Email already exists."));
-
-        user.FullName = dto.FullName.Trim();
-        user.Email = email;
-        user.UserName = email;
-        user.PhoneNumber = dto.PhoneNumber?.Trim();
-        user.Address = dto.Address?.Trim();
-        user.UpdatedAt = DateTime.UtcNow;
-
-        var updateResult = await _userManager.UpdateAsync(user);
-
-        if (!updateResult.Succeeded)
-            return BadRequest(ApiResponse<object>.ErrorResponse(
-                "Failed to update staff.",
-                updateResult.Errors.Select(e => e.Description).ToList()));
-
-        if (!string.IsNullOrWhiteSpace(dto.Password))
+        try
         {
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var passwordResult = await _userManager.ResetPasswordAsync(user, token, dto.Password);
+            var result = await _service.UpdateStaffAsync(id, dto);
+            var response = ApiResponse<object>.SuccessResponse(
+                result,
+                "Staff updated successfully.");
 
-            if (!passwordResult.Succeeded)
-                return BadRequest(ApiResponse<object>.ErrorResponse(
-                    "Staff details were updated, but password update failed.",
-                    passwordResult.Errors.Select(e => e.Description).ToList()));
+            return StatusCode(response.StatusCode, response);
         }
+        catch (KeyNotFoundException ex)
+        {
+            var response = ApiResponse<object>.NotFoundResponse(ex.Message);
 
-        return Ok(ApiResponse<object>.SuccessResponse(true, "Staff updated successfully."));
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var response = ex.Message == "Email already exists."
+                ? ApiResponse<object>.ConflictResponse(ex.Message)
+                : ApiResponse<object>.FailureResponse(ex.Message);
+
+            return StatusCode(response.StatusCode, response);
+        }
     }
 
     [HttpPut("{id}/role")]
@@ -97,33 +81,43 @@ public class StaffController : ControllerBase
         try
         {
             var result = await _service.UpdateRoleAsync(id, dto.Role);
+            var response = ApiResponse<object>.SuccessResponse(
+                result,
+                "Staff role updated successfully.");
 
-            return Ok(ApiResponse<object>.SuccessResponse(result, "Staff role updated successfully."));
+            return StatusCode(response.StatusCode, response);
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+            var response = ApiResponse<object>.FailureResponse(ex.Message);
+
+            return StatusCode(response.StatusCode, response);
         }
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {
-        var user = await _userManager.FindByIdAsync(id);
+        try
+        {
+            var result = await _service.DeleteStaffAsync(id);
+            var response = ApiResponse<object>.SuccessResponse(
+                result,
+                "Staff deleted successfully.");
 
-        if (user == null)
-            return NotFound(ApiResponse<object>.ErrorResponse("Staff not found."));
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            var response = ApiResponse<object>.NotFoundResponse(ex.Message);
 
-        user.IsActive = false;
-        user.UpdatedAt = DateTime.UtcNow;
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var response = ApiResponse<object>.FailureResponse(ex.Message);
 
-        var result = await _userManager.UpdateAsync(user);
-
-        if (!result.Succeeded)
-            return BadRequest(ApiResponse<object>.ErrorResponse(
-                "Failed to delete staff.",
-                result.Errors.Select(e => e.Description).ToList()));
-
-        return Ok(ApiResponse<object>.SuccessResponse(true, "Staff deleted successfully."));
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

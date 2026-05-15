@@ -3,7 +3,7 @@ using Coursework.Domain.Entities;
 using Coursework.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 
-namespace Coursework.Infrastructure.Services;
+namespace Coursework.Application.Services;
 
 public class NotificationService : INotificationService
 {

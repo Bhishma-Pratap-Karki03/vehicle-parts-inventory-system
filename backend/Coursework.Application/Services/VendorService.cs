@@ -1,30 +1,30 @@
-﻿using Coursework.Application.DTOs.Vendor;
+using Coursework.Application.DTOs.Vendor;
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
-using Coursework.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
-namespace Coursework.Infrastructure.Services;
+namespace Coursework.Application.Services;
 
 public class VendorService : IVendorService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IVendorRepository _vendorRepository;
 
-    public VendorService(ApplicationDbContext context)
+    public VendorService(IVendorRepository vendorRepository)
     {
-        _context = context;
+        _vendorRepository = vendorRepository;
     }
 
     public async Task<List<Vendor>> GetAll()
     {
-        return await _context.Vendors
+        var vendors = await _vendorRepository.FindAllAsync();
+
+        return vendors
             .OrderByDescending(v => v.CreatedAt)
-            .ToListAsync();
+            .ToList();
     }
 
     public async Task<Vendor?> GetById(int id)
     {
-        return await _context.Vendors.FindAsync(id);
+        return await _vendorRepository.GetByIdAsync(id);
     }
 
     public async Task<Vendor> Create(VendorDto dto)
@@ -40,18 +40,18 @@ public class VendorService : IVendorService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Vendors.Add(vendor);
-        await _context.SaveChangesAsync();
+        _vendorRepository.Create(vendor);
+        await _vendorRepository.SaveChangesAsync();
 
         return vendor;
     }
 
     public async Task<Vendor> Update(int id, VendorDto dto)
     {
-        var vendor = await _context.Vendors.FindAsync(id);
+        var vendor = await _vendorRepository.GetByIdAsync(id);
 
         if (vendor == null)
-            throw new Exception("Vendor not found");
+            throw new InvalidOperationException("Vendor not found.");
 
         vendor.VendorName = dto.VendorName;
         vendor.ContactPerson = dto.ContactPerson;
@@ -61,22 +61,22 @@ public class VendorService : IVendorService
         vendor.IsActive = dto.IsActive;
         vendor.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _vendorRepository.SaveChangesAsync();
 
         return vendor;
     }
 
     public async Task<bool> Delete(int id)
     {
-        var vendor = await _context.Vendors.FindAsync(id);
+        var vendor = await _vendorRepository.GetByIdAsync(id);
 
         if (vendor == null)
-            throw new Exception("Vendor not found");
+            throw new InvalidOperationException("Vendor not found.");
 
         vendor.IsActive = false;
         vendor.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _vendorRepository.SaveChangesAsync();
 
         return true;
     }

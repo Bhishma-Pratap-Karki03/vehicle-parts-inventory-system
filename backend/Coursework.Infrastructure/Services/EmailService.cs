@@ -17,20 +17,30 @@ public class EmailService : IEmailService
     public async Task SendEmailAsync(string toEmail, string subject, string body)
     {
         var emailSettings = _configuration.GetSection("EmailSettings");
+        var host = emailSettings["Host"]
+            ?? throw new InvalidOperationException("Email host is not configured.");
+        var port = emailSettings["Port"]
+            ?? throw new InvalidOperationException("Email port is not configured.");
+        var enableSsl = emailSettings["EnableSsl"]
+            ?? throw new InvalidOperationException("Email SSL setting is not configured.");
+        var username = emailSettings["Username"]
+            ?? throw new InvalidOperationException("Email username is not configured.");
+        var password = emailSettings["Password"]
+            ?? throw new InvalidOperationException("Email password is not configured.");
 
         var smtpClient = new SmtpClient
         {
-            Host = emailSettings["Host"],
-            Port = int.Parse(emailSettings["Port"]),
-            EnableSsl = bool.Parse(emailSettings["EnableSsl"]),
+            Host = host,
+            Port = int.Parse(port),
+            EnableSsl = bool.Parse(enableSsl),
             Credentials = new NetworkCredential(
-                emailSettings["Username"],
-                emailSettings["Password"])
+                username,
+                password)
         };
 
         var mailMessage = new MailMessage
         {
-            From = new MailAddress(emailSettings["Username"]),
+            From = new MailAddress(username),
             Subject = subject,
             Body = body,
             IsBodyHtml = false

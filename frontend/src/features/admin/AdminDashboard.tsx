@@ -2,8 +2,9 @@ import { type ReactNode, useState } from "react";
 import VendorManagement from "./VendorManagement";
 import StaffManagement from "./StaffManagement";
 import NotificationsPage from "./NotificationsPage";
+import ChangePasswordPage from "./ChangePasswordPage";
 
-type AdminPage = "vendors" | "staff" | "notifications";
+type AdminPage = "vendors" | "staff" | "notifications" | "changePassword";
 
 type IconName =
     | "grid"
@@ -11,6 +12,7 @@ type IconName =
     | "truck"
     | "bell"
     | "settings"
+    | "key"
     | "search"
     | "logout";
 
@@ -52,6 +54,13 @@ function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: str
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82V22a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8.6 20a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33H2a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4 8.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.6 4a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82V2a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4a1.65 1.65 0 0 0 1.82.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 8c.14.31.2.65.2 1s-.06.69-.2 1a1.65 1.65 0 0 0 0 2c.14.31.2.65.2 1s-.06.69-.2 1Z" />
             </>
         ),
+        key: (
+            <>
+                <circle cx="7.5" cy="15.5" r="5.5" />
+                <path d="m12 11 9-9" />
+                <path d="m15 5 4 4" />
+            </>
+        ),
         search: (
             <>
                 <circle cx="11" cy="11" r="7" />
@@ -91,6 +100,11 @@ export default function AdminDashboard() {
         { id: "staff", label: "Staff Management", icon: "users" },
         { id: "notifications", label: "Notifications", icon: "bell" },
     ];
+
+    function logout() {
+        localStorage.removeItem("token");
+        window.location.reload();
+    }
 
     return (
         <div className="min-h-screen bg-[#f3f6f9] text-[#071936]">
@@ -167,11 +181,24 @@ export default function AdminDashboard() {
                 </nav>
 
                 <div className="border-t border-slate-100 py-4 text-xs font-semibold">
-                    <button className="flex w-full items-center gap-3 border-l-4 border-transparent px-4 py-2.5 text-left text-slate-600 hover:border-[#0b5f8f] hover:bg-[#eef6fb] hover:text-[#073b63]">
-                        <Icon name="settings" className="h-4 w-4 text-slate-500" />
-                        Settings
+                    <button
+                        onClick={() => setPage("changePassword")}
+                        className={`flex w-full items-center gap-3 border-l-4 px-4 py-2.5 text-left hover:border-[#0b5f8f] hover:bg-[#eef6fb] hover:text-[#073b63] ${
+                            page === "changePassword"
+                                ? "border-[#0b5f8f] bg-[#eef6fb] text-[#073b63]"
+                                : "border-transparent text-slate-600"
+                        }`}
+                    >
+                        <Icon
+                            name="key"
+                            className={`h-4 w-4 ${page === "changePassword" ? "text-[#0b5f8f]" : "text-slate-500"}`}
+                        />
+                        Change Password
                     </button>
-                    <button className="flex w-full items-center gap-3 border-l-4 border-transparent px-4 py-2.5 text-left text-red-600 hover:border-red-500 hover:bg-red-50">
+                    <button
+                        onClick={logout}
+                        className="flex w-full items-center gap-3 border-l-4 border-transparent px-4 py-2.5 text-left text-red-600 hover:border-red-500 hover:bg-red-50"
+                    >
                         <Icon name="logout" className="h-4 w-4" />
                         Logout
                     </button>
@@ -182,6 +209,7 @@ export default function AdminDashboard() {
                 {page === "vendors" && <VendorManagement />}
                 {page === "staff" && <StaffManagement />}
                 {page === "notifications" && <NotificationsPage />}
+                {page === "changePassword" && <ChangePasswordPage />}
             </main>
         </div>
     );

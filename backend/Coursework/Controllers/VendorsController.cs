@@ -1,4 +1,5 @@
-﻿using Coursework.Application.DTOs.Vendor;
+using Coursework.Application.Common;
+using Coursework.Application.DTOs.Vendor;
 using Coursework.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,11 @@ public class VendorsController : ControllerBase
     public async Task<IActionResult> GetVendors()
     {
         var vendors = await _vendorService.GetAll();
-        return Ok(vendors);
+        var response = ApiResponse<object>.SuccessResponse(
+            vendors,
+            "Vendors retrieved successfully.");
+
+        return StatusCode(response.StatusCode, response);
     }
 
     [HttpGet("{id:int}")]
@@ -30,16 +35,28 @@ public class VendorsController : ControllerBase
         var vendor = await _vendorService.GetById(id);
 
         if (vendor == null)
-            return NotFound("Vendor not found.");
+        {
+            var notFoundResponse = ApiResponse<object>.NotFoundResponse("Vendor not found.");
 
-        return Ok(vendor);
+            return StatusCode(notFoundResponse.StatusCode, notFoundResponse);
+        }
+
+        var response = ApiResponse<object>.SuccessResponse(
+            vendor,
+            "Vendor retrieved successfully.");
+
+        return StatusCode(response.StatusCode, response);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateVendor(VendorDto request)
     {
         var vendor = await _vendorService.Create(request);
-        return CreatedAtAction(nameof(GetVendorById), new { id = vendor.VendorId }, vendor);
+        var response = ApiResponse<object>.CreatedResponse(
+            vendor,
+            "Vendor created successfully.");
+
+        return StatusCode(response.StatusCode, response);
     }
 
     [HttpPut("{id:int}")]
@@ -48,11 +65,17 @@ public class VendorsController : ControllerBase
         try
         {
             var vendor = await _vendorService.Update(id, request);
-            return Ok(vendor);
+            var response = ApiResponse<object>.SuccessResponse(
+                vendor,
+                "Vendor updated successfully.");
+
+            return StatusCode(response.StatusCode, response);
         }
         catch (Exception ex)
         {
-            return NotFound(new { Error = ex.Message });
+            var response = ApiResponse<object>.NotFoundResponse(ex.Message);
+
+            return StatusCode(response.StatusCode, response);
         }
     }
 
@@ -62,11 +85,17 @@ public class VendorsController : ControllerBase
         try
         {
             var success = await _vendorService.Delete(id);
-            return Ok(new { Deleted = success });
+            var response = ApiResponse<object>.SuccessResponse(
+                success,
+                "Vendor deleted successfully.");
+
+            return StatusCode(response.StatusCode, response);
         }
         catch (Exception ex)
         {
-            return NotFound(new { Error = ex.Message });
+            var response = ApiResponse<object>.NotFoundResponse(ex.Message);
+
+            return StatusCode(response.StatusCode, response);
         }
     }
 }

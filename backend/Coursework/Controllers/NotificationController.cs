@@ -1,3 +1,4 @@
+using Coursework.Application.Common;
 using Coursework.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,31 +21,32 @@ public class NotificationController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var notifications = await _service.GetAllAsync();
+        var response = ApiResponse<object>.SuccessResponse(
+            notifications,
+            "Notifications retrieved successfully.");
 
-        return Ok(notifications);
+        return StatusCode(response.StatusCode, response);
     }
 
     [HttpPost("low-stock")]
     public async Task<IActionResult> CheckLowStock()
     {
         var count = await _service.CheckLowStockAsync();
+        var response = ApiResponse<object>.SuccessResponse(
+            new { NotificationsCreated = count },
+            "Low stock checked successfully.");
 
-        return Ok(new
-        {
-            message = "Low stock checked",
-            notificationsCreated = count
-        });
+        return StatusCode(response.StatusCode, response);
     }
 
     [HttpPost("credit-reminders")]
     public async Task<IActionResult> SendReminders()
     {
         var count = await _service.SendCreditRemindersAsync();
+        var response = ApiResponse<object>.SuccessResponse(
+            new { RemindersSent = count },
+            "Reminders sent successfully.");
 
-        return Ok(new
-        {
-            message = "Reminders sent",
-            remindersSent = count
-        });
+        return StatusCode(response.StatusCode, response);
     }
 }

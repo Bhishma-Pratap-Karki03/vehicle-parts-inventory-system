@@ -4,9 +4,6 @@ namespace Coursework.Application.Interfaces;
 
 public interface ICustomerRepository
 {
-    Task<ApplicationUser> CreateCustomerAsync(
-        ApplicationUser customer);
-
     Task<Vehicle> CreateVehicleAsync(
         Vehicle vehicle);
 

@@ -5,5 +5,9 @@ namespace Coursework.Application.Interfaces;
 
 public interface IAuthService
 {
-    Task<ApiResponse<LoginResponseDto>> LoginAsync(LoginDto dto);
+    Task<ApiResponse<LoginResponseDto>> LoginAsync(
+        LoginDto dto);
+
+    Task<ApiResponse<string>> ChangePasswordAsync(
+        ChangePasswordDto dto);
 }

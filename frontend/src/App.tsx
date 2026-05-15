@@ -16,6 +16,8 @@ import SalesInvoiceListPage from './pages/salesInvoices/SalesInvoiceListPage'
 import CustomerCreatePage from './pages/customers/CustomerCreatePage'
 import CustomerSearchPage from './pages/customers/CustomerSearchPage'
 import CustomerDetailsPage from './pages/customers/CustomerDetailsPage'
+import CustomerLoginPage from './pages/customers/CustomerLoginPage'
+import ChangePasswordPage from './pages/customers/ChangePasswordPage'
 
 function App() {
   return (
@@ -27,21 +29,67 @@ function App() {
       <Route element={<PartDetailsPage />} path="/parts/:partId" />
       <Route element={<PartEditorPage />} path="/parts/:partId/edit" />
 
-      <Route element={<PartTransactionListPage />} path="/part-transactions" />
-      <Route element={<StockAdjustmentPage />} path="/part-transactions/create" />
-      <Route element={<PartTransactionDetailsPage />} path="/part-transactions/:partTransactionId" />
+      <Route
+        element={<PartTransactionListPage />}
+        path="/part-transactions"
+      />
+      <Route
+        element={<StockAdjustmentPage />}
+        path="/part-transactions/create"
+      />
+      <Route
+        element={<PartTransactionDetailsPage />}
+        path="/part-transactions/:partTransactionId"
+      />
 
-      <Route element={<PurchaseInvoiceListPage />} path="/purchase-invoices" />
-      <Route element={<PurchaseInvoiceCreatePage />} path="/purchase-invoices/create" />
-      <Route element={<PurchaseInvoiceDetailsPage />} path="/purchase-invoices/:purchaseInvoiceId" />
+      <Route
+        element={<PurchaseInvoiceListPage />}
+        path="/purchase-invoices"
+      />
+      <Route
+        element={<PurchaseInvoiceCreatePage />}
+        path="/purchase-invoices/create"
+      />
+      <Route
+        element={<PurchaseInvoiceDetailsPage />}
+        path="/purchase-invoices/:purchaseInvoiceId"
+      />
 
-      <Route element={<SalesInvoiceListPage />} path="/sales-invoices" />
-      <Route element={<SalesInvoiceCreatePage />} path="/sales-invoices/create" />
-      <Route element={<SalesInvoiceDetailsPage />} path="/sales-invoices/:salesInvoiceId" />
+      <Route
+        element={<SalesInvoiceListPage />}
+        path="/sales-invoices"
+      />
+      <Route
+        element={<SalesInvoiceCreatePage />}
+        path="/sales-invoices/create"
+      />
+      <Route
+        element={<SalesInvoiceDetailsPage />}
+        path="/sales-invoices/:salesInvoiceId"
+      />
 
-      <Route element={<CustomerCreatePage />} path="/customers/create" />
-      <Route element={<CustomerSearchPage />} path="/customers/search" />
-      <Route element={<CustomerDetailsPage />} path="/customers/:id" />
+      <Route
+        element={<CustomerCreatePage />}
+        path="/customers/create"
+      />
+      <Route
+        element={<CustomerSearchPage />}
+        path="/customers/search"
+      />
+      <Route
+        element={<CustomerDetailsPage />}
+        path="/customers/:id"
+      />
+
+      <Route
+        element={<CustomerLoginPage />}
+        path="/customers/login"
+      />
+
+      <Route
+        element={<ChangePasswordPage />}
+        path="/customers/change-password"
+      />
 
       <Route element={<NotFoundPage />} path="*" />
     </Routes>

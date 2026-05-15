@@ -15,23 +15,29 @@ public class AuthService : IAuthService
         _userManager = userManager;
     }
 
-    public async Task<ApiResponse<LoginResponseDto>> LoginAsync(LoginDto dto)
+    public async Task<ApiResponse<LoginResponseDto>> LoginAsync(
+        LoginDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email);
 
         if (user == null)
         {
-            return ApiResponse<LoginResponseDto>.UnauthorizedResponse(
-                "Invalid email or password.");
+            return ApiResponse<LoginResponseDto>
+                .UnauthorizedResponse(
+                    "Invalid email or password.");
         }
 
         var isPasswordValid =
-            await _userManager.CheckPasswordAsync(user, dto.Password);
+            await _userManager.CheckPasswordAsync(
+                user,
+                dto.Password
+            );
 
         if (!isPasswordValid)
         {
-            return ApiResponse<LoginResponseDto>.UnauthorizedResponse(
-                "Invalid email or password.");
+            return ApiResponse<LoginResponseDto>
+                .UnauthorizedResponse(
+                    "Invalid email or password.");
         }
 
         var roles = await _userManager.GetRolesAsync(user);
@@ -44,8 +50,46 @@ public class AuthService : IAuthService
             Token = "login-success"
         };
 
-        return ApiResponse<LoginResponseDto>.SuccessResponse(
-            response,
-            "Login successful.");
+        return ApiResponse<LoginResponseDto>
+            .SuccessResponse(
+                response,
+                "Login successful.");
+    }
+
+    public async Task<ApiResponse<string>>
+        ChangePasswordAsync(ChangePasswordDto dto)
+    {
+        var user =
+            await _userManager.FindByEmailAsync(dto.Email);
+
+        if (user == null)
+        {
+            return ApiResponse<string>
+                .NotFoundResponse("User not found.");
+        }
+
+        var result = await _userManager.ChangePasswordAsync(
+            user,
+            dto.CurrentPassword,
+            dto.NewPassword
+        );
+
+        if (!result.Succeeded)
+        {
+            return ApiResponse<string>
+                .FailureResponse(
+                    "Password change failed.",
+                    400,
+                    result.Errors
+                        .Select(error => error.Description)
+                        .ToList()
+                );
+        }
+
+        return ApiResponse<string>
+            .SuccessResponse(
+                "Password updated successfully.",
+                "Password changed successfully."
+            );
     }
 }

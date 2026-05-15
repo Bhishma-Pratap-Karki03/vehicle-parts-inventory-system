@@ -2,6 +2,7 @@ using Coursework.Application.Common;
 using Coursework.Application.DTOs.Customers;
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace Coursework.Application.Services;
 
@@ -9,10 +10,14 @@ public class CustomerService : ICustomerService
 {
     private readonly ICustomerRepository _customerRepository;
 
+    private readonly UserManager<ApplicationUser> _userManager;
+
     public CustomerService(
-        ICustomerRepository customerRepository)
+        ICustomerRepository customerRepository,
+        UserManager<ApplicationUser> userManager)
     {
         _customerRepository = customerRepository;
+        _userManager = userManager;
     }
 
     public async Task<ApiResponse<CustomerDetailsDto>>
@@ -27,8 +32,27 @@ public class CustomerService : ICustomerService
             UserName = dto.Email
         };
 
-        var createdCustomer =
-            await _customerRepository.CreateCustomerAsync(customer);
+        var result = await _userManager.CreateAsync(
+            customer,
+            "Customer@123"
+        );
+
+        if (!result.Succeeded)
+        {
+            return ApiResponse<CustomerDetailsDto>
+                .FailureResponse(
+                    "Failed to create customer.",
+                    400,
+                    result.Errors
+                        .Select(error => error.Description)
+                        .ToList()
+                );
+        }
+
+        await _userManager.AddToRoleAsync(
+            customer,
+            "Customer"
+        );
 
         var vehicleDtos = new List<VehicleDto>();
 
@@ -36,7 +60,7 @@ public class CustomerService : ICustomerService
         {
             var vehicle = new Vehicle
             {
-                CustomerId = createdCustomer.Id,
+                CustomerId = customer.Id,
                 VehicleNumber = vehicleDto.VehicleNumber,
                 Brand = vehicleDto.Brand,
                 Model = vehicleDto.Model,
@@ -60,18 +84,19 @@ public class CustomerService : ICustomerService
 
         var response = new CustomerDetailsDto
         {
-            Id = createdCustomer.Id,
-            FullName = createdCustomer.FullName,
-            Email = createdCustomer.Email!,
-            PhoneNumber = createdCustomer.PhoneNumber!,
-            Address = createdCustomer.Address,
+            Id = customer.Id,
+            FullName = customer.FullName,
+            Email = customer.Email!,
+            PhoneNumber = customer.PhoneNumber!,
+            Address = customer.Address,
             Vehicles = vehicleDtos
         };
 
         return ApiResponse<CustomerDetailsDto>
             .CreatedResponse(
                 response,
-                "Customer registered successfully.");
+                "Customer registered successfully."
+            );
     }
 
     public async Task<ApiResponse<List<CustomerListDto>>>
@@ -96,7 +121,8 @@ public class CustomerService : ICustomerService
         return ApiResponse<List<CustomerListDto>>
             .SuccessResponse(
                 response,
-                "Customers fetched successfully.");
+                "Customers fetched successfully."
+            );
     }
 
     public async Task<ApiResponse<CustomerDetailsDto>>
@@ -133,6 +159,7 @@ public class CustomerService : ICustomerService
         return ApiResponse<CustomerDetailsDto>
             .SuccessResponse(
                 response,
-                "Customer details fetched successfully.");
+                "Customer details fetched successfully."
+            );
     }
 }

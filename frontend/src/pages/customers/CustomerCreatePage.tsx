@@ -95,7 +95,9 @@ function CustomerCreatePage() {
         return
       }
 
-      toast.success(result.message)
+      toast.success(
+        `${result.message} Default password: Customer@123`,
+      )
 
       setFormData({
         fullName: '',

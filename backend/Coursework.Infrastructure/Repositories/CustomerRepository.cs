@@ -9,15 +9,6 @@ public class CustomerRepository(ApplicationDbContext context)
     : RepositoryBase<ApplicationUser>(context),
         ICustomerRepository
 {
-    public async Task<ApplicationUser> CreateCustomerAsync(
-        ApplicationUser customer)
-    {
-        await Context.Users.AddAsync(customer);
-        await Context.SaveChangesAsync();
-
-        return customer;
-    }
-
     public async Task<Vehicle> CreateVehicleAsync(
         Vehicle vehicle)
     {

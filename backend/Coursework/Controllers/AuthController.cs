@@ -22,4 +22,14 @@ public class AuthController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
+
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordDto dto)
+    {
+        var response =
+            await _authService.ChangePasswordAsync(dto);
+
+        return StatusCode(response.StatusCode, response);
+    }
 }

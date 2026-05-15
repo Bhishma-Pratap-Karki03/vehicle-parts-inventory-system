@@ -2,8 +2,6 @@ using Coursework.Application.Common;
 using Coursework.Application.DTOs.Customers;
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
-using Coursework.Infrastructure.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -11,17 +9,23 @@ namespace Coursework.Services;
 
 public class CustomerService : ICustomerService
 {
-    private readonly ApplicationDbContext _dbContext;
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IUserRepository _userRepository;
+    private readonly IVehicleRepository _vehicleRepository;
+    private readonly ISalesInvoiceRepository _salesInvoiceRepository;
+    private readonly IServiceRecordRepository _serviceRecordRepository;
     private readonly ILogger<CustomerService> _logger;
 
     public CustomerService(
-        ApplicationDbContext dbContext,
-        UserManager<ApplicationUser> userManager,
+        IUserRepository userRepository,
+        IVehicleRepository vehicleRepository,
+        ISalesInvoiceRepository salesInvoiceRepository,
+        IServiceRecordRepository serviceRecordRepository,
         ILogger<CustomerService> logger)
     {
-        _dbContext = dbContext;
-        _userManager = userManager;
+        _userRepository = userRepository;
+        _vehicleRepository = vehicleRepository;
+        _salesInvoiceRepository = salesInvoiceRepository;
+        _serviceRecordRepository = serviceRecordRepository;
         _logger = logger;
     }
 
@@ -29,7 +33,7 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            var user = await _userManager.FindByIdAsync(customerId);
+            var user = await _userRepository.FindByIdAsync(customerId);
 
             if (user == null || !user.IsActive)
             {
@@ -56,7 +60,7 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            var user = await _userManager.FindByIdAsync(customerId);
+            var user = await _userRepository.FindByIdAsync(customerId);
 
             if (user == null || !user.IsActive)
             {
@@ -73,7 +77,7 @@ public class CustomerService : ICustomerService
                 : dto.Address.Trim();
             user.UpdatedAt = DateTime.UtcNow;
 
-            var result = await _userManager.UpdateAsync(user);
+            var result = await _userRepository.UpdateAsync(user);
 
             if (!result.Succeeded)
             {
@@ -99,11 +103,7 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            var vehicles = await _dbContext.Vehicles
-                .AsNoTracking()
-                .Where(v => v.CustomerId == customerId)
-                .OrderBy(v => v.VehicleNumber)
-                .ToListAsync();
+            var vehicles = await _vehicleRepository.GetCustomerVehiclesAsync(customerId);
 
             var response = vehicles.Select(MapVehicle).ToList();
 
@@ -128,9 +128,9 @@ public class CustomerService : ICustomerService
         {
             var normalizedNumber = dto.VehicleNumber.Trim();
 
-            var existing = await _dbContext.Vehicles
-                .AsNoTracking()
-                .AnyAsync(v => v.VehicleNumber == normalizedNumber);
+            var existing = await _vehicleRepository
+                .FindByCondition(v => v.VehicleNumber == normalizedNumber)
+                .AnyAsync();
 
             if (existing)
             {
@@ -149,8 +149,8 @@ public class CustomerService : ICustomerService
                 CreatedAt = DateTime.UtcNow
             };
 
-            _dbContext.Vehicles.Add(vehicle);
-            await _dbContext.SaveChangesAsync();
+            _vehicleRepository.Create(vehicle);
+            await _vehicleRepository.SaveChangesAsync();
 
             return ApiResponse<CustomerVehicleDto>.CreatedResponse(
                 MapVehicle(vehicle),
@@ -172,10 +172,10 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            var vehicle = await _dbContext.Vehicles
-                .FirstOrDefaultAsync(v =>
-                    v.VehicleId == vehicleId &&
-                    v.CustomerId == customerId);
+            var vehicle = await _vehicleRepository.GetCustomerVehicleAsync(
+                vehicleId,
+                customerId,
+                trackChanges: true);
 
             if (vehicle == null)
             {
@@ -185,11 +185,11 @@ public class CustomerService : ICustomerService
 
             var normalizedNumber = dto.VehicleNumber.Trim();
 
-            var conflict = await _dbContext.Vehicles
-                .AsNoTracking()
-                .AnyAsync(v =>
+            var conflict = await _vehicleRepository
+                .FindByCondition(v =>
                     v.VehicleNumber == normalizedNumber &&
-                    v.VehicleId != vehicleId);
+                    v.VehicleId != vehicleId)
+                .AnyAsync();
 
             if (conflict)
             {
@@ -204,7 +204,7 @@ public class CustomerService : ICustomerService
             vehicle.Mileage = dto.Mileage;
             vehicle.UpdatedAt = DateTime.UtcNow;
 
-            await _dbContext.SaveChangesAsync();
+            await _vehicleRepository.SaveChangesAsync();
 
             return ApiResponse<CustomerVehicleDto>.SuccessResponse(
                 MapVehicle(vehicle),
@@ -227,10 +227,10 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            var vehicle = await _dbContext.Vehicles
-                .FirstOrDefaultAsync(v =>
-                    v.VehicleId == vehicleId &&
-                    v.CustomerId == customerId);
+            var vehicle = await _vehicleRepository.GetCustomerVehicleAsync(
+                vehicleId,
+                customerId,
+                trackChanges: true);
 
             if (vehicle == null)
             {
@@ -238,11 +238,13 @@ public class CustomerService : ICustomerService
                     "Vehicle was not found.");
             }
 
-            var hasInvoices = await _dbContext.SalesInvoices
-                .AnyAsync(s => s.VehicleId == vehicleId);
+            var hasInvoices = await _salesInvoiceRepository
+                .FindByCondition(s => s.VehicleId == vehicleId)
+                .AnyAsync();
 
-            var hasServiceRecords = await _dbContext.ServiceRecords
-                .AnyAsync(s => s.VehicleId == vehicleId);
+            var hasServiceRecords = await _serviceRecordRepository
+                .FindByCondition(s => s.VehicleId == vehicleId)
+                .AnyAsync();
 
             if (hasInvoices || hasServiceRecords)
             {
@@ -250,8 +252,8 @@ public class CustomerService : ICustomerService
                     "Vehicle cannot be deleted because it is referenced by invoices or service records.");
             }
 
-            _dbContext.Vehicles.Remove(vehicle);
-            await _dbContext.SaveChangesAsync();
+            _vehicleRepository.Delete(vehicle);
+            await _vehicleRepository.SaveChangesAsync();
 
             return ApiResponse<int>.SuccessResponse(
                 vehicleId,
@@ -275,9 +277,8 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            var invoices = await _dbContext.SalesInvoices
-                .AsNoTracking()
-                .Where(s => s.CustomerId == customerId)
+            var invoices = await _salesInvoiceRepository
+                .FindByCondition(s => s.CustomerId == customerId)
                 .Include(s => s.Vehicle)
                 .Include(s => s.Items)
                     .ThenInclude(item => item.Part)
@@ -332,9 +333,8 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            var records = await _dbContext.ServiceRecords
-                .AsNoTracking()
-                .Where(s => s.CustomerId == customerId)
+            var records = await _serviceRecordRepository
+                .FindByCondition(s => s.CustomerId == customerId)
                 .Include(s => s.Vehicle)
                 .Include(s => s.Staff)
                 .OrderByDescending(s => s.ServiceDate)
@@ -376,9 +376,8 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            var invoiceAggregates = await _dbContext.SalesInvoices
-                .AsNoTracking()
-                .Where(s => s.CustomerId == customerId)
+            var invoiceAggregates = await _salesInvoiceRepository
+                .FindByCondition(s => s.CustomerId == customerId)
                 .GroupBy(_ => 1)
                 .Select(group => new
                 {
@@ -388,13 +387,13 @@ public class CustomerService : ICustomerService
                 })
                 .FirstOrDefaultAsync();
 
-            var serviceCount = await _dbContext.ServiceRecords
-                .AsNoTracking()
-                .CountAsync(s => s.CustomerId == customerId);
+            var serviceCount = await _serviceRecordRepository
+                .FindByCondition(s => s.CustomerId == customerId)
+                .CountAsync();
 
-            var vehicleCount = await _dbContext.Vehicles
-                .AsNoTracking()
-                .CountAsync(v => v.CustomerId == customerId);
+            var vehicleCount = await _vehicleRepository
+                .FindByCondition(v => v.CustomerId == customerId)
+                .CountAsync();
 
             var summary = new CustomerHistorySummaryDto
             {

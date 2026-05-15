@@ -4,6 +4,7 @@ using System.Text;
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Coursework.Services;

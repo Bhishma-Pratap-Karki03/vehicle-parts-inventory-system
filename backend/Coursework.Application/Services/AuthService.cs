@@ -2,7 +2,6 @@ using Coursework.Application.Common;
 using Coursework.Application.DTOs.Auth;
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
 namespace Coursework.Services;
@@ -11,19 +10,16 @@ public class AuthService : IAuthService
 {
     private const string CustomerRoleName = "Customer";
 
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly IUserRepository _userRepository;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
-        UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager,
+        IUserRepository userRepository,
         IJwtTokenService jwtTokenService,
         ILogger<AuthService> logger)
     {
-        _userManager = userManager;
-        _roleManager = roleManager;
+        _userRepository = userRepository;
         _jwtTokenService = jwtTokenService;
         _logger = logger;
     }
@@ -32,7 +28,7 @@ public class AuthService : IAuthService
     {
         try
         {
-            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            var existingUser = await _userRepository.FindByEmailAsync(dto.Email);
 
             if (existingUser != null)
             {
@@ -40,10 +36,7 @@ public class AuthService : IAuthService
                     "An account with this email already exists.");
             }
 
-            if (!await _roleManager.RoleExistsAsync(CustomerRoleName))
-            {
-                await _roleManager.CreateAsync(new IdentityRole(CustomerRoleName));
-            }
+            await _userRepository.EnsureRoleExistsAsync(CustomerRoleName);
 
             var user = new ApplicationUser
             {
@@ -61,7 +54,7 @@ public class AuthService : IAuthService
                 CreatedAt = DateTime.UtcNow
             };
 
-            var createResult = await _userManager.CreateAsync(user, dto.Password);
+            var createResult = await _userRepository.CreateAsync(user, dto.Password);
 
             if (!createResult.Succeeded)
             {
@@ -72,7 +65,7 @@ public class AuthService : IAuthService
                     errors: errors);
             }
 
-            var roleResult = await _userManager.AddToRoleAsync(user, CustomerRoleName);
+            var roleResult = await _userRepository.AddToRoleAsync(user, CustomerRoleName);
 
             if (!roleResult.Succeeded)
             {
@@ -101,7 +94,7 @@ public class AuthService : IAuthService
     {
         try
         {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
+            var user = await _userRepository.FindByEmailAsync(dto.Email);
 
             if (user == null || !user.IsActive)
             {
@@ -109,7 +102,7 @@ public class AuthService : IAuthService
                     "Invalid email or password.");
             }
 
-            var passwordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
+            var passwordValid = await _userRepository.CheckPasswordAsync(user, dto.Password);
 
             if (!passwordValid)
             {
@@ -142,7 +135,7 @@ public class AuthService : IAuthService
                     "User identifier was not provided.");
             }
 
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userRepository.FindByIdAsync(userId);
 
             if (user == null || !user.IsActive)
             {
@@ -150,7 +143,7 @@ public class AuthService : IAuthService
                     "User was not found.");
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
+            var roles = await _userRepository.GetRolesAsync(user);
 
             var dto = new AuthenticatedUserDto
             {
@@ -179,7 +172,7 @@ public class AuthService : IAuthService
     {
         var token = await _jwtTokenService.GenerateTokenAsync(user);
         var expiry = _jwtTokenService.GetTokenExpiry();
-        var roles = await _userManager.GetRolesAsync(user);
+        var roles = await _userRepository.GetRolesAsync(user);
 
         return new AuthResponseDto
         {

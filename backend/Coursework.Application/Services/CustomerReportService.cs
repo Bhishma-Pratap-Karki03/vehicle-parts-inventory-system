@@ -2,7 +2,6 @@ using Coursework.Application.Common;
 using Coursework.Application.DTOs.Customers;
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Enums;
-using Coursework.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -10,14 +9,17 @@ namespace Coursework.Services;
 
 public class CustomerReportService : ICustomerReportService
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly ISalesInvoiceRepository _salesInvoiceRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ILogger<CustomerReportService> _logger;
 
     public CustomerReportService(
-        ApplicationDbContext dbContext,
+        ISalesInvoiceRepository salesInvoiceRepository,
+        IUserRepository userRepository,
         ILogger<CustomerReportService> logger)
     {
-        _dbContext = dbContext;
+        _salesInvoiceRepository = salesInvoiceRepository;
+        _userRepository = userRepository;
         _logger = logger;
     }
 
@@ -27,8 +29,7 @@ public class CustomerReportService : ICustomerReportService
         {
             limit = Math.Clamp(limit, 1, 100);
 
-            var data = await _dbContext.SalesInvoices
-                .AsNoTracking()
+            var data = await _salesInvoiceRepository.FindAll()
                 .GroupBy(s => s.CustomerId)
                 .Select(group => new
                 {
@@ -44,17 +45,7 @@ public class CustomerReportService : ICustomerReportService
 
             var customerIds = data.Select(item => item.CustomerId).ToList();
 
-            var customers = await _dbContext.Users
-                .AsNoTracking()
-                .Where(user => customerIds.Contains(user.Id))
-                .Select(user => new
-                {
-                    user.Id,
-                    user.FullName,
-                    user.Email,
-                    user.PhoneNumber
-                })
-                .ToListAsync();
+            var customers = await _userRepository.GetUsersByIdsAsync(customerIds);
 
             var response = data
                 .Select(item =>
@@ -92,8 +83,7 @@ public class CustomerReportService : ICustomerReportService
         {
             limit = Math.Clamp(limit, 1, 100);
 
-            var data = await _dbContext.SalesInvoices
-                .AsNoTracking()
+            var data = await _salesInvoiceRepository.FindAll()
                 .GroupBy(s => s.CustomerId)
                 .Select(group => new
                 {
@@ -109,17 +99,7 @@ public class CustomerReportService : ICustomerReportService
 
             var customerIds = data.Select(item => item.CustomerId).ToList();
 
-            var customers = await _dbContext.Users
-                .AsNoTracking()
-                .Where(user => customerIds.Contains(user.Id))
-                .Select(user => new
-                {
-                    user.Id,
-                    user.FullName,
-                    user.Email,
-                    user.PhoneNumber
-                })
-                .ToListAsync();
+            var customers = await _userRepository.GetUsersByIdsAsync(customerIds);
 
             var response = data
                 .Select(item =>
@@ -158,8 +138,7 @@ public class CustomerReportService : ICustomerReportService
             overdueDays = Math.Clamp(overdueDays, 0, 365);
             var overdueThreshold = DateTime.UtcNow.AddDays(-overdueDays);
 
-            var data = await _dbContext.SalesInvoices
-                .AsNoTracking()
+            var data = await _salesInvoiceRepository.FindAll()
                 .Where(s => s.PaymentStatus != PaymentStatus.Paid)
                 .GroupBy(s => s.CustomerId)
                 .Select(group => new
@@ -176,17 +155,7 @@ public class CustomerReportService : ICustomerReportService
 
             var customerIds = data.Select(item => item.CustomerId).ToList();
 
-            var customers = await _dbContext.Users
-                .AsNoTracking()
-                .Where(user => customerIds.Contains(user.Id))
-                .Select(user => new
-                {
-                    user.Id,
-                    user.FullName,
-                    user.Email,
-                    user.PhoneNumber
-                })
-                .ToListAsync();
+            var customers = await _userRepository.GetUsersByIdsAsync(customerIds);
 
             var response = data
                 .Select(item =>

@@ -7,7 +7,8 @@ namespace Coursework.Controllers;
 
 [ApiController]
 [Route("api/notifications")]
-[Authorize(Roles = "Admin")]
+[Authorize]
+//[Authorize(Roles = "Admin")]
 public class NotificationController : ControllerBase
 {
     private readonly INotificationService _service;

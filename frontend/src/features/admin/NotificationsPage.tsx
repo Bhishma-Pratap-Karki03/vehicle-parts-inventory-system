@@ -4,6 +4,12 @@ import type { AppNotification } from "../../types/notification";
 
 type IconName = "bell" | "alert" | "credit" | "search" | "send" | "clock";
 
+type ApiResponse<T> = {
+    success: boolean;
+    message: string;
+    data: T;
+};
+
 function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: string }) {
     const paths: Record<IconName, ReactNode> = {
         bell: (
@@ -68,8 +74,8 @@ export default function NotificationsPage() {
 
     async function loadNotifications() {
         try {
-            const data = await apiRequest<AppNotification[]>("/notifications");
-            setNotifications(data);
+            const response = await apiRequest<ApiResponse<AppNotification[]>>("/notifications");
+            setNotifications(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
             setMessage(
                 error instanceof Error ? error.message : "Failed to load notifications."
@@ -85,14 +91,16 @@ export default function NotificationsPage() {
 
     async function checkLowStock() {
         try {
-            const result = await apiRequest<{
-                message: string;
-                notificationsCreated: number;
-            }>("/notifications/low-stock", {
+            const response = await apiRequest<ApiResponse<{
+                notificationsCreated?: number;
+                NotificationsCreated?: number;
+            }>>("/notifications/low-stock", {
                 method: "POST",
             });
+            const created =
+                response.data.notificationsCreated ?? response.data.NotificationsCreated ?? 0;
 
-            setMessage(`${result.message}. Created: ${result.notificationsCreated}`);
+            setMessage(`${response.message}. Created: ${created}`);
             await loadNotifications();
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "Failed to check low stock.");
@@ -101,14 +109,15 @@ export default function NotificationsPage() {
 
     async function sendCreditReminders() {
         try {
-            const result = await apiRequest<{
-                message: string;
-                remindersSent: number;
-            }>("/notifications/credit-reminders", {
+            const response = await apiRequest<ApiResponse<{
+                remindersSent?: number;
+                RemindersSent?: number;
+            }>>("/notifications/credit-reminders", {
                 method: "POST",
             });
+            const sent = response.data.remindersSent ?? response.data.RemindersSent ?? 0;
 
-            setMessage(`${result.message}. Sent: ${result.remindersSent}`);
+            setMessage(`${response.message}. Sent: ${sent}`);
             await loadNotifications();
         } catch (error) {
             setMessage(

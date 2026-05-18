@@ -82,4 +82,12 @@ public class ApiResponse<T>
     {
         return FailureResponse(message, 500);
     }
+
+    public static ApiResponse<T> ErrorResponse(
+        string message,
+        List<string>? errors = null,
+        int statusCode = 400)
+    {
+        return FailureResponse(message, statusCode, errors);
+    }
 }

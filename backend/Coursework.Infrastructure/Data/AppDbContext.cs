@@ -18,7 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<PurchaseInvoice> PurchaseInvoices => Set<PurchaseInvoice>();
     public DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems => Set<PurchaseInvoiceItem>();
-    
+
     public DbSet<PartTransaction> PartTransactions => Set<PartTransaction>();
 
     public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
@@ -71,55 +71,61 @@ private static void SeedRoles(ModelBuilder modelBuilder)
 
     var adminUser = new ApplicationUser
     {
-        Id = "dev-admin-user",
-        FullName = "Development Admin",
-        UserName = "admin@autocareims.com",
-        NormalizedUserName = "ADMIN@AUTOCAREIMS.COM",
-        Email = "admin@autocareims.com",
-        NormalizedEmail = "ADMIN@AUTOCAREIMS.COM",
-        EmailConfirmed = true,
-        IsActive = true,
-        CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-        SecurityStamp = "dev-admin-security-stamp",
-        ConcurrencyStamp = "dev-admin-concurrency-stamp",
-        PasswordHash = "AQAAAAIAAYagAAAAEPermanentAdminHash123456789"
-    };
+        modelBuilder.Entity<IdentityRole>().HasData(
+            new IdentityRole
+            {
+                Id = "1",
+                Name = "Admin",
+                NormalizedName = "ADMIN",
+                ConcurrencyStamp = "admin-role-stamp"
+            },
+            new IdentityRole
+            {
+                Id = "2",
+                Name = "Staff",
+                NormalizedName = "STAFF",
+                ConcurrencyStamp = "staff-role-stamp"
+            },
+            new IdentityRole
+            {
+                Id = "3",
+                Name = "Customer",
+                NormalizedName = "CUSTOMER",
+                ConcurrencyStamp = "customer-role-stamp"
+            },
+            new IdentityRole
+            {
+                Id = "4",
+                Name = "Vendor",
+                NormalizedName = "VENDOR",
+                ConcurrencyStamp = "vendor-role-stamp"
+            }
+        );
+        modelBuilder.Entity<ApplicationUser>().HasData(
+            new ApplicationUser
+            {
+                Id = "dev-admin-user",
+                FullName = "Development Admin",
+                UserName = "admin@autocareims.com",
+                NormalizedUserName = "ADMIN@AUTOCAREIMS.COM",
+                Email = "admin@autocareims.com",
+                NormalizedEmail = "ADMIN@AUTOCAREIMS.COM",
+                EmailConfirmed = true,
+                IsActive = true,
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                SecurityStamp = "dev-admin-security-stamp",
+                ConcurrencyStamp = "dev-admin-concurrency-stamp"
+            }
+        );
 
-    var staffUser = new ApplicationUser
-    {
-        Id = "dev-staff-user",
-        FullName = "Staff User",
-        UserName = "staff@gmail.com",
-        NormalizedUserName = "STAFF@GMAIL.COM",
-        Email = "staff@gmail.com",
-        NormalizedEmail = "STAFF@GMAIL.COM",
-        EmailConfirmed = true,
-        IsActive = true,
-        CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-        SecurityStamp = "dev-staff-security-stamp",
-        ConcurrencyStamp = "dev-staff-concurrency-stamp",
-        PasswordHash = "AQAAAAIAAYagAAAAEPermanentStaffHash123456789"
-    };
-
-    modelBuilder.Entity<ApplicationUser>().HasData(
-        adminUser,
-        staffUser
-    );
-
-    modelBuilder.Entity<IdentityUserRole<string>>().HasData(
-        new IdentityUserRole<string>
-        {
-            UserId = "dev-admin-user",
-            RoleId = "1"
-        },
-
-        new IdentityUserRole<string>
-        {
-            UserId = "dev-staff-user",
-            RoleId = "2"
-        }
-    );
-}
+        modelBuilder.Entity<IdentityUserRole<string>>().HasData(
+            new IdentityUserRole<string>
+            {
+                UserId = "dev-admin-user",
+                RoleId = "1"
+            }
+        );
+    }
 
     private static void ConfigureIndexes(ModelBuilder modelBuilder)
     {
@@ -138,7 +144,7 @@ private static void SeedRoles(ModelBuilder modelBuilder)
         modelBuilder.Entity<SalesInvoice>()
             .HasIndex(s => s.InvoiceNumber)
             .IsUnique();
-        
+
         modelBuilder.Entity<SalesInvoice>()
             .HasIndex(s => s.CustomerId);
 
@@ -162,6 +168,7 @@ private static void SeedRoles(ModelBuilder modelBuilder)
 
         modelBuilder.Entity<Vendor>()
             .HasIndex(v => v.Email);
+
     }
 
     private static void ConfigureRelationships(ModelBuilder modelBuilder)
@@ -201,7 +208,7 @@ private static void SeedRoles(ModelBuilder modelBuilder)
             .WithMany(p => p.PurchaseInvoiceItems)
             .HasForeignKey(i => i.PartId)
             .OnDelete(DeleteBehavior.Restrict);
-        
+
         modelBuilder.Entity<PartTransaction>()
             .HasOne(t => t.Part)
             .WithMany(p => p.PartTransactions)
@@ -225,7 +232,7 @@ private static void SeedRoles(ModelBuilder modelBuilder)
             .WithMany(u => u.CreatedPartTransactions)
             .HasForeignKey(t => t.CreatedById)
             .OnDelete(DeleteBehavior.Restrict);
-        
+
         modelBuilder.Entity<PartTransaction>()
             .HasOne(t => t.SalesInvoice)
             .WithMany(s => s.PartTransactions)
@@ -311,16 +318,14 @@ private static void SeedRoles(ModelBuilder modelBuilder)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Review>()
-            .HasOne(r => r.Customer)
-            .WithMany(u => u.Reviews)
-            .HasForeignKey(r => r.CustomerId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasOne(r => r.Appointment)
+            .WithOne(a => a.Review)
+            .HasForeignKey<Review>(r => r.AppointmentId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Review>()
-            .HasOne(r => r.Appointment)
-            .WithMany(a => a.Reviews)
-            .HasForeignKey(r => r.AppointmentId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .HasIndex(r => r.AppointmentId)
+            .IsUnique();
 
         modelBuilder.Entity<PartRequest>()
             .HasOne(p => p.Customer)
@@ -333,6 +338,18 @@ private static void SeedRoles(ModelBuilder modelBuilder)
             .WithMany(u => u.Notifications)
             .HasForeignKey(n => n.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PartRequest>()
+            .HasOne(p => p.Customer)
+            .WithMany(u => u.PartRequests)
+            .HasForeignKey(p => p.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PartRequest>()
+            .HasOne(p => p.Vehicle)
+            .WithMany()
+            .HasForeignKey(p => p.VehicleId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 
     private static void ConfigureMoneyPrecision(ModelBuilder modelBuilder)
@@ -388,12 +405,12 @@ private static void SeedRoles(ModelBuilder modelBuilder)
         modelBuilder.Entity<ServiceRecord>()
             .Property(s => s.LaborCost)
             .HasPrecision(18, 2);
-        
+
         modelBuilder.Entity<PartTransaction>()
             .Property(t => t.CostPricePerUnit)
             .HasPrecision(18, 2);
     }
-    
+
     private static void ConfigureStringLengths(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<SalesInvoice>()
@@ -407,7 +424,7 @@ private static void SeedRoles(ModelBuilder modelBuilder)
             .Property(p => p.Status)
             .HasConversion<string>()
             .HasMaxLength(50);
-        
+
         modelBuilder.Entity<SalesInvoice>()
             .Property(s => s.PaymentStatus)
             .HasConversion<string>()
@@ -447,11 +464,16 @@ private static void SeedRoles(ModelBuilder modelBuilder)
             .Property(p => p.Status)
             .HasConversion<string>()
             .HasMaxLength(50);
-        
+
+        modelBuilder.Entity<PartRequest>()
+            .Property(p => p.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
         modelBuilder.Entity<PartTransaction>()
             .Property(t => t.TransactionType)
             .HasConversion<string>()
             .HasMaxLength(50);
     }
-    
+
 }

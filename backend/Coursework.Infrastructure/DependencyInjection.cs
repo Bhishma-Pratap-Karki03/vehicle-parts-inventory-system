@@ -1,9 +1,10 @@
 using Coursework.Application.Interfaces;
-using Coursework.Domain.Entities;
 using Coursework.Application.Services;
-using Coursework.Infrastructure.Services;
+using Coursework.Domain.Entities;
+using Coursework.Infrastructure.BackgroundServices;
 using Coursework.Infrastructure.Data;
 using Coursework.Infrastructure.Repositories;
+using Coursework.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,7 +33,7 @@ public static class DependencyInjection
             })
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>();
-            // .AddDefaultTokenProviders();
+        // .AddDefaultTokenProviders();
 
         services.AddScoped<IPartRepository, PartRepository>();
         services.AddScoped<IVendorRepository, VendorRepository>();
@@ -41,6 +42,8 @@ public static class DependencyInjection
         services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IServiceRecordRepository, ServiceRecordRepository>();
 
         services.AddScoped<IPartService, PartService>();
         services.AddScoped<IPurchaseInvoiceService, PurchaseInvoiceService>();
@@ -53,6 +56,41 @@ public static class DependencyInjection
         services.AddScoped<IInvoicePdfService, InvoicePdfService>();
         services.AddScoped<ISalesInvoicePdfService, SalesInvoicePdfService>();
         services.AddScoped<IEmailService, SendGridEmailService>();
+
+
+
+
+        // Repositories
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<IServiceRecordRepository, ServiceRecordRepository>();
+        services.AddScoped<IPartRequestRepository, PartRequestRepository>();
+        services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
+        services.AddScoped<ISalesInvoiceItemRepository, SalesInvoiceItemRepository>();
+        services.AddScoped<IPurchaseInvoiceItemRepository, PurchaseInvoiceItemRepository>();
+
+        // Application Services
+        services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<IPartRequestService, PartRequestService>();
+        services.AddScoped<IFinancialReportService, FinancialReportService>();
+
+        services.AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
+        services.AddScoped<IStaffService, StaffService>();
+        services.AddScoped<IVendorService, VendorService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IPartRepository, PartRepository>();
+        services.AddScoped<IVendorRepository, VendorRepository>();
+        services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
+        services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+
+        services.AddHostedService<NotificationBackgroundService>();
 
         return services;
     }

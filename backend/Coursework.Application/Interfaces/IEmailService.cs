@@ -1,6 +1,6 @@
-using Coursework.Application.DTOs.Emails;
-
 namespace Coursework.Application.Interfaces;
+
+using Coursework.Application.DTOs.Emails;
 
 public interface IEmailService
 {
@@ -10,4 +10,6 @@ public interface IEmailService
         string plainTextContent,
         string htmlContent,
         EmailAttachmentDto attachment);
+
+    Task SendEmailAsync(string toEmail, string subject, string body);
 }

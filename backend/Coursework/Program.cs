@@ -1,14 +1,68 @@
+using System.Text;
+using Coursework.Application.Interfaces;
 using Coursework.Infrastructure;
 using Coursework.Infrastructure.Data;
-using QuestPDF.Infrastructure;
+using Coursework.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddOpenApi();
 builder.Services.AddHttpClient();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<ICustomerReportService, CustomerReportService>();
+
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtSecret = jwtSection["SecretKey"]
+    ?? throw new InvalidOperationException("Jwt:SecretKey is not configured.");
+var jwtIssuer = jwtSection["Issuer"];
+var jwtAudience = jwtSection["Audience"];
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
 {
@@ -30,15 +84,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-
-app.UseHttpsRedirection();
-
+// app.UseHttpsRedirection();
 app.UseCors("AllowAll");
-
-app.UseAuthorization();
-
 app.UseAuthentication();
-
+app.UseAuthorization();
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())

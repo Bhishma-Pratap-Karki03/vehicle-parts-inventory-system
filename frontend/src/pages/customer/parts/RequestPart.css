@@ -1,3 +1,28 @@
+.request-part-page {
+    min-height: 100vh;
+    background: #f7f9fb;
+    color: #191c1e;
+    font-family: Inter, Arial, sans-serif;
+}
+
+.request-part-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px 32px;
+}
+
+.request-part-page h1,
+.request-part-page h2,
+.request-part-page h3,
+.request-part-page h4 {
+    font-family: Manrope, Inter, Arial, sans-serif;
+}
+
+.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    vertical-align: middle;
+}
+
 .form-label {
     font-size: 12px;
     line-height: 16px;
@@ -32,3 +57,13 @@
         place-items: center;
         box-shadow: 0 1px 4px rgba(15, 76, 129, 0.15);
     }
+
+.request-card-shadow {
+    box-shadow: 0 4px 20px rgba(15, 76, 129, 0.05);
+}
+
+@media (max-width: 768px) {
+    .request-part-container {
+        padding: 24px 16px;
+    }
+}

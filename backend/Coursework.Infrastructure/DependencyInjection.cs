@@ -31,7 +31,7 @@ public static class DependencyInjection
             })
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>();
-            // .AddDefaultTokenProviders();
+        // .AddDefaultTokenProviders();
 
         services.AddScoped<IPartRepository, PartRepository>();
         services.AddScoped<IVendorRepository, VendorRepository>();
@@ -39,19 +39,19 @@ public static class DependencyInjection
         services.AddScoped<IPartTransactionRepository, PartTransactionRepository>();
         services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
-        
+
         services.AddScoped<IPartService, PartService>();
         services.AddScoped<IPurchaseInvoiceService, PurchaseInvoiceService>();
         services.AddScoped<IPartTransactionService, PartTransactionService>();
         services.AddScoped<ISalesInvoiceService, SalesInvoiceService>();
-        
+
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IInvoicePdfService, InvoicePdfService>();
         services.AddScoped<ISalesInvoicePdfService, SalesInvoicePdfService>();
         services.AddScoped<IEmailService, SendGridEmailService>();
-        
-        
-        
+
+
+
 
         // Repositories
         services.AddScoped<IAppointmentRepository, AppointmentRepository>();
@@ -59,11 +59,15 @@ public static class DependencyInjection
         services.AddScoped<IVehicleRepository, VehicleRepository>();
         services.AddScoped<IServiceRecordRepository, ServiceRecordRepository>();
         services.AddScoped<IPartRequestRepository, PartRequestRepository>();
+        services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
+        services.AddScoped<ISalesInvoiceItemRepository, SalesInvoiceItemRepository>();
+        services.AddScoped<IPurchaseInvoiceItemRepository, PurchaseInvoiceItemRepository>();
 
         // Application Services
         services.AddScoped<IAppointmentService, AppointmentService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IPartRequestService, PartRequestService>();
+        services.AddScoped<IFinancialReportService, FinancialReportService>();
 
         return services;
     }

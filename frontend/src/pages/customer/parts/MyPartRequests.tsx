@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL, TEMP_CUSTOMER_ID } from "../../../api/apiConfig";
 import { toast } from "react-toastify";
+import "./MyPartRequests.css";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const TEMP_CUSTOMER_ID = import.meta.env.VITE_TEMP_CUSTOMER_ID;
 
 type PartRequest = {
     partRequestId: number;
@@ -204,8 +206,8 @@ function MyPartRequests() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f7f9fb] text-[#191c1e]">
-            <main className="p-8 max-w-7xl mx-auto">
+        <div className="my-part-requests-page">
+            <main className="my-part-requests-container">
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
                     <div>
                         <nav className="flex items-center gap-2 text-xs font-semibold text-[#727780] mb-4 uppercase tracking-wide">
@@ -464,7 +466,7 @@ function SummaryCard({
     }[variant];
 
     return (
-        <div className={`bg-white p-6 rounded-2xl shadow-[0px_4px_20px_rgba(15,76,129,0.05)] border border-slate-100 ${variantClass}`}>
+        <div className={`bg-white p-6 rounded-2xl shadow-[0px_4px_20px_rgba(15,76,129,0.05)] border border-slate-100 bento-card ${variantClass}`}>
             <div className="flex items-center justify-between mb-2">
                 <span className="text-xs uppercase tracking-wider font-semibold text-[#505f76]">
                     {title}
@@ -682,7 +684,9 @@ function StatusBadge({ status }: { status: string }) {
                             : "bg-slate-100 text-slate-600";
 
     return (
-        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${className}`}>
+        <span
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${className}`}
+        >
             <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
             {status}
         </span>

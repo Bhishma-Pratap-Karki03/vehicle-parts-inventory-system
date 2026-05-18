@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL, TEMP_CUSTOMER_ID } from "../../../api/apiConfig";
 import { toast } from "react-toastify";
 import "./MyAppointments.css";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const TEMP_CUSTOMER_ID = import.meta.env.VITE_TEMP_CUSTOMER_ID;
 
 type AppointmentStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled" | string;
 

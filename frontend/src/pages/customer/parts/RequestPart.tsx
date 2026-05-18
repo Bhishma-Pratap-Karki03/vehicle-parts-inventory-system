@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL, TEMP_CUSTOMER_ID } from "../../../api/apiConfig";
 import { toast } from "react-toastify";
 import "./RequestPart.css";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const TEMP_CUSTOMER_ID = import.meta.env.VITE_TEMP_CUSTOMER_ID;
 
 type CustomerVehicle = {
     vehicleId: number;
@@ -152,8 +154,8 @@ function RequestPart() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f7f9fb] text-[#191c1e]">
-            <main className="p-8 max-w-7xl mx-auto">
+        <div className="request-part-page">
+            <main className="request-part-container">
                 <div className="mb-10">
                     <nav className="flex items-center gap-2 text-xs font-semibold text-[#727780] mb-4 uppercase tracking-wide">
                         <span

@@ -1,8 +1,8 @@
+import "./RequestPart.css";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { API_BASE_URL } from "../../../api/apiConfig";
 import { toast } from "react-toastify";
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 type PartRequest = {
     partRequestId: number;
     customerId: string;
@@ -76,8 +76,8 @@ function PartRequestDetails() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-[#f7f9fb] text-[#191c1e]">
-                <main className="p-8 max-w-7xl mx-auto">
+            <div className="request-part-page">
+                <main className="request-part-container">
                     <EmptyState
                         icon="progress_activity"
                         title="Loading part request..."
@@ -90,8 +90,8 @@ function PartRequestDetails() {
 
     if (!request) {
         return (
-            <div className="min-h-screen bg-[#f7f9fb] text-[#191c1e]">
-                <main className="p-8 max-w-7xl mx-auto">
+            <div className="request-part-page">
+                <main className="request-part-container">
                     <EmptyState
                         icon="inventory_2"
                         title="Part request not found"
@@ -103,8 +103,8 @@ function PartRequestDetails() {
     }
 
     return (
-        <div className="min-h-screen bg-[#f7f9fb] text-[#191c1e]">
-            <main className="p-8 max-w-7xl mx-auto">
+        <div className="request-part-page">
+            <main className="request-part-container">
                 <div className="mb-10">
                     <nav className="flex items-center gap-2 text-xs font-semibold text-[#727780] mb-4 uppercase tracking-wide">
                         <span
@@ -509,7 +509,10 @@ function UrgencyBadge({ urgency }: { urgency: string }) {
                 : "bg-slate-100 text-slate-600";
 
     return (
-        <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${className}`}>
+        <span
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${className}`}
+        >
+            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
             {urgency}
         </span>
     );

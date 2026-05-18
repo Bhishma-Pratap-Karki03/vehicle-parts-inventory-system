@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { API_BASE_URL, TEMP_CUSTOMER_ID } from "../../../api/apiConfig";
 import { toast } from "react-toastify";
 import "./BookAppointment.css";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const TEMP_CUSTOMER_ID = import.meta.env.VITE_TEMP_CUSTOMER_ID;
 
 type CustomerVehicle = {
     vehicleId: number;

@@ -42,7 +42,7 @@ public class Part
 
     [Range(1, int.MaxValue)]
     public int MinimumStockLevel { get; set; } = 10;
-    
+
     public PartStatus Status { get; set; } = PartStatus.Available;
 
     public bool IsDeleted { get; set; } = false;
@@ -56,7 +56,7 @@ public class Part
     public DateTime? UpdatedAt { get; set; }
 
     public ICollection<SalesInvoiceItem> SalesInvoiceItems { get; set; } = new List<SalesInvoiceItem>();
-    
+
     public ICollection<PurchaseInvoiceItem> PurchaseInvoiceItems { get; set; } = new List<PurchaseInvoiceItem>();
 
     public ICollection<PartTransaction> PartTransactions { get; set; } = new List<PartTransaction>();

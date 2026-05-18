@@ -38,6 +38,6 @@ public class PurchaseInvoice
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<PurchaseInvoiceItem> Items { get; set; } = new List<PurchaseInvoiceItem>();
-    
+
     public ICollection<PartTransaction> PartTransactions { get; set; } = new List<PartTransaction>();
 }

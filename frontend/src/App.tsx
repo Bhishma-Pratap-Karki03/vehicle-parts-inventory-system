@@ -6,6 +6,11 @@ import CustomerLayout from "./layouts/CustomerLayout";
 import AdminLayout from "./layouts/AdminLayout";
 import StaffLayout from "./layouts/StaffLayout";
 
+import CustomerCreatePage from './pages/customers/CustomerCreatePage'
+import CustomerSearchPage from './pages/customers/CustomerSearchPage'
+import CustomerDetailsPage from './pages/customers/CustomerDetailsPage'
+import ChangePasswordPage from './pages/customers/ChangePasswordPage'
+
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import BookAppointment from "./pages/customer/appointments/BookAppointment";
 import MyAppointments from "./pages/customer/appointments/MyAppointments";
@@ -75,6 +80,7 @@ function UnauthorizedPage() {
     </main>
   )
 }
+
 
 function App() {
   return (
@@ -204,6 +210,43 @@ function App() {
             </ProtectedRoute>
           }
           path="/customer/service-history"
+        />
+
+        {/* Staff/Admin Customer Management Routes */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <CustomerCreatePage />
+            </ProtectedRoute>
+          }
+          path="/customers/create"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <CustomerSearchPage />
+            </ProtectedRoute>
+          }
+          path="/customers/search"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <CustomerDetailsPage />
+            </ProtectedRoute>
+          }
+          path="/customers/:id"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff', 'Customer']}>
+              <ChangePasswordPage />
+            </ProtectedRoute>
+          }
+          path="/change-password"
         />
 
         {/* Admin and Staff Parts Routes */}
@@ -350,16 +393,15 @@ function App() {
 
         {/* Admin Routes */}
         <Route
-        element={
-          <ProtectedRoute allowedRoles={['Admin']}>
-            <AdminLayout>
-              <AdminDashboard />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-        path="/admin/dashboard"
-      />
-
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+          path="/admin/dashboard"
+        />
 
         <Route
           element={

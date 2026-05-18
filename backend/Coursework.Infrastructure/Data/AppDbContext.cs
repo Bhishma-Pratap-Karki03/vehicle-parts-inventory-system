@@ -42,8 +42,34 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         ConfigureStringLengths(modelBuilder);
         ConfigureEnumConversions(modelBuilder);
     }
+    
+private static void SeedRoles(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<IdentityRole>().HasData(
+        new IdentityRole
+        {
+            Id = "1",
+            Name = "Admin",
+            NormalizedName = "ADMIN",
+            ConcurrencyStamp = "admin-role-stamp"
+        },
+        new IdentityRole
+        {
+            Id = "2",
+            Name = "Staff",
+            NormalizedName = "STAFF",
+            ConcurrencyStamp = "staff-role-stamp"
+        },
+        new IdentityRole
+        {
+            Id = "3",
+            Name = "Customer",
+            NormalizedName = "CUSTOMER",
+            ConcurrencyStamp = "customer-role-stamp"
+        }
+    );
 
-    private static void SeedRoles(ModelBuilder modelBuilder)
+    var adminUser = new ApplicationUser
     {
         modelBuilder.Entity<IdentityRole>().HasData(
             new IdentityRole
@@ -449,9 +475,5 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasConversion<string>()
             .HasMaxLength(50);
     }
-<<<<<<< HEAD
-}
-=======
 
 }
->>>>>>> origin/development

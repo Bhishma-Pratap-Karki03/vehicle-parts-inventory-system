@@ -2,6 +2,7 @@ using Coursework.Application.Common;
 using Coursework.Application.DTOs.Customers;
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -9,24 +10,218 @@ namespace Coursework.Services;
 
 public class CustomerService : ICustomerService
 {
+    private readonly ICustomerRepository _customerRepository;
     private readonly IUserRepository _userRepository;
     private readonly IVehicleRepository _vehicleRepository;
     private readonly ISalesInvoiceRepository _salesInvoiceRepository;
     private readonly IServiceRecordRepository _serviceRecordRepository;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<CustomerService> _logger;
 
     public CustomerService(
+        ICustomerRepository customerRepository,
         IUserRepository userRepository,
         IVehicleRepository vehicleRepository,
         ISalesInvoiceRepository salesInvoiceRepository,
         IServiceRecordRepository serviceRecordRepository,
+        UserManager<ApplicationUser> userManager,
         ILogger<CustomerService> logger)
     {
+        _customerRepository = customerRepository;
         _userRepository = userRepository;
         _vehicleRepository = vehicleRepository;
         _salesInvoiceRepository = salesInvoiceRepository;
         _serviceRecordRepository = serviceRecordRepository;
+        _userManager = userManager;
         _logger = logger;
+    }
+
+    public async Task<ApiResponse<CustomerDetailsDto>> CreateCustomerAsync(CreateCustomerDto dto)
+    {
+        try
+        {
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+
+            if (existingUser != null)
+            {
+                return ApiResponse<CustomerDetailsDto>.ConflictResponse(
+                    "A customer with this email already exists.");
+            }
+
+            var customer = new ApplicationUser
+            {
+                FullName = dto.FullName.Trim(),
+                Email = dto.Email.Trim(),
+                PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber)
+                    ? null
+                    : dto.PhoneNumber.Trim(),
+                Address = string.IsNullOrWhiteSpace(dto.Address)
+                    ? null
+                    : dto.Address.Trim(),
+                UserName = dto.Email.Trim(),
+                EmailConfirmed = true,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var result = await _userManager.CreateAsync(
+                customer,
+                "Customer@123");
+
+            if (!result.Succeeded)
+            {
+                return ApiResponse<CustomerDetailsDto>.FailureResponse(
+                    "Failed to create customer.",
+                    400,
+                    result.Errors.Select(error => error.Description).ToList());
+            }
+
+            await _userManager.AddToRoleAsync(customer, "Customer");
+
+            var vehicleDtos = new List<VehicleDto>();
+
+            foreach (var vehicleDto in dto.Vehicles)
+            {
+                var normalizedVehicleNumber = vehicleDto.VehicleNumber.Trim();
+
+                var vehicleExists = await _vehicleRepository
+                    .FindByCondition(v => v.VehicleNumber == normalizedVehicleNumber)
+                    .AnyAsync();
+
+                if (vehicleExists)
+                {
+                    return ApiResponse<CustomerDetailsDto>.ConflictResponse(
+                        $"Vehicle number {normalizedVehicleNumber} already exists.");
+                }
+
+                var vehicle = new Vehicle
+                {
+                    CustomerId = customer.Id,
+                    VehicleNumber = normalizedVehicleNumber,
+                    Brand = vehicleDto.Brand.Trim(),
+                    Model = vehicleDto.Model.Trim(),
+                    Year = vehicleDto.Year,
+                    Mileage = vehicleDto.Mileage,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var createdVehicle = await _customerRepository.CreateVehicleAsync(vehicle);
+
+                vehicleDtos.Add(new VehicleDto
+                {
+                    VehicleId = createdVehicle.VehicleId,
+                    VehicleNumber = createdVehicle.VehicleNumber,
+                    Brand = createdVehicle.Brand,
+                    Model = createdVehicle.Model,
+                    Year = createdVehicle.Year,
+                    Mileage = createdVehicle.Mileage
+                });
+            }
+
+            var response = new CustomerDetailsDto
+            {
+                Id = customer.Id,
+                FullName = customer.FullName,
+                Email = customer.Email!,
+                PhoneNumber = customer.PhoneNumber!,
+                Address = customer.Address,
+                Vehicles = vehicleDtos
+            };
+
+            return ApiResponse<CustomerDetailsDto>.CreatedResponse(
+                response,
+                "Customer registered successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while creating customer.");
+
+            return ApiResponse<CustomerDetailsDto>.ServerErrorResponse(
+                "An error occurred while creating the customer.");
+        }
+    }
+
+    public async Task<ApiResponse<List<CustomerListDto>>> SearchCustomersAsync(string query)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return ApiResponse<List<CustomerListDto>>.FailureResponse(
+                    "Search query is required.",
+                    400);
+            }
+
+            var customers = await _customerRepository.SearchCustomersAsync(query);
+
+            var response = customers
+                .SelectMany(customer =>
+                    customer.Vehicles.Select(vehicle =>
+                        new CustomerListDto
+                        {
+                            Id = customer.Id,
+                            FullName = customer.FullName,
+                            Email = customer.Email!,
+                            PhoneNumber = customer.PhoneNumber!,
+                            VehicleNumber = vehicle.VehicleNumber
+                        }))
+                .ToList();
+
+            return ApiResponse<List<CustomerListDto>>.SuccessResponse(
+                response,
+                "Customers fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while searching customers.");
+
+            return ApiResponse<List<CustomerListDto>>.ServerErrorResponse(
+                "An error occurred while searching customers.");
+        }
+    }
+
+    public async Task<ApiResponse<CustomerDetailsDto>> GetCustomerByIdAsync(string id)
+    {
+        try
+        {
+            var customer = await _customerRepository.GetCustomerByIdAsync(id);
+
+            if (customer == null)
+            {
+                return ApiResponse<CustomerDetailsDto>.NotFoundResponse(
+                    "Customer not found.");
+            }
+
+            var response = new CustomerDetailsDto
+            {
+                Id = customer.Id,
+                FullName = customer.FullName,
+                Email = customer.Email!,
+                PhoneNumber = customer.PhoneNumber!,
+                Address = customer.Address,
+                Vehicles = customer.Vehicles.Select(vehicle =>
+                    new VehicleDto
+                    {
+                        VehicleId = vehicle.VehicleId,
+                        VehicleNumber = vehicle.VehicleNumber,
+                        Brand = vehicle.Brand,
+                        Model = vehicle.Model,
+                        Year = vehicle.Year,
+                        Mileage = vehicle.Mileage
+                    }).ToList()
+            };
+
+            return ApiResponse<CustomerDetailsDto>.SuccessResponse(
+                response,
+                "Customer details fetched successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while loading customer {CustomerId}.", id);
+
+            return ApiResponse<CustomerDetailsDto>.ServerErrorResponse(
+                "An error occurred while loading customer details.");
+        }
     }
 
     public async Task<ApiResponse<CustomerProfileDto>> GetProfileAsync(string customerId)

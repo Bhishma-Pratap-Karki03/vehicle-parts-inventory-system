@@ -20,6 +20,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+
         services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.Password.RequireDigit = true;
@@ -40,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<IPartTransactionRepository, PartTransactionRepository>();
         services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IServiceRecordRepository, ServiceRecordRepository>();
 
@@ -47,6 +49,8 @@ public static class DependencyInjection
         services.AddScoped<IPurchaseInvoiceService, PurchaseInvoiceService>();
         services.AddScoped<IPartTransactionService, PartTransactionService>();
         services.AddScoped<ISalesInvoiceService, SalesInvoiceService>();
+        services.AddScoped<ICustomerService, CustomerService>();
+        services.AddScoped<IAuthService, AuthService>();
 
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IInvoicePdfService, InvoicePdfService>();

@@ -2,6 +2,7 @@ using Coursework.Application.Common;
 using Coursework.Application.DTOs.Auth;
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
 namespace Coursework.Services;
@@ -12,15 +13,18 @@ public class AuthService : IAuthService
 
     private readonly IUserRepository _userRepository;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IUserRepository userRepository,
         IJwtTokenService jwtTokenService,
+        UserManager<ApplicationUser> userManager,
         ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _jwtTokenService = jwtTokenService;
+        _userManager = userManager;
         _logger = logger;
     }
 
@@ -58,7 +62,9 @@ public class AuthService : IAuthService
 
             if (!createResult.Succeeded)
             {
-                var errors = createResult.Errors.Select(error => error.Description).ToList();
+                var errors = createResult.Errors
+                    .Select(error => error.Description)
+                    .ToList();
 
                 return ApiResponse<AuthResponseDto>.FailureResponse(
                     "Unable to create the account.",
@@ -83,7 +89,10 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while registering customer with email {Email}.", dto.Email);
+            _logger.LogError(
+                ex,
+                "Error occurred while registering customer with email {Email}.",
+                dto.Email);
 
             return ApiResponse<AuthResponseDto>.ServerErrorResponse(
                 "An error occurred while creating the account.");
@@ -118,10 +127,57 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while logging in user with email {Email}.", dto.Email);
+            _logger.LogError(
+                ex,
+                "Error occurred while logging in user with email {Email}.",
+                dto.Email);
 
             return ApiResponse<AuthResponseDto>.ServerErrorResponse(
                 "An error occurred while logging in.");
+        }
+    }
+
+    public async Task<ApiResponse<string>> ChangePasswordAsync(ChangePasswordDto dto)
+    {
+        try
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+
+            if (user == null || !user.IsActive)
+            {
+                return ApiResponse<string>.NotFoundResponse("User not found.");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(
+                user,
+                dto.CurrentPassword,
+                dto.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors
+                    .Select(error => error.Description)
+                    .ToList();
+
+                return ApiResponse<string>.FailureResponse(
+                    "Password change failed.",
+                    400,
+                    errors);
+            }
+
+            return ApiResponse<string>.SuccessResponse(
+                "Password updated successfully.",
+                "Password changed successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while changing password for email {Email}.",
+                dto.Email);
+
+            return ApiResponse<string>.ServerErrorResponse(
+                "An error occurred while changing password.");
         }
     }
 
@@ -161,7 +217,10 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while loading current user {UserId}.", userId);
+            _logger.LogError(
+                ex,
+                "Error occurred while loading current user {UserId}.",
+                userId);
 
             return ApiResponse<AuthenticatedUserDto>.ServerErrorResponse(
                 "An error occurred while loading user details.");

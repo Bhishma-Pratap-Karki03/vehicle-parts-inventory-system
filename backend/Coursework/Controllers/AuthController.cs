@@ -17,6 +17,16 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordDto dto)
+    {
+        var response =
+            await _authService.ChangePasswordAsync(dto);
+
+        return StatusCode(response.StatusCode, response);
+    }
+}
     [HttpPost("register-customer")]
     [AllowAnonymous]
     public async Task<IActionResult> RegisterCustomer([FromBody] RegisterCustomerDto dto)

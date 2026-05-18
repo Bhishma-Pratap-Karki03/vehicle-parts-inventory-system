@@ -22,7 +22,7 @@ public class SalesInvoiceService : ISalesInvoiceService
     private readonly ICloudinaryService _cloudinaryService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<SalesInvoiceService> _logger;
-    private readonly IEmailService _emailService;
+    private readonly IEmailAttachmentService _emailService;
 
     public SalesInvoiceService(
         ISalesInvoiceRepository salesInvoiceRepository,
@@ -31,7 +31,7 @@ public class SalesInvoiceService : ISalesInvoiceService
         IPartTransactionRepository partTransactionRepository,
         ISalesInvoicePdfService salesInvoicePdfService,
         ICloudinaryService cloudinaryService,
-        IEmailService emailService,
+        IEmailAttachmentService emailService,
         UserManager<ApplicationUser> userManager,
         ILogger<SalesInvoiceService> logger)
     {
@@ -432,12 +432,12 @@ public class SalesInvoiceService : ISalesInvoiceService
                 .Take(queryParameters.PageSize)
                 .ToListAsync();
 
-            var invoiceDtos = invoices
+            var invoiceDto = invoices
                 .Select(MapToResponseDto)
                 .ToList();
 
             var pagedResult = PagedResult<SalesInvoiceResponseDto>.Create(
-                invoiceDtos,
+                invoiceDto,
                 queryParameters.PageNumber,
                 queryParameters.PageSize,
                 totalCount);

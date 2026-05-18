@@ -55,7 +55,8 @@ public static class DependencyInjection
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IInvoicePdfService, InvoicePdfService>();
         services.AddScoped<ISalesInvoicePdfService, SalesInvoicePdfService>();
-        services.AddScoped<IEmailService, SendGridEmailService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IEmailAttachmentService, SendGridEmailService>();
 
 
 

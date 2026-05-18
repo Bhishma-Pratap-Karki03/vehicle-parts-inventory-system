@@ -6,7 +6,7 @@ using SendGrid.Helpers.Mail;
 
 namespace Coursework.Infrastructure.Services;
 
-public class SendGridEmailService : IEmailService
+public class SendGridEmailService : IEmailAttachmentService
 {
     private readonly SendGridClient _client;
     private readonly EmailAddress _fromEmail;

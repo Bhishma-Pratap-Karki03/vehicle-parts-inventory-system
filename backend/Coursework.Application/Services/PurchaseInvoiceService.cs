@@ -15,13 +15,13 @@ public class PurchaseInvoiceService : IPurchaseInvoiceService
     private readonly IPurchaseInvoiceRepository _purchaseInvoiceRepository;
     private readonly IInvoicePdfService _invoicePdfService;
     private readonly ICloudinaryService _cloudinaryService;
-    private readonly IEmailService _emailService;
+    private readonly IEmailAttachmentService _emailService;
 
     public PurchaseInvoiceService(
         IPurchaseInvoiceRepository purchaseInvoiceRepository,
         IInvoicePdfService invoicePdfService,
         ICloudinaryService cloudinaryService,
-        IEmailService emailService)
+        IEmailAttachmentService emailService)
     {
         _purchaseInvoiceRepository = purchaseInvoiceRepository;
         _invoicePdfService = invoicePdfService;

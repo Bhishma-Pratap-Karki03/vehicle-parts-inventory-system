@@ -33,8 +33,4 @@ public class PagedResult<T>
             TotalPages = totalPages
         };
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/development

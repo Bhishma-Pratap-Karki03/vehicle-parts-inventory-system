@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import App from './App.tsx'
 import { AuthProvider } from './shared/auth/AuthContext'
 import './index.css'
+import 'react-toastify/dist/ReactToastify.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -15,7 +16,6 @@ createRoot(document.getElementById('root')!).render(
         <App />
         <ToastContainer
           autoClose={2600}
-          closeButton={false}
           hideProgressBar
           newestOnTop
           position="top-right"
@@ -23,5 +23,5 @@ createRoot(document.getElementById('root')!).render(
         />
       </AuthProvider>
     </BrowserRouter>
-  </StrictMode>,
+  </StrictMode>
 )

@@ -5,16 +5,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coursework.Infrastructure.Repositories;
 
-public class SalesInvoiceRepository 
+public class SalesInvoiceRepository
     : RepositoryBase<SalesInvoice>, ISalesInvoiceRepository
 {
-    public SalesInvoiceRepository(ApplicationDbContext context) 
+    public SalesInvoiceRepository(ApplicationDbContext context)
         : base(context)
     {
     }
 
     public async Task<SalesInvoice?> GetSalesInvoiceDetailsAsync(
-        int salesInvoiceId, 
+        int salesInvoiceId,
         bool trackChanges = false)
     {
         return await FindByCondition(
@@ -29,7 +29,7 @@ public class SalesInvoiceRepository
     }
 
     public async Task<SalesInvoice?> GetSalesInvoiceForPdfAsync(
-        int salesInvoiceId, 
+        int salesInvoiceId,
         bool trackChanges = false)
     {
         return await FindByCondition(

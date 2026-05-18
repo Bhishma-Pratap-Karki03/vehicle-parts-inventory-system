@@ -18,7 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<PurchaseInvoice> PurchaseInvoices => Set<PurchaseInvoice>();
     public DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems => Set<PurchaseInvoiceItem>();
-    
+
     public DbSet<PartTransaction> PartTransactions => Set<PartTransaction>();
 
     public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
@@ -111,7 +111,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<SalesInvoice>()
             .HasIndex(s => s.InvoiceNumber)
             .IsUnique();
-        
+
         modelBuilder.Entity<SalesInvoice>()
             .HasIndex(s => s.CustomerId);
 
@@ -174,7 +174,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany(p => p.PurchaseInvoiceItems)
             .HasForeignKey(i => i.PartId)
             .OnDelete(DeleteBehavior.Restrict);
-        
+
         modelBuilder.Entity<PartTransaction>()
             .HasOne(t => t.Part)
             .WithMany(p => p.PartTransactions)
@@ -198,7 +198,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany(u => u.CreatedPartTransactions)
             .HasForeignKey(t => t.CreatedById)
             .OnDelete(DeleteBehavior.Restrict);
-        
+
         modelBuilder.Entity<PartTransaction>()
             .HasOne(t => t.SalesInvoice)
             .WithMany(s => s.PartTransactions)
@@ -284,16 +284,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Review>()
-            .HasOne(r => r.Customer)
-            .WithMany(u => u.Reviews)
-            .HasForeignKey(r => r.CustomerId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasOne(r => r.Appointment)
+            .WithOne(a => a.Review)
+            .HasForeignKey<Review>(r => r.AppointmentId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Review>()
-            .HasOne(r => r.Appointment)
-            .WithMany(a => a.Reviews)
-            .HasForeignKey(r => r.AppointmentId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .HasIndex(r => r.AppointmentId)
+            .IsUnique();
 
         modelBuilder.Entity<PartRequest>()
             .HasOne(p => p.Customer)
@@ -306,6 +304,18 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany(u => u.Notifications)
             .HasForeignKey(n => n.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PartRequest>()
+            .HasOne(p => p.Customer)
+            .WithMany(u => u.PartRequests)
+            .HasForeignKey(p => p.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PartRequest>()
+            .HasOne(p => p.Vehicle)
+            .WithMany()
+            .HasForeignKey(p => p.VehicleId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 
     private static void ConfigureMoneyPrecision(ModelBuilder modelBuilder)
@@ -361,12 +371,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<ServiceRecord>()
             .Property(s => s.LaborCost)
             .HasPrecision(18, 2);
-        
+
         modelBuilder.Entity<PartTransaction>()
             .Property(t => t.CostPricePerUnit)
             .HasPrecision(18, 2);
     }
-    
+
     private static void ConfigureStringLengths(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<SalesInvoice>()
@@ -380,7 +390,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .Property(p => p.Status)
             .HasConversion<string>()
             .HasMaxLength(50);
-        
+
         modelBuilder.Entity<SalesInvoice>()
             .Property(s => s.PaymentStatus)
             .HasConversion<string>()
@@ -420,11 +430,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .Property(p => p.Status)
             .HasConversion<string>()
             .HasMaxLength(50);
-        
+
+        modelBuilder.Entity<PartRequest>()
+            .Property(p => p.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
         modelBuilder.Entity<PartTransaction>()
             .Property(t => t.TransactionType)
             .HasConversion<string>()
             .HasMaxLength(50);
     }
-    
+
 }

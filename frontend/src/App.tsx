@@ -1,5 +1,19 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 
+import CustomerLayout from "./layouts/CustomerLayout";
+import AdminLayout from "./layouts/AdminLayout";
+import StaffLayout from "./layouts/StaffLayout";
+
+import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import BookAppointment from "./pages/customer/appointments/BookAppointment";
+import MyAppointments from "./pages/customer/appointments/MyAppointments";
+import AppointmentDetails from "./pages/customer/appointments/AppointmentDetails";
+import RequestPart from "./pages/customer/parts/RequestPart";
+import MyPartRequests from "./pages/customer/parts/MyPartRequests";
+import PartRequestDetails from "./pages/customer/parts/PartRequestDetails";
+import StaffDashboard from "./pages/staff/StaffDashboard";
+import FinancialReports from "./pages/admin/reports/FinancialReports";
+
 import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -76,118 +90,82 @@ function App() {
         <Route element={<RootRedirect />} path="/" />
         <Route element={<UnauthorizedPage />} path="/unauthorized" />
 
+        {/* Customer Routes */}
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartsManagementPage />
+            <ProtectedRoute allowedRoles={['Customer']}>
+              <CustomerLayout>
+                <CustomerDashboard />
+              </CustomerLayout>
             </ProtectedRoute>
           }
-          path="/parts"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartEditorPage />
-            </ProtectedRoute>
-          }
-          path="/parts/new"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartDetailsPage />
-            </ProtectedRoute>
-          }
-          path="/parts/:partId"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartEditorPage />
-            </ProtectedRoute>
-          }
-          path="/parts/:partId/edit"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartTransactionListPage />
-            </ProtectedRoute>
-          }
-          path="/part-transactions"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <StockAdjustmentPage />
-            </ProtectedRoute>
-          }
-          path="/part-transactions/create"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartTransactionDetailsPage />
-            </ProtectedRoute>
-          }
-          path="/part-transactions/:partTransactionId"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin']}>
-              <PurchaseInvoiceListPage />
-            </ProtectedRoute>
-          }
-          path="/purchase-invoices"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin']}>
-              <PurchaseInvoiceCreatePage />
-            </ProtectedRoute>
-          }
-          path="/purchase-invoices/create"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin']}>
-              <PurchaseInvoiceDetailsPage />
-            </ProtectedRoute>
-          }
-          path="/purchase-invoices/:purchaseInvoiceId"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <SalesInvoiceListPage />
-            </ProtectedRoute>
-          }
-          path="/sales-invoices"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <SalesInvoiceCreatePage />
-            </ProtectedRoute>
-          }
-          path="/sales-invoices/create"
-        />
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <SalesInvoiceDetailsPage />
-            </ProtectedRoute>
-          }
-          path="/sales-invoices/:salesInvoiceId"
+          path="/customer/dashboard"
         />
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <StaffCustomerReportsPage />
+            <ProtectedRoute allowedRoles={['Customer']}>
+              <CustomerLayout>
+                <BookAppointment />
+              </CustomerLayout>
             </ProtectedRoute>
           }
-          path="/staff/customer-reports"
+          path="/appointments/book"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Customer']}>
+              <CustomerLayout>
+                <MyAppointments />
+              </CustomerLayout>
+            </ProtectedRoute>
+          }
+          path="/appointments/my"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Customer']}>
+              <CustomerLayout>
+                <AppointmentDetails />
+              </CustomerLayout>
+            </ProtectedRoute>
+          }
+          path="/appointments/:id"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Customer']}>
+              <CustomerLayout>
+                <RequestPart />
+              </CustomerLayout>
+            </ProtectedRoute>
+          }
+          path="/parts/request"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Customer']}>
+              <CustomerLayout>
+                <MyPartRequests />
+              </CustomerLayout>
+            </ProtectedRoute>
+          }
+          path="/parts/my"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Customer']}>
+              <CustomerLayout>
+                <PartRequestDetails />
+              </CustomerLayout>
+            </ProtectedRoute>
+          }
+          path="/parts/requests/:id"
         />
 
         <Route
@@ -198,6 +176,7 @@ function App() {
           }
           path="/customer/profile"
         />
+
         <Route
           element={
             <ProtectedRoute allowedRoles={['Customer']}>
@@ -206,6 +185,7 @@ function App() {
           }
           path="/customer/vehicles"
         />
+
         <Route
           element={
             <ProtectedRoute allowedRoles={['Customer']}>
@@ -214,6 +194,7 @@ function App() {
           }
           path="/customer/purchase-history"
         />
+
         <Route
           element={
             <ProtectedRoute allowedRoles={['Customer']}>
@@ -222,6 +203,160 @@ function App() {
           }
           path="/customer/service-history"
         />
+
+        {/* Admin and Staff Parts Routes */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <PartsManagementPage />
+            </ProtectedRoute>
+          }
+          path="/parts"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <PartEditorPage />
+            </ProtectedRoute>
+          }
+          path="/parts/new"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <PartDetailsPage />
+            </ProtectedRoute>
+          }
+          path="/parts/:partId"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <PartEditorPage />
+            </ProtectedRoute>
+          }
+          path="/parts/:partId/edit"
+        />
+
+        {/* Part Transactions */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <PartTransactionListPage />
+            </ProtectedRoute>
+          }
+          path="/part-transactions"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <StockAdjustmentPage />
+            </ProtectedRoute>
+          }
+          path="/part-transactions/create"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <PartTransactionDetailsPage />
+            </ProtectedRoute>
+          }
+          path="/part-transactions/:partTransactionId"
+        />
+
+        {/* Purchase Invoices */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <PurchaseInvoiceListPage />
+            </ProtectedRoute>
+          }
+          path="/purchase-invoices"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <PurchaseInvoiceCreatePage />
+            </ProtectedRoute>
+          }
+          path="/purchase-invoices/create"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <PurchaseInvoiceDetailsPage />
+            </ProtectedRoute>
+          }
+          path="/purchase-invoices/:purchaseInvoiceId"
+        />
+
+        {/* Sales Invoices */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <SalesInvoiceListPage />
+            </ProtectedRoute>
+          }
+          path="/sales-invoices"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <SalesInvoiceCreatePage />
+            </ProtectedRoute>
+          }
+          path="/sales-invoices/create"
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <SalesInvoiceDetailsPage />
+            </ProtectedRoute>
+          }
+          path="/sales-invoices/:salesInvoiceId"
+        />
+
+        {/* Staff Routes */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Staff']}>
+              <StaffLayout />
+            </ProtectedRoute>
+          }
+          path="/staff"
+        >
+          <Route index element={<StaffDashboard />} />
+        </Route>
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
+              <StaffCustomerReportsPage />
+            </ProtectedRoute>
+          }
+          path="/staff/customer-reports"
+        />
+
+        {/* Admin Routes */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout>
+                <FinancialReports />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+          path="/admin/reports/financial"
+        />
       </Route>
 
       <Route element={<NotFoundPage />} path="*" />
@@ -229,4 +364,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

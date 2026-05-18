@@ -70,52 +70,40 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         );
 
         var adminUser = new ApplicationUser
-    {
-        modelBuilder.Entity<IdentityRole>().HasData(
-            new IdentityRole
-            {
-                Id = "1",
-                Name = "Admin",
-                NormalizedName = "ADMIN",
-                ConcurrencyStamp = "admin-role-stamp"
-            },
-            new IdentityRole
-            {
-                Id = "2",
-                Name = "Staff",
-                NormalizedName = "STAFF",
-                ConcurrencyStamp = "staff-role-stamp"
-            },
-            new IdentityRole
-            {
-                Id = "3",
-                Name = "Customer",
-                NormalizedName = "CUSTOMER",
-                ConcurrencyStamp = "customer-role-stamp"
-            },
-            new IdentityRole
-            {
-                Id = "4",
-                Name = "Vendor",
-                NormalizedName = "VENDOR",
-                ConcurrencyStamp = "vendor-role-stamp"
-            }
-        );
+        {
+            Id = "dev-admin-user",
+            FullName = "Development Admin",
+            UserName = "admin@autocareims.com",
+            NormalizedUserName = "ADMIN@AUTOCAREIMS.COM",
+            Email = "admin@autocareims.com",
+            NormalizedEmail = "ADMIN@AUTOCAREIMS.COM",
+            EmailConfirmed = true,
+            IsActive = true,
+            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            SecurityStamp = "dev-admin-security-stamp",
+            ConcurrencyStamp = "dev-admin-concurrency-stamp",
+            PasswordHash = "AQAAAAIAAYagAAAAEPermanentAdminHash123456789"
+        };
+
+        var staffUser = new ApplicationUser
+        {
+            Id = "dev-staff-user",
+            FullName = "Staff User",
+            UserName = "staff@gmail.com",
+            NormalizedUserName = "STAFF@GMAIL.COM",
+            Email = "staff@gmail.com",
+            NormalizedEmail = "STAFF@GMAIL.COM",
+            EmailConfirmed = true,
+            IsActive = true,
+            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            SecurityStamp = "dev-staff-security-stamp",
+            ConcurrencyStamp = "dev-staff-concurrency-stamp",
+            PasswordHash = "AQAAAAIAAYagAAAAEPermanentStaffHash123456789"
+        };
+
         modelBuilder.Entity<ApplicationUser>().HasData(
-            new ApplicationUser
-            {
-                Id = "dev-admin-user",
-                FullName = "Development Admin",
-                UserName = "admin@autocareims.com",
-                NormalizedUserName = "ADMIN@AUTOCAREIMS.COM",
-                Email = "admin@autocareims.com",
-                NormalizedEmail = "ADMIN@AUTOCAREIMS.COM",
-                EmailConfirmed = true,
-                IsActive = true,
-                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                SecurityStamp = "dev-admin-security-stamp",
-                ConcurrencyStamp = "dev-admin-concurrency-stamp"
-            }
+            adminUser,
+            staffUser
         );
 
         modelBuilder.Entity<IdentityUserRole<string>>().HasData(
@@ -123,6 +111,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             {
                 UserId = "dev-admin-user",
                 RoleId = "1"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "dev-staff-user",
+                RoleId = "2"
             }
         );
     }
@@ -168,7 +161,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<Vendor>()
             .HasIndex(v => v.Email);
-
     }
 
     private static void ConfigureRelationships(ModelBuilder modelBuilder)
@@ -333,23 +325,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(p => p.CustomerId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Notification>()
-            .HasOne(n => n.User)
-            .WithMany(u => u.Notifications)
-            .HasForeignKey(n => n.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<PartRequest>()
-            .HasOne(p => p.Customer)
-            .WithMany(u => u.PartRequests)
-            .HasForeignKey(p => p.CustomerId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         modelBuilder.Entity<PartRequest>()
             .HasOne(p => p.Vehicle)
             .WithMany()
             .HasForeignKey(p => p.VehicleId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.User)
+            .WithMany(u => u.Notifications)
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     private static void ConfigureMoneyPrecision(ModelBuilder modelBuilder)
@@ -461,11 +447,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasMaxLength(50);
 
         modelBuilder.Entity<PurchaseInvoice>()
-            .Property(p => p.Status)
-            .HasConversion<string>()
-            .HasMaxLength(50);
-
-        modelBuilder.Entity<PartRequest>()
             .Property(p => p.Status)
             .HasConversion<string>()
             .HasMaxLength(50);

@@ -154,7 +154,7 @@ public class CustomersController : ControllerBase
         [FromBody] CreateCustomerDto dto)
     {
         var response =
-            await customerService.CreateCustomerAsync(dto);
+            await _customerService.CreateCustomerAsync(dto);
 
         return StatusCode(
             response.StatusCode,
@@ -166,7 +166,7 @@ public class CustomersController : ControllerBase
         [FromQuery] string query)
     {
         var response =
-            await customerService.SearchCustomersAsync(query);
+            await _customerService.SearchCustomersAsync(query);
 
         return StatusCode(
             response.StatusCode,
@@ -178,7 +178,7 @@ public class CustomersController : ControllerBase
         [FromRoute] string id)
     {
         var response =
-            await customerService.GetCustomerByIdAsync(id);
+            await _customerService.GetCustomerByIdAsync(id);
 
         return StatusCode(
             response.StatusCode,

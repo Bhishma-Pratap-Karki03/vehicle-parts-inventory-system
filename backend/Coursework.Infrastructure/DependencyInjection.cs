@@ -5,6 +5,7 @@ using Coursework.Infrastructure.BackgroundServices;
 using Coursework.Infrastructure.Data;
 using Coursework.Infrastructure.Repositories;
 using Coursework.Infrastructure.Services;
+using Coursework.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

@@ -26,7 +26,7 @@ public class AuthController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
-}
+
     [HttpPost("register-customer")]
     [AllowAnonymous]
     public async Task<IActionResult> RegisterCustomer([FromBody] RegisterCustomerDto dto)

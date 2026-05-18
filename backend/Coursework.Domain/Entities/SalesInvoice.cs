@@ -12,6 +12,9 @@ public class SalesInvoice
     [MaxLength(50)]
     public string InvoiceNumber { get; set; } = string.Empty;
 
+    [MaxLength(500)]
+    public string? InvoicePdfPublicId { get; set; }
+
     [Required]
     public string CustomerId { get; set; } = string.Empty;
 
@@ -49,4 +52,6 @@ public class SalesInvoice
     public ICollection<SalesInvoiceItem> Items { get; set; } = new List<SalesInvoiceItem>();
 
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
+
+    public ICollection<PartTransaction> PartTransactions { get; set; } = new List<PartTransaction>();
 }

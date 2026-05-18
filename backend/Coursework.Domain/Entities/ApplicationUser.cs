@@ -21,4 +21,8 @@ public class ApplicationUser : IdentityUser
     public ICollection<PartRequest> PartRequests { get; set; } = new List<PartRequest>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+
+    public ICollection<PurchaseInvoice> CreatedPurchaseInvoices { get; set; } = new List<PurchaseInvoice>();
+
+    public ICollection<PartTransaction> CreatedPartTransactions { get; set; } = new List<PartTransaction>();
 }

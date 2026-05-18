@@ -31,5 +31,15 @@ public class Appointment
 
     public DateTime? UpdatedAt { get; set; }
 
-    public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    [Required]
+    [MaxLength(100)]
+    public string ServiceType { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(50)]
+    public string Urgency { get; set; } = "Normal";
+
+    public DateTime? AlternativeAppointmentDate { get; set; }
+
+    public Review? Review { get; set; }
 }

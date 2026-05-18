@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coursework.Infrastructure.Repositories;
 
-public class SalesInvoiceRepository : RepositoryBase<SalesInvoice>, ISalesInvoiceRepository
+public class SalesInvoiceRepository
+    : RepositoryBase<SalesInvoice>, ISalesInvoiceRepository
 {
     public SalesInvoiceRepository(ApplicationDbContext context)
         : base(context)

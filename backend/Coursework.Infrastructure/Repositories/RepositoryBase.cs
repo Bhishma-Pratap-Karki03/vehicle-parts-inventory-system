@@ -41,4 +41,8 @@ public class RepositoryBase<T>(ApplicationDbContext context) : IRepositoryBase<T
     public void DeleteRange(IEnumerable<T> entities) => Context.Set<T>().RemoveRange(entities);
 
     public async Task SaveChangesAsync() => await Context.SaveChangesAsync();
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/development

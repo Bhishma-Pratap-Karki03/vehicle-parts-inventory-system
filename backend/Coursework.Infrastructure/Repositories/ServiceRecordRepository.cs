@@ -1,12 +1,10 @@
-﻿using Coursework.Application.Interfaces;
+using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
 using Coursework.Infrastructure.Data;
 
 namespace Coursework.Infrastructure.Repositories;
 
-public class ServiceRecordRepository : RepositoryBase<ServiceRecord>, IServiceRecordRepository
+public class ServiceRecordRepository(ApplicationDbContext context)
+    : RepositoryBase<ServiceRecord>(context), IServiceRecordRepository
 {
-    public ServiceRecordRepository(ApplicationDbContext context) : base(context)
-    {
-    }
 }

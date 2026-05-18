@@ -1,4 +1,4 @@
-﻿using Coursework.Domain.Entities;
+using Coursework.Domain.Entities;
 
 namespace Coursework.Application.Interfaces;
 

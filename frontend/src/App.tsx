@@ -1,3 +1,5 @@
+import AdminDashboard from "./features/admin/AdminDashboard";
+
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import CustomerLayout from "./layouts/CustomerLayout";
@@ -347,6 +349,18 @@ function App() {
         />
 
         {/* Admin Routes */}
+        <Route
+        element={
+          <ProtectedRoute allowedRoles={['Admin']}>
+            <AdminLayout>
+              <AdminDashboard />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+        path="/admin/dashboard"
+      />
+
+
         <Route
           element={
             <ProtectedRoute allowedRoles={['Admin']}>

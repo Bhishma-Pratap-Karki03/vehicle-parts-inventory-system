@@ -1,5 +1,6 @@
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
+using Coursework.Domain.Enums;
 using Coursework.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,5 +42,19 @@ public class SalesInvoiceRepository
             .Include(s => s.Items)
             .ThenInclude(i => i.Part)
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<SalesInvoice>> GetUnpaidCreditsOlderThanAsync(
+        DateTime dueBefore,
+        bool trackChanges = false)
+    {
+        return await FindByCondition(
+                i => i.PaymentStatus != PaymentStatus.Paid &&
+                     i.DueDate != null &&
+                     i.DueDate < dueBefore,
+                trackChanges)
+            .Include(i => i.Customer)
+            .OrderBy(i => i.DueDate)
+            .ToListAsync();
     }
 }

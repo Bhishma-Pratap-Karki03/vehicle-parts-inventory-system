@@ -66,6 +66,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 Name = "Customer",
                 NormalizedName = "CUSTOMER",
                 ConcurrencyStamp = "customer-role-stamp"
+            },
+            new IdentityRole
+            {
+                Id = "4",
+                Name = "Vendor",
+                NormalizedName = "VENDOR",
+                ConcurrencyStamp = "vendor-role-stamp"
             }
         );
         modelBuilder.Entity<ApplicationUser>().HasData(
@@ -135,6 +142,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<Vendor>()
             .HasIndex(v => v.Email);
+
     }
 
     private static void ConfigureRelationships(ModelBuilder modelBuilder)
@@ -441,5 +449,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasConversion<string>()
             .HasMaxLength(50);
     }
+<<<<<<< HEAD
+}
+=======
 
 }
+>>>>>>> origin/development

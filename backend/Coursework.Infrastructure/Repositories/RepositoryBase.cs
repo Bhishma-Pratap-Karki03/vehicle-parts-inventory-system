@@ -19,7 +19,9 @@ public class RepositoryBase<T>(ApplicationDbContext context) : IRepositoryBase<T
             ? await Context.Set<T>().AsNoTracking().ToListAsync()
             : await Context.Set<T>().ToListAsync();
 
-    public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges = false) =>
+    public IQueryable<T> FindByCondition(
+        Expression<Func<T, bool>> expression,
+        bool trackChanges = false) =>
         !trackChanges
             ? Context.Set<T>().Where(expression).AsNoTracking()
             : Context.Set<T>().Where(expression);
@@ -39,4 +41,8 @@ public class RepositoryBase<T>(ApplicationDbContext context) : IRepositoryBase<T
     public void DeleteRange(IEnumerable<T> entities) => Context.Set<T>().RemoveRange(entities);
 
     public async Task SaveChangesAsync() => await Context.SaveChangesAsync();
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/development

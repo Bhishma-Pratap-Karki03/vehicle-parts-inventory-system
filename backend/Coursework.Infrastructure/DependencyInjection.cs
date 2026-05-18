@@ -1,9 +1,10 @@
 using Coursework.Application.Interfaces;
-using Coursework.Domain.Entities;
 using Coursework.Application.Services;
-using Coursework.Infrastructure.Services;
+using Coursework.Domain.Entities;
+using Coursework.Infrastructure.BackgroundServices;
 using Coursework.Infrastructure.Data;
 using Coursework.Infrastructure.Repositories;
+using Coursework.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -70,6 +71,22 @@ public static class DependencyInjection
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IPartRequestService, PartRequestService>();
         services.AddScoped<IFinancialReportService, FinancialReportService>();
+
+        services.AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
+        services.AddScoped<IStaffService, StaffService>();
+        services.AddScoped<IVendorService, VendorService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IPartRepository, PartRepository>();
+        services.AddScoped<IVendorRepository, VendorRepository>();
+        services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
+        services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+
+        services.AddHostedService<NotificationBackgroundService>();
 
         return services;
     }

@@ -78,6 +78,3 @@ out/
 ## Logs
 *.log
 logs/
-
-# User-specific files
-appsettings.json

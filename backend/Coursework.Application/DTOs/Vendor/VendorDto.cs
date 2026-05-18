@@ -1,11 +1,9 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace Coursework.Domain.Entities;
+namespace Coursework.Application.DTOs.Vendor;
 
-public class Vendor
+public class VendorDto
 {
-    public int VendorId { get; set; }
-
     [Required]
     [MaxLength(100)]
     public string VendorName { get; set; } = string.Empty;
@@ -25,12 +23,4 @@ public class Vendor
     public string? Address { get; set; }
 
     public bool IsActive { get; set; } = true;
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public DateTime? UpdatedAt { get; set; }
-
-    public ICollection<Part> Parts { get; set; } = new List<Part>();
-
-    public ICollection<PurchaseInvoice> PurchaseInvoices { get; set; } = new List<PurchaseInvoice>();
 }

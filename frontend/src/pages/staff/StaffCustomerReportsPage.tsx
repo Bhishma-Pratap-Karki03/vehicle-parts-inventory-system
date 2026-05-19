@@ -229,7 +229,7 @@ function StaffCustomerReportsPage() {
         ) : (
           <div className="mt-6 overflow-x-auto rounded-3xl border border-[#E4EBF3]">
             {activeTab === 'regulars' ? (
-              <table className="w-full min-w-[640px] text-left text-[13px]">
+              <table className="w-full min-w-160 text-left text-[13px]">
                 <thead className="bg-[#F2F7FC] text-[11px] uppercase tracking-[0.12em] text-[#6D8197]">
                   <tr>
                     <th className="px-4 py-3 font-semibold">#</th>
@@ -267,7 +267,7 @@ function StaffCustomerReportsPage() {
             ) : null}
 
             {activeTab === 'high-spenders' ? (
-              <table className="w-full min-w-[640px] text-left text-[13px]">
+              <table className="w-full min-w-160 text-left text-[13px]">
                 <thead className="bg-[#F2F7FC] text-[11px] uppercase tracking-[0.12em] text-[#6D8197]">
                   <tr>
                     <th className="px-4 py-3 font-semibold">#</th>
@@ -305,7 +305,7 @@ function StaffCustomerReportsPage() {
             ) : null}
 
             {activeTab === 'pending-credits' ? (
-              <table className="w-full min-w-[720px] text-left text-[13px]">
+              <table className="w-full min-w-180 text-left text-[13px]">
                 <thead className="bg-[#F2F7FC] text-[11px] uppercase tracking-[0.12em] text-[#6D8197]">
                   <tr>
                     <th className="px-4 py-3 font-semibold">#</th>

@@ -78,7 +78,7 @@ function CustomerSearchPage() {
   return (
     <main className="min-h-screen bg-[#F5F8FB] px-7 py-8 text-[#17324F]">
       <div className="mx-auto max-w-7xl">
-        <div className="rounded-[32px] border border-[#DCE5EF] bg-white px-10 py-10 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+        <div className="rounded-4xl border border-[#DCE5EF] bg-white px-10 py-10 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
           <h1 className="text-[64px] font-semibold tracking-[-0.03em] text-[#0F2744] [font-family:var(--font-display)]">
             Customer Search
           </h1>
@@ -88,7 +88,7 @@ function CustomerSearchPage() {
           </p>
         </div>
 
-        <section className="mt-8 rounded-[32px] border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+        <section className="mt-8 rounded-4xl border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
           <div className="flex items-center gap-4 rounded-[22px] border border-[#D4E0EC] bg-white px-6">
             <Search className="text-[#6A8198]" size={22} />
 
@@ -112,13 +112,13 @@ function CustomerSearchPage() {
 
           <div className="mt-8 space-y-5">
             {errorMessage && submittedQuery ? (
-              <div className="rounded-[24px] border border-[#F0D2CE] bg-[#FFF8F7] px-6 py-5 text-[15px] font-medium text-[#A94E48]">
+              <div className="rounded-3xl border border-[#F0D2CE] bg-[#FFF8F7] px-6 py-5 text-[15px] font-medium text-[#A94E48]">
                 {errorMessage}
               </div>
             ) : null}
 
             {isLoading ? (
-              <div className="flex items-center gap-3 rounded-[24px] border border-[#DCE5EF] bg-[#FBFDFF] px-6 py-5 text-[15px] text-[#52677F]">
+              <div className="flex items-center gap-3 rounded-3xl border border-[#DCE5EF] bg-[#FBFDFF] px-6 py-5 text-[15px] text-[#52677F]">
                 <span aria-hidden className="material-symbols-outlined animate-spin text-[#15558D]">
                   progress_activity
                 </span>

@@ -1,84 +1,74 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+import { useAuth } from "../../shared/auth/useAuth";
 import "./CustomerNavbar.css";
 
 function CustomerNavbar() {
+    const navigate = useNavigate();
+    const { logout, user } = useAuth();
+
+    const displayName = user?.fullName || "Customer";
+
+    function handleLogout() {
+        logout();
+        navigate("/login", { replace: true });
+    }
+
     return (
         <header className="customer-navbar">
             <div className="customer-navbar-container">
-
-                {/* LOGO */}
                 <div className="customer-brand">
-                    <img
-                        src="/images/autocare-logo.jpg"
-                        alt="AutoCare IMS Logo"
-                        className="customer-logo"
-                    />
+                    <Link to="/home">
+                        <img
+                            src="/images/autocare-logo.jpg"
+                            alt="AutoCare IMS Logo"
+                            className="customer-logo"
+                        />
+                    </Link>
                 </div>
 
-                {/* NAVIGATION */}
                 <nav className="customer-nav-links">
+                    <Link to="/home">Home</Link>
 
-                    {/* HOME */}
-                    <Link to="/">Home</Link>
-
-                    {/* APPOINTMENTS */}
                     <div className="customer-dropdown">
-                        <button>Appointments ▾</button>
+                        <button type="button">Appointments ▾</button>
                         <div className="customer-dropdown-menu">
                             <Link to="/appointments/book">Book Appointment</Link>
                             <Link to="/appointments/my">My Appointments</Link>
                         </div>
                     </div>
 
-                    {/* PART REQUESTS */}
                     <div className="customer-dropdown">
-                        <button>Part Requests ▾</button>
+                        <button type="button">Part Requests ▾</button>
                         <div className="customer-dropdown-menu">
                             <Link to="/parts/request">Request Part</Link>
                             <Link to="/parts/my">My Part Requests</Link>
                         </div>
                     </div>
 
-                    {/* REVIEWS */}
                     <div className="customer-dropdown">
-                        <button>Reviews ▾</button>
+                        <button type="button">History ▾</button>
                         <div className="customer-dropdown-menu">
-                            <Link to="/reviews/my">My Reviews</Link>
-                            <p>Reviews are linked to completed appointments.</p>
+                            <Link to="/customer/service-history">Service History</Link>
+                            <Link to="/customer/purchase-history">Purchase History</Link>
                         </div>
                     </div>
 
-                    {/* HISTORY */}
                     <div className="customer-dropdown">
-                        <button>History ▾</button>
+                        <button type="button">Vehicles ▾</button>
                         <div className="customer-dropdown-menu">
-                            <Link to="/history/service">Service History</Link>
-                            <Link to="/history/purchase">Purchase History</Link>
+                            <Link to="/customer/vehicles">My Vehicles</Link>
                         </div>
                     </div>
-
-                    {/* VEHICLES */}
-                    <div className="customer-dropdown">
-                        <button>Vehicles ▾</button>
-                        <div className="customer-dropdown-menu">
-                            <Link to="/vehicles">My Vehicles</Link>
-                            <Link to="/vehicles/add">Add Vehicle</Link>
-                        </div>
-                    </div>
-
                 </nav>
 
-                {/* RIGHT SIDE */}
                 <div className="customer-navbar-right">
-                    <button className="customer-notification">🔔</button>
-
                     <div className="customer-profile-dropdown">
-                        <button className="customer-profile-button">
-                            <div className="customer-avatar">C</div>
+                        <button className="customer-profile-button" type="button">
+                            <div className="customer-avatar">{displayName.charAt(0).toUpperCase()}</div>
 
                             <div className="customer-profile-text">
-                                <strong>Customer</strong>
+                                <strong>{displayName}</strong>
                                 <span>My Account</span>
                             </div>
 
@@ -86,12 +76,12 @@ function CustomerNavbar() {
                         </button>
 
                         <div className="customer-profile-menu">
-                            <Link to="/profile">My Profile</Link>
-                            <Link to="/profile/edit">Edit Profile</Link>
+                            <Link to="/customer/profile">My Profile</Link>
+                            <Link to="/change-password">Change Password</Link>
                             <hr />
-                            <Link to="/logout" className="customer-logout">
+                            <button className="customer-logout" onClick={handleLogout} type="button">
                                 Logout
-                            </Link>
+                            </button>
                         </div>
                     </div>
                 </div>

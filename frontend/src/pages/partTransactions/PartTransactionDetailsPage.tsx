@@ -112,7 +112,7 @@ function PartTransactionDetailsPage() {
           <div className="mt-6">
             <Link
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#15558D] px-5 text-[14px] font-semibold text-white no-underline shadow-[0_14px_30px_rgba(21,85,141,0.2)]"
-              to="/part-transactions"
+              to="/stock-transactions"
             >
               Back to Stock Transactions
             </Link>
@@ -145,7 +145,7 @@ function PartTransactionDetailsPage() {
           <div className="max-w-4xl">
             <Link
               className="inline-flex items-center gap-2 text-[15px] font-medium text-[#45637F] transition hover:text-[#163E66]"
-              to={transaction.partId ? `/part-transactions?partId=${transaction.partId}` : '/part-transactions'}
+              to={transaction.partId ? `/stock-transactions?partId=${transaction.partId}` : '/stock-transactions'}
             >
               <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
                 arrow_back
@@ -186,7 +186,7 @@ function PartTransactionDetailsPage() {
             ) : (
               <Link
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#15558D] px-5 text-[14px] font-semibold text-white no-underline shadow-[0_14px_30px_rgba(21,85,141,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0E487C]"
-                to={`/part-transactions/create?partId=${transaction.partId}`}
+                to={`/stock-transactions/create?partId=${transaction.partId}`}
               >
                 <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
                   sync_alt

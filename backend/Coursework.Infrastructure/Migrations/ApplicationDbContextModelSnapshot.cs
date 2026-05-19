@@ -3,7 +3,6 @@ using System;
 using Coursework.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,11 +11,9 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Coursework.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260510084422_InitialCreate")]
-    partial class InitialCreate
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -120,10 +117,30 @@ namespace Coursework.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@AUTOCAREIMS.COM",
                             NormalizedUserName = "ADMIN@AUTOCAREIMS.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPermanentAdminHash123456789",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "dev-admin-security-stamp",
                             TwoFactorEnabled = false,
                             UserName = "admin@autocareims.com"
+                        },
+                        new
+                        {
+                            Id = "dev-staff-user",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "dev-staff-concurrency-stamp",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "staff@gmail.com",
+                            EmailConfirmed = true,
+                            FullName = "Staff User",
+                            IsActive = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "STAFF@GMAIL.COM",
+                            NormalizedUserName = "STAFF@GMAIL.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPermanentStaffHash123456789",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "dev-staff-security-stamp",
+                            TwoFactorEnabled = false,
+                            UserName = "staff@gmail.com"
                         });
                 });
 
@@ -138,6 +155,9 @@ namespace Coursework.Infrastructure.Migrations
                     b.Property<string>("AdminRemarks")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("AlternativeAppointmentDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("AppointmentDate")
                         .HasColumnType("timestamp with time zone");
@@ -154,6 +174,11 @@ namespace Coursework.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("ServiceType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -161,6 +186,11 @@ namespace Coursework.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Urgency")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("VehicleId")
                         .HasColumnType("integer");
@@ -321,6 +351,11 @@ namespace Coursework.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("CustomerId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -331,6 +366,10 @@ namespace Coursework.Infrastructure.Migrations
 
                     b.Property<string>("PartName")
                         .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PartNumber")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -345,9 +384,19 @@ namespace Coursework.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Urgency")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("VehicleId")
+                        .HasColumnType("integer");
+
                     b.HasKey("PartRequestId");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("VehicleId");
 
                     b.ToTable("PartRequests");
                 });
@@ -580,7 +629,8 @@ namespace Coursework.Infrastructure.Migrations
 
                     b.HasKey("ReviewId");
 
-                    b.HasIndex("AppointmentId");
+                    b.HasIndex("AppointmentId")
+                        .IsUnique();
 
                     b.HasIndex("CustomerId");
 
@@ -994,6 +1044,11 @@ namespace Coursework.Infrastructure.Migrations
                         {
                             UserId = "dev-admin-user",
                             RoleId = "1"
+                        },
+                        new
+                        {
+                            UserId = "dev-staff-user",
+                            RoleId = "2"
                         });
                 });
 
@@ -1065,7 +1120,14 @@ namespace Coursework.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Coursework.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Customer");
+
+                    b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("Coursework.Domain.Entities.PartTransaction", b =>
@@ -1167,8 +1229,8 @@ namespace Coursework.Infrastructure.Migrations
             modelBuilder.Entity("Coursework.Domain.Entities.Review", b =>
                 {
                     b.HasOne("Coursework.Domain.Entities.Appointment", "Appointment")
-                        .WithMany("Reviews")
-                        .HasForeignKey("AppointmentId")
+                        .WithOne("Review")
+                        .HasForeignKey("Coursework.Domain.Entities.Review", "AppointmentId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Coursework.Domain.Entities.ApplicationUser", "Customer")
@@ -1344,7 +1406,7 @@ namespace Coursework.Infrastructure.Migrations
 
             modelBuilder.Entity("Coursework.Domain.Entities.Appointment", b =>
                 {
-                    b.Navigation("Reviews");
+                    b.Navigation("Review");
                 });
 
             modelBuilder.Entity("Coursework.Domain.Entities.Part", b =>

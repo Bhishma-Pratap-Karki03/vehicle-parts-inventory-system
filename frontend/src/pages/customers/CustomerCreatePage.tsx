@@ -144,7 +144,7 @@ function CustomerCreatePage() {
           className="mt-10 space-y-8"
           onSubmit={handleSubmit}
         >
-          <section className="rounded-[32px] border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+          <section className="rounded-4xl border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
             <div className="flex items-start gap-5">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EDF4FB] text-[#174B7A]">
                 <User size={28} />
@@ -225,7 +225,7 @@ function CustomerCreatePage() {
             </div>
           </section>
 
-          <section className="rounded-[32px] border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+          <section className="rounded-4xl border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-5">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EDF4FB] text-[#174B7A]">

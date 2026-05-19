@@ -2,7 +2,8 @@ import "./RequestPart.css";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { apiRequest, getApiErrorMessage } from "../../../shared/utils/api";
+
 type PartRequest = {
     partRequestId: number;
     customerId: string;
@@ -19,20 +20,6 @@ type PartRequest = {
     requestedAt: string;
     updatedAt: string | null;
 };
-
-type ApiResponse<T> = {
-    success: boolean;
-    message: string;
-    data: T;
-    errors: string[] | null;
-    statusCode: number;
-};
-
-async function readApiResponse<T>(response: Response): Promise<ApiResponse<T> | null> {
-    const text = await response.text();
-    if (!text) return null;
-    return JSON.parse(text) as ApiResponse<T>;
-}
 
 function PartRequestDetails() {
     const { id } = useParams();
@@ -55,11 +42,10 @@ function PartRequestDetails() {
         try {
             setIsLoading(true);
 
-            const response = await fetch(`${API_BASE_URL}/api/part-requests/${id}`);
-            const result = await readApiResponse<PartRequest>(response);
+            const result = await apiRequest<PartRequest>(`/api/part-requests/${id}`);
 
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to load part request.");
+            if (!result.success || !result.data) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             setRequest(result.data);
@@ -449,7 +435,7 @@ function ProgressStep({
     return (
         <div className="relative z-10 flex md:flex-col items-center gap-4 md:gap-2">
             <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${circleClass} ${current ? "outline outline-4 outline-[#d2e4ff]" : ""
+                className={`w-10 h-10 rounded-full flex items-center justify-center ${circleClass} ${current ? "outline-4 outline-[#d2e4ff]" : ""
                     }`}
             >
                 <span className="material-symbols-outlined text-sm">{icon}</span>

@@ -270,7 +270,7 @@ function PartDetailsPage() {
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-4 text-[13px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
-                  to={`/part-transactions?partId=${part.partId}`}
+                  to={`/stock-transactions?partId=${part.partId}`}
                 >
                   <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
                     history
@@ -279,7 +279,7 @@ function PartDetailsPage() {
                 </Link>
                 <Link
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-4 text-[13px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
-                  to={`/part-transactions/create?partId=${part.partId}`}
+                  to={`/stock-transactions/create?partId=${part.partId}`}
                 >
                   <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
                     sync_alt

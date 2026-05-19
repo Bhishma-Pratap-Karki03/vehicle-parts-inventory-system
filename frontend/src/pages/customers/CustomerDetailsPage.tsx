@@ -5,32 +5,49 @@ import {
   Car,
   ClipboardList,
 } from 'lucide-react'
-import backendUrl from '../../config'
+import { apiRequest, getApiErrorMessage } from '../../shared/utils/api'
+
+interface Vehicle {
+  vehicleId: number
+  vehicleNumber: string
+  brand: string
+  model: string
+  year: number
+  mileage: number
+}
+
+interface Customer {
+  id: string
+  fullName: string
+  email: string
+  phoneNumber: string
+  address: string
+  vehicles: Vehicle[]
+}
 
 function CustomerDetailsPage() {
   const { id } = useParams()
 
-  const [customer, setCustomer] = useState<any>(null)
+  const [customer, setCustomer] = useState<Customer | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     void fetchCustomer()
-  }, [])
+  }, [id])
 
   const fetchCustomer = async () => {
     try {
       setIsLoading(true)
 
-      const response = await fetch(
-        `${backendUrl}/api/Customers/${id}`,
+      const result = await apiRequest<Customer>(
+        `/api/customers/${id}`,
       )
 
-      const result = await response.json()
-
-      if (!result.success) {
+      if (!result.success || !result.data) {
         setErrorMessage(
-          result.message || 'Customer not found.',
+          getApiErrorMessage(result) ||
+            'Customer not found.',
         )
 
         setCustomer(null)
@@ -38,9 +55,7 @@ function CustomerDetailsPage() {
       }
 
       setCustomer(result.data)
-    } catch (error) {
-      console.log(error)
-
+    } catch {
       setErrorMessage(
         'Failed to load customer details.',
       )
@@ -64,13 +79,36 @@ function CustomerDetailsPage() {
   if (errorMessage) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#F5F8FB] px-6">
-        <div className="w-full max-w-2xl rounded-[32px] border border-[#DCE5EF] bg-white p-10 text-center shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+        <div className="w-full max-w-2xl rounded-4xl border border-[#DCE5EF] bg-white p-10 text-center shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
           <h2 className="text-[36px] font-semibold text-[#17324F]">
             Unable to Load Customer
           </h2>
 
           <p className="mt-5 text-[17px] leading-8 text-[#6A8198]">
             {errorMessage}
+          </p>
+
+          <Link
+            className="mt-8 inline-flex h-14 items-center justify-center rounded-full bg-[#15558D] px-8 text-[15px] font-semibold text-white no-underline transition hover:bg-[#0E4778]"
+            to="/customers/search"
+          >
+            Back to Search
+          </Link>
+        </div>
+      </main>
+    )
+  }
+
+  if (!customer) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#F5F8FB] px-6">
+        <div className="w-full max-w-2xl rounded-4xl border border-[#DCE5EF] bg-white p-10 text-center shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+          <h2 className="text-[36px] font-semibold text-[#17324F]">
+            Customer Not Found
+          </h2>
+
+          <p className="mt-5 text-[17px] leading-8 text-[#6A8198]">
+            The customer you are looking for does not exist.
           </p>
 
           <Link
@@ -94,7 +132,7 @@ function CustomerDetailsPage() {
           ← Back to Customer Search
         </Link>
 
-        <div className="mt-8 rounded-[32px] border border-[#DCE5EF] bg-white px-10 py-10 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+        <div className="mt-8 rounded-4xl border border-[#DCE5EF] bg-white px-10 py-10 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="text-[64px] font-semibold tracking-[-0.03em] text-[#0F2744] [font-family:var(--font-display)]">
@@ -120,7 +158,7 @@ function CustomerDetailsPage() {
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.2fr]">
-          <section className="rounded-[32px] border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+          <section className="rounded-4xl border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
             <div className="flex items-start gap-5">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EDF4FB] text-[#174B7A]">
                 <User size={28} />
@@ -139,7 +177,7 @@ function CustomerDetailsPage() {
             </div>
 
             <div className="mt-10 space-y-6">
-              <div className="rounded-[24px] border border-[#E3ECF5] bg-[#FBFDFF] p-6">
+              <div className="rounded-3xl border border-[#E3ECF5] bg-[#FBFDFF] p-6">
                 <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
                   Full Name
                 </p>
@@ -149,7 +187,7 @@ function CustomerDetailsPage() {
                 </h3>
               </div>
 
-              <div className="rounded-[24px] border border-[#E3ECF5] bg-[#FBFDFF] p-6">
+              <div className="rounded-3xl border border-[#E3ECF5] bg-[#FBFDFF] p-6">
                 <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
                   Email Address
                 </p>
@@ -159,7 +197,7 @@ function CustomerDetailsPage() {
                 </h3>
               </div>
 
-              <div className="rounded-[24px] border border-[#E3ECF5] bg-[#FBFDFF] p-6">
+              <div className="rounded-3xl border border-[#E3ECF5] bg-[#FBFDFF] p-6">
                 <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
                   Phone Number
                 </p>
@@ -169,7 +207,7 @@ function CustomerDetailsPage() {
                 </h3>
               </div>
 
-              <div className="rounded-[24px] border border-[#E3ECF5] bg-[#FBFDFF] p-6">
+              <div className="rounded-3xl border border-[#E3ECF5] bg-[#FBFDFF] p-6">
                 <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
                   Address
                 </p>
@@ -181,7 +219,7 @@ function CustomerDetailsPage() {
             </div>
           </section>
 
-          <section className="rounded-[32px] border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+          <section className="rounded-4xl border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
             <div className="flex items-start gap-5">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EDF4FB] text-[#174B7A]">
                 <Car size={28} />
@@ -200,7 +238,7 @@ function CustomerDetailsPage() {
 
             <div className="mt-10 space-y-6">
               {customer.vehicles?.map(
-                (vehicle: any, index: number) => (
+                (vehicle: Vehicle, index: number) => (
                   <div
                     className="rounded-[28px] border border-[#DCE5EF] bg-[#FBFDFF] p-7"
                     key={vehicle.vehicleId}
@@ -263,7 +301,7 @@ function CustomerDetailsPage() {
           </section>
         </div>
 
-        <section className="mt-8 rounded-[32px] border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+        <section className="mt-8 rounded-4xl border border-[#DCE5EF] bg-white p-8 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
           <div className="flex items-start gap-5">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EDF4FB] text-[#174B7A]">
               <ClipboardList size={28} />

@@ -16,11 +16,15 @@ function resolveRedirectPath(roles: string[], from?: string): string {
   }
 
   if (roles.includes('Customer')) {
-    return '/customer/profile'
+    return '/home'
   }
 
-  if (roles.includes('Staff') || roles.includes('Admin')) {
-    return '/parts'
+  if (roles.includes('Admin')) {
+    return '/admin/dashboard'
+  }
+
+  if (roles.includes('Staff')) {
+    return '/staff'
   }
 
   return '/'

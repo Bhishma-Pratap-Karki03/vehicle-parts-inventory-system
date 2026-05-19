@@ -98,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.localStorage.removeItem(AUTH_STORAGE_KEYS.user)
     setToken(null)
     setUser(null)
+    window.location.href = '/login'
   }, [])
 
   const updateUser = useCallback((nextUser: AuthenticatedUser) => {

@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { useAuth } from "../../../shared/auth/useAuth";
+import { apiRequest, getApiErrorMessage } from "../../../shared/utils/api";
 import "./BookAppointment.css";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const TEMP_CUSTOMER_ID = import.meta.env.VITE_TEMP_CUSTOMER_ID;
 
 type CustomerVehicle = {
     vehicleId: number;
@@ -15,25 +14,8 @@ type CustomerVehicle = {
     lastServiceDate: string | null;
 };
 
-type ApiResponse<T> = {
-    success: boolean;
-    message: string;
-    data: T;
-    errors: string[] | null;
-    statusCode: number;
-};
-
-async function readApiResponse<T>(response: Response): Promise<ApiResponse<T> | null> {
-    const text = await response.text();
-
-    if (!text) {
-        return null;
-    }
-
-    return JSON.parse(text) as ApiResponse<T>;
-}
-
 function BookAppointment() {
+    const { user } = useAuth();
     const [vehicles, setVehicles] = useState<CustomerVehicle[]>([]);
     const [selectedVehicleId, setSelectedVehicleId] = useState<number | "">("");
 
@@ -51,16 +33,18 @@ function BookAppointment() {
     const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
 
     useEffect(() => {
+        if (!user?.userId) {
+            return;
+        }
+
         const loadVehicles = async () => {
             try {
-                const response = await fetch(
-                    `${API_BASE_URL}/api/appointments/customer/${TEMP_CUSTOMER_ID}/vehicles`
+                const result = await apiRequest<CustomerVehicle[]>(
+                    `/api/appointments/customer/${user.userId}/vehicles`
                 );
 
-                const result = await readApiResponse<CustomerVehicle[]>(response);
-
-                if (!response.ok || !result?.success) {
-                    throw new Error(result?.message || "Failed to load vehicles.");
+                if (!result.success || !result.data) {
+                    throw new Error(getApiErrorMessage(result));
                 }
 
                 const vehicleData = result.data ?? [];
@@ -80,8 +64,8 @@ function BookAppointment() {
             }
         };
 
-        loadVehicles();
-    }, []);
+        void loadVehicles();
+    }, [user?.userId]);
 
     const selectedVehicle = vehicles.find(
         (vehicle) => vehicle.vehicleId === selectedVehicleId
@@ -124,6 +108,11 @@ function BookAppointment() {
     };
 
     const handleBookAppointment = async () => {
+        if (!user?.userId) {
+            toast.error("Please log in to book an appointment.");
+            return;
+        }
+
         if (!selectedVehicleId) {
             toast.error("Please select a vehicle.");
             return;
@@ -169,7 +158,7 @@ function BookAppointment() {
                 : null;
 
         const requestBody = {
-            customerId: TEMP_CUSTOMER_ID,
+            customerId: user.userId,
             vehicleId: selectedVehicleId,
             appointmentDate,
             alternativeAppointmentDate,
@@ -181,18 +170,13 @@ function BookAppointment() {
         try {
             setIsSubmitting(true);
 
-            const response = await fetch(`${API_BASE_URL}/api/appointments`, {
+            const result = await apiRequest<unknown>('/api/appointments', {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody),
+                body: requestBody,
             });
 
-            const result = await readApiResponse<unknown>(response);
-
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to book appointment.");
+            if (!result.success) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             toast.success(result.message || "Appointment booked successfully.");
@@ -395,11 +379,13 @@ function BookAppointment() {
 
                             <section className="p-6 bg-[#f2f4f6]">
                                 <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6">
-                                    <div className="flex flex-wrap gap-x-12 gap-y-4">
-                                        <ContactInfo label="Owner Name" value="Test Customer" />
-                                        <ContactInfo label="Phone Number" value="9800000000" />
-                                        <ContactInfo label="Email Address" value="customer@test.com" />
-                                    </div>
+                                    {user && (
+                                        <div className="flex flex-wrap gap-x-12 gap-y-4">
+                                            <ContactInfo label="Owner Name" value={user.fullName} />
+                                            <ContactInfo label="Phone Number" value={user.phoneNumber || ''} />
+                                            <ContactInfo label="Email Address" value={user.email} />
+                                        </div>
+                                    )}
                                 </div>
 
                                 <label className="flex items-start gap-3 cursor-pointer">

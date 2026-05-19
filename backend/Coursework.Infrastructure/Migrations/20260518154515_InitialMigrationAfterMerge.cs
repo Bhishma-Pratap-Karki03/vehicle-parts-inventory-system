@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Coursework.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialMigrationAfterMerge : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -214,31 +214,6 @@ namespace Coursework.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PartRequests",
-                columns: table => new
-                {
-                    PartRequestId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CustomerId = table.Column<string>(type: "text", nullable: false),
-                    PartName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    AdminResponse = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    RequestedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PartRequests", x => x.PartRequestId);
-                    table.ForeignKey(
-                        name: "FK_PartRequests_AspNetUsers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Vehicles",
                 columns: table => new
                 {
@@ -345,7 +320,10 @@ namespace Coursework.Infrastructure.Migrations
                     Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     AdminRemarks = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ServiceType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Urgency = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    AlternativeAppointmentDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -362,6 +340,41 @@ namespace Coursework.Infrastructure.Migrations
                         principalTable: "Vehicles",
                         principalColumn: "VehicleId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PartRequests",
+                columns: table => new
+                {
+                    PartRequestId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CustomerId = table.Column<string>(type: "text", nullable: false),
+                    VehicleId = table.Column<int>(type: "integer", nullable: true),
+                    PartName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    PartNumber = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    Category = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Urgency = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    AdminResponse = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    RequestedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PartRequests", x => x.PartRequestId);
+                    table.ForeignKey(
+                        name: "FK_PartRequests_AspNetUsers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PartRequests_Vehicles_VehicleId",
+                        column: x => x.VehicleId,
+                        principalTable: "Vehicles",
+                        principalColumn: "VehicleId",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -640,12 +653,20 @@ namespace Coursework.Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "Address", "ConcurrencyStamp", "CreatedAt", "Email", "EmailConfirmed", "FullName", "IsActive", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UpdatedAt", "UserName" },
-                values: new object[] { "dev-admin-user", 0, null, "dev-admin-concurrency-stamp", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "admin@autocareims.com", true, "Development Admin", true, false, null, "ADMIN@AUTOCAREIMS.COM", "ADMIN@AUTOCAREIMS.COM", null, null, false, "dev-admin-security-stamp", false, null, "admin@autocareims.com" });
+                values: new object[,]
+                {
+                    { "dev-admin-user", 0, null, "dev-admin-concurrency-stamp", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "admin@autocareims.com", true, "Development Admin", true, false, null, "ADMIN@AUTOCAREIMS.COM", "ADMIN@AUTOCAREIMS.COM", "AQAAAAIAAYagAAAAEPermanentAdminHash123456789", null, false, "dev-admin-security-stamp", false, null, "admin@autocareims.com" },
+                    { "dev-staff-user", 0, null, "dev-staff-concurrency-stamp", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "staff@gmail.com", true, "Staff User", true, false, null, "STAFF@GMAIL.COM", "STAFF@GMAIL.COM", "AQAAAAIAAYagAAAAEPermanentStaffHash123456789", null, false, "dev-staff-security-stamp", false, null, "staff@gmail.com" }
+                });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
                 columns: new[] { "RoleId", "UserId" },
-                values: new object[] { "1", "dev-admin-user" });
+                values: new object[,]
+                {
+                    { "1", "dev-admin-user" },
+                    { "2", "dev-staff-user" }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Appointments_CustomerId",
@@ -703,6 +724,11 @@ namespace Coursework.Infrastructure.Migrations
                 name: "IX_PartRequests_CustomerId",
                 table: "PartRequests",
                 column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartRequests_VehicleId",
+                table: "PartRequests",
+                column: "VehicleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Parts_PartNumber",
@@ -779,7 +805,8 @@ namespace Coursework.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Reviews_AppointmentId",
                 table: "Reviews",
-                column: "AppointmentId");
+                column: "AppointmentId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reviews_CustomerId",

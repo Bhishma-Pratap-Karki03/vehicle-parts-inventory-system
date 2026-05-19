@@ -104,7 +104,7 @@ function MobileTransactionCard({ transaction }: { transaction: PartTransactionRe
         </div>
         <Link
           className="inline-flex h-9 min-w-[92px] items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#D7E2ED] bg-white px-4 text-[12px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
-          to={`/part-transactions/${transaction.partTransactionId}`}
+          to={`/stock-transactions/${transaction.partTransactionId}`}
         >
           <span aria-hidden className="material-symbols-outlined inline-flex shrink-0 select-none items-center justify-center leading-none text-[18px] not-italic">
             visibility
@@ -190,7 +190,7 @@ function PartTransactionsTable({ transactions, isLoading, errorMessage }: PartTr
                   <div className="flex justify-end">
                     <Link
                       className="inline-flex h-9 min-w-[92px] items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#D7E2ED] bg-white px-4 text-[12px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
-                      to={`/part-transactions/${transaction.partTransactionId}`}
+                      to={`/stock-transactions/${transaction.partTransactionId}`}
                     >
                       <span aria-hidden className="material-symbols-outlined inline-flex shrink-0 select-none items-center justify-center leading-none text-[18px] not-italic">
                         visibility

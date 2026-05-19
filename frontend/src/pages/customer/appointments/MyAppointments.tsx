@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAuth } from "../../../shared/auth/useAuth";
+import { apiRequest, getApiErrorMessage } from "../../../shared/utils/api";
 import "./MyAppointments.css";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const TEMP_CUSTOMER_ID = import.meta.env.VITE_TEMP_CUSTOMER_ID;
 
 type AppointmentStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled" | string;
 
@@ -23,13 +22,6 @@ type Appointment = {
     createdAt?: string;
 };
 
-type ApiResponse<T> = {
-    success: boolean;
-    message: string;
-    data: T;
-    errors: string[] | null;
-    statusCode: number;
-};
 type PagedResult<T> = {
     items: T[];
     pageNumber: number;
@@ -39,14 +31,9 @@ type PagedResult<T> = {
     hasPreviousPage: boolean;
     hasNextPage: boolean;
 };
-async function readApiResponse<T>(response: Response): Promise<ApiResponse<T> | null> {
-    const text = await response.text();
-    if (!text) return null;
-    return JSON.parse(text) as ApiResponse<T>;
-}
-
 function MyAppointments() {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -64,21 +51,27 @@ function MyAppointments() {
     const [hasNextPage, setHasNextPage] = useState(false);
 
     useEffect(() => {
-        loadAppointments(pageNumber);
-    }, [pageNumber]);
+        if (!user?.userId) {
+            return;
+        }
+
+        void loadAppointments(pageNumber);
+    }, [pageNumber, user?.userId]);
 
     const loadAppointments = async (page: number) => {
+        if (!user?.userId) {
+            return;
+        }
+
         try {
             setIsLoading(true);
 
-            const response = await fetch(
-                `${API_BASE_URL}/api/appointments/customer/${TEMP_CUSTOMER_ID}?pageNumber=${page}&pageSize=${pageSize}`
+            const result = await apiRequest<PagedResult<Appointment>>(
+                `/api/appointments/customer/${user.userId}?pageNumber=${page}&pageSize=${pageSize}`
             );
 
-            const result = await readApiResponse<PagedResult<Appointment>>(response);
-
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to load appointments.");
+            if (!result.success || !result.data) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             const pagedData = result.data;
@@ -107,17 +100,15 @@ function MyAppointments() {
         try {
             setIsCancelling(true);
 
-            const response = await fetch(
-                `${API_BASE_URL}/api/appointments/${appointmentToCancel.appointmentId}/cancel`,
+            const result = await apiRequest<Appointment>(
+                `/api/appointments/${appointmentToCancel.appointmentId}/cancel`,
                 {
                     method: "PATCH",
                 }
             );
 
-            const result = await readApiResponse<Appointment>(response);
-
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to cancel appointment.");
+            if (!result.success || !result.data) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             toast.success(result.message || "Appointment cancelled successfully.");
@@ -125,7 +116,7 @@ function MyAppointments() {
             setAppointments((prev) =>
                 prev.map((appointment) =>
                     appointment.appointmentId === appointmentToCancel.appointmentId
-                        ? result.data
+                        ? (result.data ?? appointment)
                         : appointment
                 )
             );

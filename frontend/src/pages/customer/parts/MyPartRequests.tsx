@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAuth } from "../../../shared/auth/useAuth";
+import { apiRequest, getApiErrorMessage } from "../../../shared/utils/api";
 import "./MyPartRequests.css";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const TEMP_CUSTOMER_ID = import.meta.env.VITE_TEMP_CUSTOMER_ID;
 
 type PartRequest = {
     partRequestId: number;
@@ -22,14 +22,6 @@ type PartRequest = {
     updatedAt: string | null;
 };
 
-type ApiResponse<T> = {
-    success: boolean;
-    message: string;
-    data: T;
-    errors: string[] | null;
-    statusCode: number;
-};
-
 type PagedResult<T> = {
     items: T[];
     pageNumber: number;
@@ -40,14 +32,9 @@ type PagedResult<T> = {
     hasNextPage: boolean;
 };
 
-async function readApiResponse<T>(response: Response): Promise<ApiResponse<T> | null> {
-    const text = await response.text();
-    if (!text) return null;
-    return JSON.parse(text) as ApiResponse<T>;
-}
-
 function MyPartRequests() {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [requests, setRequests] = useState<PartRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -65,21 +52,27 @@ function MyPartRequests() {
     const [hasNextPage, setHasNextPage] = useState(false);
 
     useEffect(() => {
-        loadPartRequests(pageNumber);
-    }, [pageNumber]);
+        if (!user?.userId) {
+            return;
+        }
+
+        void loadPartRequests(pageNumber);
+    }, [pageNumber, user?.userId]);
 
     const loadPartRequests = async (page: number) => {
+        if (!user?.userId) {
+            return;
+        }
+
         try {
             setIsLoading(true);
 
-            const response = await fetch(
-                `${API_BASE_URL}/api/part-requests/customer/${TEMP_CUSTOMER_ID}?pageNumber=${page}&pageSize=${pageSize}`
+            const result = await apiRequest<PagedResult<PartRequest>>(
+                `/api/part-requests/customer/${user.userId}?pageNumber=${page}&pageSize=${pageSize}`
             );
 
-            const result = await readApiResponse<PagedResult<PartRequest>>(response);
-
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to load part requests.");
+            if (!result.success || !result.data) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             const pagedData = result.data;
@@ -106,17 +99,15 @@ function MyPartRequests() {
         try {
             setIsCancelling(true);
 
-            const response = await fetch(
-                `${API_BASE_URL}/api/part-requests/${requestToCancel.partRequestId}/cancel`,
+            const result = await apiRequest<PartRequest>(
+                `/api/part-requests/${requestToCancel.partRequestId}/cancel`,
                 {
                     method: "PUT",
                 }
             );
 
-            const result = await readApiResponse<PartRequest>(response);
-
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to cancel request.");
+            if (!result.success || !result.data) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             toast.success(result.message || "Part request cancelled successfully.");
@@ -124,7 +115,7 @@ function MyPartRequests() {
             setRequests((prev) =>
                 prev.map((request) =>
                     request.partRequestId === requestToCancel.partRequestId
-                        ? result.data
+                        ? (result.data ?? request)
                         : request
                 )
             );

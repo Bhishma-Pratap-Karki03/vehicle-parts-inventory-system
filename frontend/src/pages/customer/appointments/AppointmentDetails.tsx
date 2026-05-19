@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAuth } from "../../../shared/auth/useAuth";
+import { apiRequest, getApiErrorMessage } from "../../../shared/utils/api";
 import "./AppointmentDetails.css";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const TEMP_CUSTOMER_ID = import.meta.env.VITE_TEMP_CUSTOMER_ID;
-
 
 type Appointment = {
     appointmentId: number;
@@ -30,23 +29,10 @@ type Review = {
     createdAt: string;
 };
 
-type ApiResponse<T> = {
-    success: boolean;
-    message: string;
-    data: T;
-    errors: string[] | null;
-    statusCode: number;
-};
-
-async function readApiResponse<T>(response: Response): Promise<ApiResponse<T> | null> {
-    const text = await response.text();
-    if (!text) return null;
-    return JSON.parse(text) as ApiResponse<T>;
-}
-
 function AppointmentDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [appointment, setAppointment] = useState<Appointment | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -73,11 +59,10 @@ function AppointmentDetails() {
         try {
             setIsLoading(true);
 
-            const response = await fetch(`${API_BASE_URL}/api/appointments/${id}`);
-            const result = await readApiResponse<Appointment>(response);
+            const result = await apiRequest<Appointment>(`/api/appointments/${id}`);
 
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to load appointment details.");
+            if (!result.success || !result.data) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             setAppointment(result.data);
@@ -99,13 +84,11 @@ function AppointmentDetails() {
 
     const loadExistingReview = async (appointmentId: number) => {
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/api/reviews/appointment/${appointmentId}`
+            const result = await apiRequest<Review>(
+                `/api/reviews/appointment/${appointmentId}`
             );
 
-            const result = await readApiResponse<Review>(response);
-
-            if (response.ok && result?.success && result.data) {
+            if (result.success && result.data) {
                 setExistingReview(result.data);
                 setRating(result.data.rating);
                 setReviewComment(result.data.comment);
@@ -117,6 +100,10 @@ function AppointmentDetails() {
 
     const handleSubmitReview = async () => {
         if (!appointment) return;
+        if (!user?.userId) {
+            toast.error("Please log in to submit a review.");
+            return;
+        }
 
         if (appointment.status !== "Completed") {
             toast.error("You can review only completed appointments.");
@@ -136,23 +123,18 @@ function AppointmentDetails() {
         try {
             setIsSubmittingReview(true);
 
-            const response = await fetch(`${API_BASE_URL}/api/reviews`, {
+            const result = await apiRequest<Review>('/api/reviews', {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    customerId: TEMP_CUSTOMER_ID,
+                body: {
+                    customerId: user.userId,
                     appointmentId: appointment.appointmentId,
                     rating,
                     comment: reviewComment.trim(),
-                }),
+                },
             });
 
-            const result = await readApiResponse<Review>(response);
-
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to submit review.");
+            if (!result.success || !result.data) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             toast.success(result.message || "Review submitted successfully.");
@@ -179,17 +161,15 @@ function AppointmentDetails() {
         try {
             setIsCancelling(true);
 
-            const response = await fetch(
-                `${API_BASE_URL}/api/appointments/${appointment.appointmentId}/cancel`,
+            const result = await apiRequest<Appointment>(
+                `/api/appointments/${appointment.appointmentId}/cancel`,
                 {
                     method: "PATCH",
                 }
             );
 
-            const result = await readApiResponse<Appointment>(response);
-
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to cancel appointment.");
+            if (!result.success || !result.data) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             toast.success(result.message || "Appointment cancelled successfully.");

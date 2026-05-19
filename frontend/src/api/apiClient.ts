@@ -1,16 +1,26 @@
-const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "https://localhost:7000/api";
+import backendUrl from "../config";
+import { AUTH_STORAGE_KEYS } from "../shared/utils/api";
+
+const API_BASE_URL = backendUrl ? `${backendUrl}/api` : "/api";
 
 export async function apiRequest<T>(
     endpoint: string,
     options?: RequestInit
 ): Promise<T> {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem(AUTH_STORAGE_KEYS.token);
+
+    const requestBody =
+        options?.body &&
+        typeof options.body !== "string" &&
+        !(options.body instanceof FormData)
+            ? JSON.stringify(options.body)
+            : options?.body;
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
+        body: requestBody,
         headers: {
-            "Content-Type": "application/json",
+            ...(requestBody instanceof FormData ? {} : { "Content-Type": "application/json" }),
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...(options?.headers || {}),
         },

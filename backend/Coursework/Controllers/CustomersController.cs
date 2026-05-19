@@ -1,23 +1,29 @@
 using System.Security.Claims;
 using Coursework.Application.DTOs.Customers;
 using Coursework.Application.Interfaces;
+using Coursework.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coursework.Controllers;
 
 [Route("api/customers")]
-[Authorize(Roles = "Customer")]
 public class CustomersController : ControllerBase
 {
     private readonly ICustomerService _customerService;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public CustomersController(ICustomerService customerService)
+    public CustomersController(
+        ICustomerService customerService,
+        UserManager<ApplicationUser> userManager)
     {
         _customerService = customerService;
+        _userManager = userManager;
     }
 
     [HttpGet("me")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> GetProfile()
     {
         var customerId = GetCurrentCustomerId();
@@ -32,6 +38,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPut("me")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateCustomerProfileDto dto)
     {
         var customerId = GetCurrentCustomerId();
@@ -46,6 +53,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("me/vehicles")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> GetVehicles()
     {
         var customerId = GetCurrentCustomerId();
@@ -60,6 +68,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost("me/vehicles")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> AddVehicle([FromBody] CreateCustomerVehicleDto dto)
     {
         var customerId = GetCurrentCustomerId();
@@ -74,6 +83,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPut("me/vehicles/{vehicleId:int}")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> UpdateVehicle(
         [FromRoute] int vehicleId,
         [FromBody] UpdateCustomerVehicleDto dto)
@@ -90,6 +100,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpDelete("me/vehicles/{vehicleId:int}")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> DeleteVehicle([FromRoute] int vehicleId)
     {
         var customerId = GetCurrentCustomerId();
@@ -104,6 +115,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("me/purchase-history")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> GetPurchaseHistory()
     {
         var customerId = GetCurrentCustomerId();
@@ -118,6 +130,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("me/service-history")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> GetServiceHistory()
     {
         var customerId = GetCurrentCustomerId();
@@ -132,6 +145,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("me/history/summary")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> GetHistorySummary()
     {
         var customerId = GetCurrentCustomerId();
@@ -149,10 +163,16 @@ public class CustomersController : ControllerBase
     {
         return User.FindFirstValue(ClaimTypes.NameIdentifier);
     }
-     [HttpPost]
+    [HttpPost]
+    [Authorize]
     public async Task<IActionResult> CreateCustomer(
         [FromBody] CreateCustomerDto dto)
     {
+        if (!await CurrentUserHasAnyRoleAsync("Admin", "Staff"))
+        {
+            return Forbid();
+        }
+
         var response =
             await _customerService.CreateCustomerAsync(dto);
 
@@ -162,9 +182,15 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("search")]
+    [Authorize]
     public async Task<IActionResult> SearchCustomers(
         [FromQuery] string query)
     {
+        if (!await CurrentUserHasAnyRoleAsync("Admin", "Staff"))
+        {
+            return Forbid();
+        }
+
         var response =
             await _customerService.SearchCustomersAsync(query);
 
@@ -174,14 +200,43 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> GetCustomerById(
         [FromRoute] string id)
     {
+        if (!await CurrentUserHasAnyRoleAsync("Admin", "Staff"))
+        {
+            return Forbid();
+        }
+
         var response =
             await _customerService.GetCustomerByIdAsync(id);
 
         return StatusCode(
             response.StatusCode,
             response);
+    }
+
+    private async Task<bool> CurrentUserHasAnyRoleAsync(params string[] roles)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return false;
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user == null || !user.IsActive)
+        {
+            return false;
+        }
+
+        var userRoles = await _userManager.GetRolesAsync(user);
+
+        return userRoles.Any(role =>
+            roles.Any(expectedRole =>
+                string.Equals(role, expectedRole, StringComparison.OrdinalIgnoreCase)));
     }
 }

@@ -1,12 +1,20 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import backendUrl from '../../config'
+
+import { useAuth } from '../../shared/auth/useAuth'
+import type { AuthResponse } from '../../shared/interfaces/customer.interface'
+import { apiRequest, getApiErrorMessage } from '../../shared/utils/api'
 
 function CustomerLoginPage() {
+  const { login } = useAuth()
+  const navigate = useNavigate()
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -23,42 +31,33 @@ function CustomerLoginPage() {
     e.preventDefault()
 
     try {
-      const response = await fetch(
-        `${backendUrl}/api/Auth/login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        },
-      )
+      setIsSubmitting(true)
 
-      const result = await response.json()
+      const result = await apiRequest<AuthResponse>('/api/auth/login', {
+        body: formData,
+        method: 'POST',
+        skipAuth: true,
+      })
 
-      if (!result.success) {
-        toast.error(
-          result.message || 'Login failed.',
-        )
-
+      if (!result.success || !result.data) {
+        toast.error(getApiErrorMessage(result))
         return
       }
 
-      localStorage.setItem(
-        'customerEmail',
-        formData.email,
-      )
-
+      login(result.data)
       toast.success('Login successful.')
+      navigate('/home', { replace: true })
     } catch {
       toast.error('Something went wrong.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
     <main className="min-h-screen bg-[#F5F8FB] px-7 py-8 text-[#17324F]">
       <div className="mx-auto max-w-2xl">
-        <div className="rounded-[32px] border border-[#DCE5EF] bg-white p-10 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
+        <div className="rounded-4xl border border-[#DCE5EF] bg-white p-10 shadow-[0_18px_40px_rgba(15,39,68,0.04)]">
           <h1 className="text-[52px] font-semibold tracking-[-0.03em] text-[#17324F]">
             Customer Login
           </h1>
@@ -102,10 +101,11 @@ function CustomerLoginPage() {
             </div>
 
             <button
-              className="inline-flex h-16 w-full items-center justify-center rounded-full bg-[#15558D] px-10 text-[16px] font-semibold text-white shadow-[0_18px_36px_rgba(21,85,141,0.22)] transition hover:bg-[#0E4778]"
+              className="inline-flex h-16 w-full items-center justify-center rounded-full bg-[#15558D] px-10 text-[16px] font-semibold text-white shadow-[0_18px_36px_rgba(21,85,141,0.22)] transition hover:bg-[#0E4778] disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={isSubmitting}
               type="submit"
             >
-              Login
+              {isSubmitting ? 'Signing in...' : 'Login'}
             </button>
           </form>
         </div>

@@ -16,14 +16,14 @@ public class PartsController(IPartService partService) : ControllerBase
         var response = await partService.GetAllAsync(query);
         return StatusCode(response.StatusCode, response);
     }
-    
+
     [HttpGet("summary")]
     public async Task<IActionResult> GetPartsSummary()
     {
         var response = await partService.GetSummaryAsync();
         return StatusCode(response.StatusCode, response);
     }
-    
+
     [HttpGet("vendors/options")]
     public async Task<IActionResult> GetVendorOptions()
     {
@@ -83,7 +83,7 @@ public class PartsController(IPartService partService) : ControllerBase
         var response = await partService.DeleteAsync(id);
         return StatusCode(response.StatusCode, response);
     }
-    
+
     [HttpPost("{id:int}/image")]
     public async Task<IActionResult> UploadPartImage(
         [FromRoute] int id,

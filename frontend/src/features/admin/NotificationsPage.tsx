@@ -264,7 +264,7 @@ export default function NotificationsPage() {
                             Showing {filteredNotifications.length} of {notifications.length} notifications
                         </p>
                     </div>
-                    <label className="flex h-12 min-w-[340px] items-center gap-3 rounded-lg border border-slate-300 px-4 text-slate-500">
+                    <label className="flex h-12 min-w-85 items-center gap-3 rounded-lg border border-slate-300 px-4 text-slate-500">
                         <Icon name="search" />
                         <input
                             className="w-full outline-none placeholder:text-slate-400"

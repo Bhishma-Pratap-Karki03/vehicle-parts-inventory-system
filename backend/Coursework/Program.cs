@@ -1,4 +1,5 @@
 using System.Text;
+using System.Security.Claims;
 using Coursework.Application.Interfaces;
 using Coursework.Infrastructure;
 using Coursework.Infrastructure.Data;
@@ -57,6 +58,8 @@ builder.Services
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
+            NameClaimType = ClaimTypes.NameIdentifier,
+            RoleClaimType = ClaimTypes.Role,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ClockSkew = TimeSpan.FromMinutes(1)
         };

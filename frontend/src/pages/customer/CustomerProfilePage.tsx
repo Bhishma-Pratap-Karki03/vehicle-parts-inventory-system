@@ -136,7 +136,7 @@ function CustomerProfilePage() {
               <label className="flex flex-col gap-2">
                 <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#52677F]">Address</span>
                 <textarea
-                  className="min-h-[110px] rounded-2xl border border-[#D7E2ED] bg-[#F8FBFE] px-4 py-3 text-[14px] font-medium text-[#0C2544] outline-none transition focus:border-[#15558D] focus:bg-white"
+                  className="min-h-27.5 rounded-2xl border border-[#D7E2ED] bg-[#F8FBFE] px-4 py-3 text-[14px] font-medium text-[#0C2544] outline-none transition focus:border-[#15558D] focus:bg-white"
                   maxLength={250}
                   onChange={(event) => setFormState((current) => ({ ...current, address: event.target.value }))}
                   placeholder="Street, City (optional)"

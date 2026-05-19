@@ -111,7 +111,7 @@ function StockAdjustmentPage() {
 
       const createdTransaction = mapPartTransactionFromApi(result.data)
       toast.success(result.message || 'Stock adjusted successfully.')
-      navigate(`/part-transactions/${createdTransaction.partTransactionId}`)
+      navigate(`/stock-transactions/${createdTransaction.partTransactionId}`)
     } catch (error) {
       toast.error(getRequestErrorMessage(error, 'Unable to apply this stock adjustment right now.'))
     } finally {
@@ -121,7 +121,7 @@ function StockAdjustmentPage() {
 
   return (
     <StockAdjustmentForm
-      cancelHref={prefilledPartId ? `/part-transactions?partId=${prefilledPartId}` : '/part-transactions'}
+      cancelHref={prefilledPartId ? `/stock-transactions?partId=${prefilledPartId}` : '/stock-transactions'}
       initialValues={initialValues}
       isOptionsLoading={isOptionsLoading}
       isSubmitting={isSubmitting}

@@ -97,16 +97,23 @@
     }
 
     .customer-dropdown-menu a,
-    .customer-profile-menu a {
+    .customer-profile-menu a,
+    .customer-profile-menu button {
         display: block;
         padding: 11px 16px;
         color: #334155;
         font-size: 14px;
         text-decoration: none;
+        width: 100%;
+        border: none;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
     }
 
         .customer-dropdown-menu a:hover,
-        .customer-profile-menu a:hover {
+        .customer-profile-menu a:hover,
+        .customer-profile-menu button:hover {
             background: #f8fafc;
             color: #0f4c81;
         }

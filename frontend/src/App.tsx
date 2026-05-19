@@ -5,13 +5,15 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import CustomerLayout from "./layouts/CustomerLayout";
 import AdminLayout from "./layouts/AdminLayout";
 import StaffLayout from "./layouts/StaffLayout";
+import NotificationsPage from "./features/admin/NotificationsPage";
+import VendorManagement from "./features/admin/VendorManagement";
+import StaffManagement from "./features/admin/StaffManagement";
 
 import CustomerCreatePage from './pages/customers/CustomerCreatePage'
 import CustomerSearchPage from './pages/customers/CustomerSearchPage'
 import CustomerDetailsPage from './pages/customers/CustomerDetailsPage'
 import ChangePasswordPage from './pages/customers/ChangePasswordPage'
 
-import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import BookAppointment from "./pages/customer/appointments/BookAppointment";
 import MyAppointments from "./pages/customer/appointments/MyAppointments";
 import AppointmentDetails from "./pages/customer/appointments/AppointmentDetails";
@@ -23,6 +25,7 @@ import FinancialReports from "./pages/admin/reports/FinancialReports";
 
 import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/auth/LoginPage'
+import CustomerHomePage from './pages/customer/CustomerHomePage'
 import RegisterPage from './pages/auth/RegisterPage'
 import CustomerProfilePage from './pages/customer/CustomerProfilePage'
 import CustomerPurchaseHistoryPage from './pages/customer/CustomerPurchaseHistoryPage'
@@ -43,7 +46,6 @@ import SalesInvoiceListPage from './pages/salesInvoices/SalesInvoiceListPage'
 import StaffCustomerReportsPage from './pages/staff/StaffCustomerReportsPage'
 import { useAuth } from './shared/auth/useAuth'
 import { ProtectedRoute } from './shared/auth/ProtectedRoute'
-import AppLayout from './shared/layout/AppLayout'
 
 function RootRedirect() {
   const { hasAnyRole, isAuthenticated, isInitializing } = useAuth()
@@ -57,10 +59,18 @@ function RootRedirect() {
   }
 
   if (hasAnyRole(['Customer'])) {
-    return <Navigate replace to="/customer/profile" />
+    return <Navigate replace to="/home" />
   }
 
-  return <Navigate replace to="/parts" />
+  if (hasAnyRole(['Admin'])) {
+    return <Navigate replace to="/admin/dashboard" />
+  }
+
+  if (hasAnyRole(['Staff'])) {
+    return <Navigate replace to="/staff" />
+  }
+
+  return <Navigate replace to="/unauthorized" />
 }
 
 function UnauthorizedPage() {
@@ -81,6 +91,24 @@ function UnauthorizedPage() {
   )
 }
 
+function RoleAwareChangePasswordPage() {
+  const { hasAnyRole } = useAuth()
+  const page = <ChangePasswordPage />
+
+  if (hasAnyRole(['Customer'])) {
+    return <CustomerLayout>{page}</CustomerLayout>
+  }
+
+  if (hasAnyRole(['Admin'])) {
+    return <AdminLayout>{page}</AdminLayout>
+  }
+
+  if (hasAnyRole(['Staff'])) {
+    return <StaffLayout>{page}</StaffLayout>
+  }
+
+  return page
+}
 
 function App() {
   return (
@@ -88,26 +116,21 @@ function App() {
       <Route element={<LoginPage />} path="/login" />
       <Route element={<RegisterPage />} path="/register" />
 
-      <Route
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
+     
         <Route element={<RootRedirect />} path="/" />
         <Route element={<UnauthorizedPage />} path="/unauthorized" />
 
         {/* Customer Routes */}
+
         <Route
           element={
             <ProtectedRoute allowedRoles={['Customer']}>
               <CustomerLayout>
-                <CustomerDashboard />
+                <CustomerHomePage />
               </CustomerLayout>
             </ProtectedRoute>
           }
-          path="/customer/dashboard"
+          path="/home"
         />
 
         <Route
@@ -179,7 +202,10 @@ function App() {
         <Route
           element={
             <ProtectedRoute allowedRoles={['Customer']}>
-              <CustomerProfilePage />
+              <CustomerLayout>
+                <CustomerProfilePage />
+              </CustomerLayout>
+              
             </ProtectedRoute>
           }
           path="/customer/profile"
@@ -188,7 +214,10 @@ function App() {
         <Route
           element={
             <ProtectedRoute allowedRoles={['Customer']}>
-              <CustomerVehiclesPage />
+              <CustomerLayout>
+                <CustomerVehiclesPage />
+              </CustomerLayout>
+              
             </ProtectedRoute>
           }
           path="/customer/vehicles"
@@ -197,7 +226,9 @@ function App() {
         <Route
           element={
             <ProtectedRoute allowedRoles={['Customer']}>
-              <CustomerPurchaseHistoryPage />
+              <CustomerLayout>
+                <CustomerPurchaseHistoryPage />
+              </CustomerLayout>
             </ProtectedRoute>
           }
           path="/customer/purchase-history"
@@ -206,7 +237,10 @@ function App() {
         <Route
           element={
             <ProtectedRoute allowedRoles={['Customer']}>
-              <CustomerServiceHistoryPage />
+              <CustomerLayout>
+                 <CustomerServiceHistoryPage />
+              </CustomerLayout>
+             
             </ProtectedRoute>
           }
           path="/customer/service-history"
@@ -215,17 +249,25 @@ function App() {
         {/* Staff/Admin Customer Management Routes */}
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <CustomerCreatePage />
+            <ProtectedRoute allowedRoles={['Staff']}>
+              <StaffLayout>
+                <CustomerCreatePage />
+              </StaffLayout>
+             
             </ProtectedRoute>
           }
           path="/customers/create"
         />
 
+        {/* Staff Routes */}
+
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <CustomerSearchPage />
+            <ProtectedRoute allowedRoles={['Staff']}>
+              <StaffLayout>
+                <CustomerSearchPage />
+              </StaffLayout>
+             
             </ProtectedRoute>
           }
           path="/customers/search"
@@ -233,27 +275,38 @@ function App() {
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <CustomerDetailsPage />
+            <ProtectedRoute allowedRoles={['Staff']}>
+              <StaffLayout>
+                <CustomerDetailsPage />
+              </StaffLayout>
             </ProtectedRoute>
           }
           path="/customers/:id"
         />
 
+
+
         <Route
           element={
             <ProtectedRoute allowedRoles={['Admin', 'Staff', 'Customer']}>
-              <ChangePasswordPage />
+              <RoleAwareChangePasswordPage />
             </ProtectedRoute>
           }
           path="/change-password"
         />
 
+
+
+
+
         {/* Admin and Staff Parts Routes */}
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartsManagementPage />
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout>
+                <PartsManagementPage />
+              </AdminLayout>
+              
             </ProtectedRoute>
           }
           path="/parts"
@@ -261,8 +314,10 @@ function App() {
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartEditorPage />
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout>
+                <PartEditorPage />
+              </AdminLayout>
             </ProtectedRoute>
           }
           path="/parts/new"
@@ -270,8 +325,10 @@ function App() {
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartDetailsPage />
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout>
+                <PartDetailsPage />
+              </AdminLayout>
             </ProtectedRoute>
           }
           path="/parts/:partId"
@@ -279,8 +336,10 @@ function App() {
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartEditorPage />
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout>
+                <PartEditorPage />
+              </AdminLayout>
             </ProtectedRoute>
           }
           path="/parts/:partId/edit"
@@ -289,36 +348,44 @@ function App() {
         {/* Part Transactions */}
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartTransactionListPage />
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout>
+                <PartTransactionListPage />
+              </AdminLayout>
             </ProtectedRoute>
           }
-          path="/part-transactions"
+          path="/stock-transactions"
         />
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <StockAdjustmentPage />
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout>
+                <StockAdjustmentPage />
+              </AdminLayout>
             </ProtectedRoute>
           }
-          path="/part-transactions/create"
+          path="/stock-transactions/adjust"
         />
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <PartTransactionDetailsPage />
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout>
+                <PartTransactionDetailsPage />
+              </AdminLayout>
             </ProtectedRoute>
           }
-          path="/part-transactions/:partTransactionId"
+          path="/stock-transactions/:partTransactionId"
         />
 
         {/* Purchase Invoices */}
         <Route
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
-              <PurchaseInvoiceListPage />
+              <AdminLayout>
+                <PurchaseInvoiceListPage />
+              </AdminLayout>
             </ProtectedRoute>
           }
           path="/purchase-invoices"
@@ -327,7 +394,9 @@ function App() {
         <Route
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
-              <PurchaseInvoiceCreatePage />
+              <AdminLayout>
+                <PurchaseInvoiceCreatePage />
+              </AdminLayout>
             </ProtectedRoute>
           }
           path="/purchase-invoices/create"
@@ -336,7 +405,9 @@ function App() {
         <Route
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
-              <PurchaseInvoiceDetailsPage />
+              <AdminLayout>
+                <PurchaseInvoiceDetailsPage />
+              </AdminLayout>
             </ProtectedRoute>
           }
           path="/purchase-invoices/:purchaseInvoiceId"
@@ -345,8 +416,10 @@ function App() {
         {/* Sales Invoices */}
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <SalesInvoiceListPage />
+            <ProtectedRoute allowedRoles={['Staff']}>
+              <StaffLayout>
+                <SalesInvoiceListPage />
+              </StaffLayout>
             </ProtectedRoute>
           }
           path="/sales-invoices"
@@ -354,8 +427,10 @@ function App() {
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <SalesInvoiceCreatePage />
+            <ProtectedRoute allowedRoles={['Staff']}>
+              <StaffLayout>
+                <SalesInvoiceCreatePage />
+              </StaffLayout>
             </ProtectedRoute>
           }
           path="/sales-invoices/create"
@@ -363,8 +438,10 @@ function App() {
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <SalesInvoiceDetailsPage />
+            <ProtectedRoute allowedRoles={['Staff']}>
+              <StaffLayout>
+                <SalesInvoiceDetailsPage />
+              </StaffLayout>
             </ProtectedRoute>
           }
           path="/sales-invoices/:salesInvoiceId"
@@ -384,8 +461,10 @@ function App() {
 
         <Route
           element={
-            <ProtectedRoute allowedRoles={['Admin', 'Staff']}>
-              <StaffCustomerReportsPage />
+            <ProtectedRoute allowedRoles={['Staff']}>
+              <StaffLayout>
+                <StaffCustomerReportsPage />
+              </StaffLayout>
             </ProtectedRoute>
           }
           path="/staff/customer-reports"
@@ -413,7 +492,39 @@ function App() {
           }
           path="/admin/reports/financial"
         />
-      </Route>
+    
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <AdminLayout>
+                  <NotificationsPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+            path="/admin/notifications"
+          />
+
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <AdminLayout>
+                  <VendorManagement />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+            path="/admin/vendors"
+          />
+
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <AdminLayout>
+                  <StaffManagement />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+            path="/admin/staff"
+          />
 
       <Route element={<NotFoundPage />} path="*" />
     </Routes>

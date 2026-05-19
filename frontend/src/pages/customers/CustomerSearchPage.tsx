@@ -5,12 +5,13 @@ import {
   Phone,
   Car,
 } from 'lucide-react'
-import backendUrl from '../../config'
+import { apiRequest, getApiErrorMessage } from '../../shared/utils/api'
 
 function CustomerSearchPage() {
   const [query, setQuery] = useState('')
   const [customers, setCustomers] = useState<any[]>([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const customersPerPage = 4
 
@@ -19,26 +20,30 @@ function CustomerSearchPage() {
       void searchCustomers()
     } else {
       setCustomers([])
+      setErrorMessage('')
     }
   }, [query])
 
   const searchCustomers = async () => {
     try {
-      const response = await fetch(
-        `${backendUrl}/api/Customers/search?query=${query}`,
+      const response = await apiRequest<any[]>(
+        `/api/customers/search?query=${encodeURIComponent(
+          query.trim(),
+        )}`,
       )
 
-      const result = await response.json()
-
-      if (!result.success) {
+      if (!response.success || !response.data) {
         setCustomers([])
+        setErrorMessage(getApiErrorMessage(response))
         return
       }
 
-      setCustomers(result.data)
+      setCustomers(response.data)
+      setErrorMessage('')
       setCurrentPage(1)
-    } catch (error) {
-      console.log(error)
+    } catch {
+      setCustomers([])
+      setErrorMessage('Failed to search customers.')
     }
   }
 
@@ -103,6 +108,12 @@ function CustomerSearchPage() {
           )}
 
           <div className="mt-8 space-y-5">
+            {errorMessage && query.trim() !== '' && (
+              <div className="rounded-[24px] border border-[#F0D2CE] bg-[#FFF8F7] px-6 py-5 text-[15px] font-medium text-[#A94E48]">
+                {errorMessage}
+              </div>
+            )}
+
             {paginatedCustomers.map((customer) => (
               <div
                 className="rounded-[28px] border border-[#DCE5EF] bg-[#FBFDFF] p-7 transition hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(15,39,68,0.08)]"

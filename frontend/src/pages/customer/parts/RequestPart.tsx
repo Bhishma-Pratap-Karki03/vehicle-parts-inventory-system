@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAuth } from "../../../shared/auth/useAuth";
+import { apiRequest, getApiErrorMessage } from "../../../shared/utils/api";
 import "./RequestPart.css";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const TEMP_CUSTOMER_ID = import.meta.env.VITE_TEMP_CUSTOMER_ID;
 
 type CustomerVehicle = {
     vehicleId: number;
@@ -16,22 +15,9 @@ type CustomerVehicle = {
     lastServiceDate: string | null;
 };
 
-type ApiResponse<T> = {
-    success: boolean;
-    message: string;
-    data: T;
-    errors: string[] | null;
-    statusCode: number;
-};
-
-async function readApiResponse<T>(response: Response): Promise<ApiResponse<T> | null> {
-    const text = await response.text();
-    if (!text) return null;
-    return JSON.parse(text) as ApiResponse<T>;
-}
-
 function RequestPart() {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [vehicles, setVehicles] = useState<CustomerVehicle[]>([]);
     const [selectedVehicleId, setSelectedVehicleId] = useState<number | "">("");
@@ -47,21 +33,27 @@ function RequestPart() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        loadVehicles();
-    }, []);
+        if (!user?.userId) {
+            return;
+        }
+
+        void loadVehicles();
+    }, [user?.userId]);
 
     const loadVehicles = async () => {
+        if (!user?.userId) {
+            return;
+        }
+
         try {
             setIsLoadingVehicles(true);
 
-            const response = await fetch(
-                `${API_BASE_URL}/api/appointments/customer/${TEMP_CUSTOMER_ID}/vehicles`
+            const result = await apiRequest<CustomerVehicle[]>(
+                `/api/appointments/customer/${user.userId}/vehicles`
             );
 
-            const result = await readApiResponse<CustomerVehicle[]>(response);
-
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to load vehicles.");
+            if (!result.success || !result.data) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             const vehicleData = result.data ?? [];
@@ -93,6 +85,11 @@ function RequestPart() {
     };
 
     const handleSubmitRequest = async () => {
+        if (!user?.userId) {
+            toast.error("Please log in to request a part.");
+            return;
+        }
+
         if (!partName.trim()) {
             toast.error("Please enter the part name.");
             return;
@@ -114,7 +111,7 @@ function RequestPart() {
         }
 
         const requestBody = {
-            customerId: TEMP_CUSTOMER_ID,
+            customerId: user.userId,
             vehicleId: selectedVehicleId || null,
             partName: partName.trim(),
             partNumber: partNumber.trim() || null,
@@ -126,18 +123,13 @@ function RequestPart() {
         try {
             setIsSubmitting(true);
 
-            const response = await fetch(`${API_BASE_URL}/api/part-requests`, {
+            const result = await apiRequest<unknown>('/api/part-requests', {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody),
+                body: requestBody,
             });
 
-            const result = await readApiResponse<unknown>(response);
-
-            if (!response.ok || !result?.success) {
-                throw new Error(result?.message || "Failed to submit part request.");
+            if (!result.success) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             toast.success(result.message || "Part request submitted successfully.");
@@ -373,14 +365,16 @@ function RequestPart() {
 
                             <div className="p-6">
                                 <div className="bg-[#f2f4f6] rounded-lg p-4 border border-slate-200 mb-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <ContactInfo label="Full Name" value="Test Customer" />
-                                        <ContactInfo label="Phone Number" value="9800000000" />
-                                        <ContactInfo
-                                            label="Email Address"
-                                            value="customer@test.com"
-                                        />
-                                    </div>
+                                    {user && (
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <ContactInfo label="Full Name" value={user.fullName} />
+                                            <ContactInfo label="Phone Number" value={user.phoneNumber || ''} />
+                                            <ContactInfo
+                                                label="Email Address"
+                                                value={user.email}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 <label className="flex items-center gap-3 cursor-pointer group">

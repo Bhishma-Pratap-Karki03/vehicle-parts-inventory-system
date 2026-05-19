@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../../api/apiClient";
 import type { Vendor } from "../../types/vendor";
+import { toast } from "react-toastify";
 
 type IconName = "truck" | "plus" | "mail" | "phone" | "map" | "user" | "search" | "edit" | "x";
 
@@ -80,7 +81,6 @@ function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: str
 export default function VendorManagement() {
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [message, setMessage] = useState("");
     const [search, setSearch] = useState("");
     const [vendorStatusFilter, setVendorStatusFilter] = useState<"active" | "inactive">("active");
 
@@ -128,7 +128,7 @@ export default function VendorManagement() {
 
             setVendors(vendorList);
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "Failed to load vendors.");
+            toast.error(error instanceof Error ? error.message : "Failed to load vendors.");
             setVendors([]);
         }
     }
@@ -163,20 +163,20 @@ export default function VendorManagement() {
                     body: JSON.stringify(form),
                 });
 
-                setMessage("Vendor updated successfully.");
+                toast.success("Vendor updated successfully.");
             } else {
                 await apiRequest("/admin/vendors", {
                     method: "POST",
                     body: JSON.stringify(form),
                 });
 
-                setMessage("Vendor created successfully.");
+                toast.success("Vendor created successfully.");
             }
 
             resetForm();
             await loadVendors();
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "Failed to save vendor.");
+            toast.error(error instanceof Error ? error.message : "Failed to save vendor.");
         }
     }
 
@@ -195,10 +195,10 @@ export default function VendorManagement() {
     async function deleteVendor(id: number) {
         try {
             await apiRequest(`/admin/vendors/${id}`, { method: "DELETE" });
-            setMessage("Vendor deleted or deactivated successfully.");
+            toast.success("Vendor deleted or deactivated successfully.");
             await loadVendors();
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "Failed to delete vendor.");
+            toast.error(error instanceof Error ? error.message : "Failed to delete vendor.");
         }
     }
 
@@ -240,12 +240,6 @@ export default function VendorManagement() {
                     </p>
                 </div>
             </div>
-
-            {message && (
-                <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-5 py-4 font-medium text-blue-900">
-                    {message}
-                </div>
-            )}
 
             <div className="mb-8 grid gap-6 md:grid-cols-3">
                 <div className="rounded-xl bg-white p-6 shadow-sm">

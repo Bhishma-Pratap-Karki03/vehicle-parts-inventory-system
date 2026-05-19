@@ -1,7 +1,20 @@
-import { Link, NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+
+import { useAuth } from "../../shared/auth/useAuth";
 import "./AdminNavbar.css";
 
 function AdminNavbar() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { logout, user } = useAuth();
+
+    const displayName = user?.fullName || "Administrator";
+
+    function handleLogout() {
+        logout();
+        navigate("/login", { replace: true });
+    }
+
     return (
         <>
             <aside className="admin-sidebar">
@@ -16,68 +29,66 @@ function AdminNavbar() {
                 <nav className="admin-sidebar-nav">
                     <p className="admin-nav-heading">Main Menu</p>
 
-                    <AdminNavLink to="/admin" icon="dashboard" label="Dashboard" />
+                    <AdminNavLink currentPath={location.pathname} to="/admin/dashboard" icon="dashboard" label="Dashboard" />
+                    <AdminNavLink currentPath={location.pathname} to="/parts" icon="settings_suggest" label="Parts Management" />
+                    <AdminNavLink currentPath={location.pathname} to="/admin/vendors" icon="local_shipping" label="Vendors" />
+                    <AdminNavLink currentPath={location.pathname} to="/admin/staff" icon="manage_accounts" label="Staff Management" />
+                    <AdminNavLink currentPath={location.pathname} to="/admin/notifications" icon="notifications_active" label="Notifications" />
 
-                    <AdminNavLink to="/admin/staff" icon="badge" label="Staff Management" />
+                    <p className="admin-nav-heading">Inventory & Invoices</p>
 
-                    <AdminNavLink to="/admin/parts" icon="settings_suggest" label="Parts Management" />
-
-                    <AdminNavLink to="/admin/vendors" icon="handshake" label="Vendor Management" />
-
-                    <p className="admin-nav-heading">Invoicing & Requests</p>
-
-                    <AdminNavLink to="/admin/purchase-invoices" icon="receipt_long" label="Purchase Invoices" />
-
-                    <AdminNavLink to="/admin/sales-invoices" icon="point_of_sale" label="Sales Invoices" />
-
-                    <AdminNavLink to="/admin/part-requests" icon="request_quote" label="Part Requests" />
-
-                    <AdminNavLink to="/admin/appointments" icon="calendar_month" label="Appointments" />
+                    <AdminNavLink currentPath={location.pathname} to="/purchase-invoices" icon="receipt_long" label="Purchase Invoices" />
+                    <AdminNavLink
+                        activeMatch={(pathname) =>
+                            pathname === "/stock-transactions" ||
+                            (/^\/stock-transactions\/[^/]+$/.test(pathname) && pathname !== "/stock-transactions/adjust")
+                        }
+                        currentPath={location.pathname}
+                        to="/stock-transactions"
+                        icon="sync_alt"
+                        label="Stock Transactions"
+                    />
+                    <AdminNavLink
+                        activeMatch={(pathname) => pathname === "/stock-transactions/adjust"}
+                        currentPath={location.pathname}
+                        to="/stock-transactions/adjust"
+                        icon="tune"
+                        label="Stock Adjustment"
+                    />
 
                     <p className="admin-nav-heading">Reporting</p>
 
-                    <AdminNavLink to="/admin/reports/financial" icon="payments" label="Financial Reports" />
-
-                    <AdminNavLink to="/admin/reports/inventory" icon="inventory_2" label="Inventory Reports" />
+                    <AdminNavLink currentPath={location.pathname} to="/admin/reports/financial" icon="payments" label="Financial Reports" />
                 </nav>
 
                 <div className="admin-sidebar-footer">
-                    <AdminNavLink to="/admin/notifications" icon="notifications" label="Notifications" />
-                    <AdminNavLink to="/admin/settings" icon="settings" label="Settings" />
+                    <AdminNavLink currentPath={location.pathname} to="/change-password" icon="lock_reset" label="Change Password" />
 
-                    <Link to="/logout" className="admin-logout-link">
+                    <button className="admin-logout-link" onClick={handleLogout} type="button">
                         <span className="material-symbols-outlined">logout</span>
-                        <span>Logout</span>
-                    </Link>
+                        <span className="admin-nav-link-label">Logout</span>
+                    </button>
                 </div>
             </aside>
 
             <header className="admin-topbar">
                 <div className="admin-topbar-left">
                     <h2>Admin</h2>
-
-                    <div className="admin-search-box">
-                        <span className="material-symbols-outlined">search</span>
-                        <input
-                            type="text"
-                            placeholder="Search staff, parts, vendors, invoices..."
-                        />
-                    </div>
                 </div>
 
                 <div className="admin-topbar-right">
-                    <button className="admin-topbar-notification">
+                    <button className="admin-topbar-notification" type="button">
                         <span className="material-symbols-outlined">notifications</span>
                         <span className="admin-notification-dot"></span>
                     </button>
 
                     <div className="admin-topbar-profile">
                         <div className="admin-profile-info">
-                            <strong>Administrator</strong>
+                            <strong>{displayName}</strong>
                             <span>Admin</span>
                         </div>
 
-                        <div className="admin-profile-avatar">A</div>
+                        <div className="admin-profile-avatar">{displayName.charAt(0).toUpperCase()}</div>
                     </div>
                 </div>
             </header>
@@ -86,24 +97,34 @@ function AdminNavbar() {
 }
 
 function AdminNavLink({
+    activeMatch,
+    currentPath,
     to,
     icon,
     label,
 }: {
+    activeMatch?: (pathname: string) => boolean;
+    currentPath: string;
     to: string;
     icon: string;
     label: string;
 }) {
+    const isActive = activeMatch
+        ? activeMatch(currentPath)
+        : to === "/admin/dashboard"
+            ? currentPath === to
+            : currentPath === to || currentPath.startsWith(`${to}/`);
+
     return (
         <NavLink
             to={to}
-            end={to === "/admin"}
-            className={({ isActive }) =>
+            title={label}
+            className={() =>
                 isActive ? "admin-nav-link active" : "admin-nav-link"
             }
         >
             <span className="material-symbols-outlined">{icon}</span>
-            <span>{label}</span>
+            <span className="admin-nav-link-label">{label}</span>
         </NavLink>
     );
 }

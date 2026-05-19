@@ -24,7 +24,6 @@ function StockAdjustmentForm({
   partOptions,
   isOptionsLoading,
   isSubmitting,
-  cancelHref,
   onSubmitAdjustment,
 }: StockAdjustmentFormProps) {
   const {
@@ -93,15 +92,6 @@ function StockAdjustmentForm({
       <form className="mx-auto w-full max-w-380 px-4 py-8 sm:px-6 lg:px-8 lg:py-10" onSubmit={handleSubmit(onSubmitAdjustment)}>
         <div className="flex flex-col gap-6 border-b border-[#DCE5EF] pb-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-4xl">
-            <Link
-              className="inline-flex items-center gap-2 text-[15px] font-medium text-[#45637F] transition hover:text-[#163E66]"
-              to={cancelHref}
-            >
-              <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
-                arrow_back
-              </span>
-              Back to Stock History
-            </Link>
 
             <h1 className="mt-2 text-[30px] font-semibold leading-tight tracking-[-0.03em] text-[#0C2544] [font-family:var(--font-display)] sm:text-[42px]">
               Adjust Stock
@@ -112,12 +102,6 @@ function StockAdjustmentForm({
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#C8D6E5] bg-white px-5 text-[14px] font-semibold text-[#24405E] no-underline shadow-[0_10px_24px_rgba(18,43,74,0.05)] transition hover:border-[#AEC3D9] hover:bg-[#F7FBFE]"
-              to={cancelHref}
-            >
-              Cancel
-            </Link>
             <button
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#15558D] px-5 text-[14px] font-semibold text-white shadow-[0_14px_30px_rgba(21,85,141,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0E487C] disabled:cursor-not-allowed disabled:opacity-70"
               disabled={isSubmitting || isOptionsLoading}
@@ -337,21 +321,21 @@ function StockAdjustmentForm({
                 </div>
 
                 {selectedPart ? (
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-nowrap items-center gap-3">
                     <Link
-                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-4 text-[13px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-3 py-2 text-[12px] font-medium text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
                       to={`/parts/${selectedPart.partId}`}
                     >
-                      <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[17px] not-italic">
+                      <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[15px] not-italic">
                         inventory_2
                       </span>
                       View Part
                     </Link>
                     <Link
-                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-4 text-[13px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
-                      to={`/part-transactions?partId=${selectedPart.partId}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-3 py-2 text-[12px] font-medium text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
+                      to={`/stock-transactions?partId=${selectedPart.partId}`}
                     >
-                      <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[17px] not-italic">
+                      <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[15px] not-italic">
                         history
                       </span>
                       View Stock History

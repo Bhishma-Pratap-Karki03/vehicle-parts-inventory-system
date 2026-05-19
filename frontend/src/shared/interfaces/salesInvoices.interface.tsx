@@ -103,7 +103,6 @@ export interface CreateSalesInvoiceItemPayload {
 export interface CreateSalesInvoicePayload {
   customerId: string
   vehicleId: number
-  discountAmount: number
   paidAmount: number
   dueDate: null | string
   items: CreateSalesInvoiceItemPayload[]

@@ -14,6 +14,8 @@ namespace Coursework.Application.Services;
 
 public class SalesInvoiceService : ISalesInvoiceService
 {
+    private const decimal LoyaltyDiscountRate = 0.10m;
+    private const decimal LoyaltyDiscountThreshold = 5000m;
     private readonly ISalesInvoiceRepository _salesInvoiceRepository;
     private readonly IPartRepository _partRepository;
     private readonly IVehicleRepository _vehicleRepository;
@@ -216,13 +218,11 @@ public class SalesInvoiceService : ISalesInvoiceService
                 return part.SellingPricePerUnit * quantity;
             });
 
-            if (dto.DiscountAmount > subTotal)
-            {
-                return ApiResponse<SalesInvoiceDetailDto>.FailureResponse(
-                    "Discount amount cannot be greater than subtotal.");
-            }
+            var discountAmount = subTotal > LoyaltyDiscountThreshold
+                ? decimal.Round(subTotal * LoyaltyDiscountRate, 2, MidpointRounding.AwayFromZero)
+                : 0m;
 
-            var finalAmount = subTotal - dto.DiscountAmount;
+            var finalAmount = subTotal - discountAmount;
 
             if (!IsPaidAmountValid(finalAmount, dto.PaidAmount))
             {
@@ -241,7 +241,7 @@ public class SalesInvoiceService : ISalesInvoiceService
                 VehicleId = dto.VehicleId,
                 InvoiceDate = DateTime.UtcNow,
                 SubTotal = subTotal,
-                DiscountAmount = dto.DiscountAmount,
+                DiscountAmount = discountAmount,
                 FinalAmount = finalAmount,
                 PaidAmount = dto.PaidAmount,
                 PaymentStatus = paymentStatus,

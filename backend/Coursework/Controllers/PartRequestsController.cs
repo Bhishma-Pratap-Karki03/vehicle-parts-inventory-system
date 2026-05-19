@@ -1,7 +1,7 @@
-﻿using Coursework.Application.Common;
+using Coursework.Application.Common;
 using Coursework.Application.DTOs.PartRequests;
 using Coursework.Application.Interfaces;
-using Coursework.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coursework.Controllers;
@@ -26,15 +26,27 @@ public class PartRequestsController : ControllerBase
 
     [HttpGet("customer/{customerId}")]
     public async Task<ActionResult<ApiResponse<PagedResult<PartRequestResponseDto>>>> GetCustomerPartRequests(
-     string customerId,
-     [FromQuery] int pageNumber = 1,
-     [FromQuery] int pageSize = 10)
+        string customerId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
         var response = await _partRequestService.GetCustomerPartRequestsAsync(
             customerId,
             pageNumber,
             pageSize);
 
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [Authorize(Roles = "Staff")]
+    [HttpGet("staff")]
+    public async Task<ActionResult<ApiResponse<PagedResult<StaffPartRequestResponseDto>>>> GetStaffPartRequests(
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? status = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var response = await _partRequestService.GetStaffPartRequestsAsync(searchTerm, status, pageNumber, pageSize);
         return StatusCode(response.StatusCode, response);
     }
 
@@ -45,11 +57,18 @@ public class PartRequestsController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-
     [HttpGet("{id}")]
     public async Task<ActionResult<ApiResponse<PartRequestResponseDto>>> GetPartRequestById(int id)
     {
         var response = await _partRequestService.GetPartRequestByIdAsync(id);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [Authorize(Roles = "Staff")]
+    [HttpPatch("{id}/status")]
+    public async Task<ActionResult<ApiResponse<StaffPartRequestResponseDto>>> UpdatePartRequestStatus(int id, UpdatePartRequestStatusDto dto)
+    {
+        var response = await _partRequestService.UpdatePartRequestStatusAsync(id, dto);
         return StatusCode(response.StatusCode, response);
     }
 }

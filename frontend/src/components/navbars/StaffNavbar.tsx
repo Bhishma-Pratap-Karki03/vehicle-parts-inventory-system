@@ -36,6 +36,14 @@ function StaffNavbar() {
             return pathname === "/customers/create";
         }
 
+        if (to === "/staff/appointments") {
+            return pathname === "/staff/appointments";
+        }
+
+        if (to === "/staff/part-requests") {
+            return pathname === "/staff/part-requests";
+        }
+
         if (to === "/sales-invoices") {
             return (
                 pathname === "/sales-invoices" ||
@@ -90,6 +98,18 @@ function StaffNavbar() {
                         icon="analytics"
                         label="Customer Reports"
                         isActive={isLinkActive("/staff/customer-reports")}
+                    />
+                    <StaffNavLink
+                        to="/staff/appointments"
+                        icon="event_note"
+                        label="Appointments"
+                        isActive={isLinkActive("/staff/appointments")}
+                    />
+                    <StaffNavLink
+                        to="/staff/part-requests"
+                        icon="inventory_2"
+                        label="Part Requests"
+                        isActive={isLinkActive("/staff/part-requests")}
                     />
 
                     <p className="staff-nav-heading">Sales</p>

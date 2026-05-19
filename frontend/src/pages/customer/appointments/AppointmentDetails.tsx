@@ -17,7 +17,9 @@ type Appointment = {
     urgency: string;
     issueDescription: string;
     status: string;
+    adminRemarks?: string | null;
     createdAt?: string;
+    updatedAt?: string | null;
 };
 
 type Review = {
@@ -357,6 +359,17 @@ function AppointmentDetails() {
                                         {appointment.issueDescription}
                                     </p>
                                 </div>
+
+                                {appointment.adminRemarks ? (
+                                    <div className="mt-5">
+                                        <label className="text-[11px] font-bold text-[#505f76] uppercase tracking-widest">
+                                            Staff Response
+                                        </label>
+                                        <p className="text-sm text-[#42474f] leading-relaxed bg-[#eef5fc] p-4 rounded-lg mt-2 border border-[#d3e4f4]">
+                                            {appointment.adminRemarks}
+                                        </p>
+                                    </div>
+                                ) : null}
                             </div>
 
                             <div
@@ -649,6 +662,7 @@ function getStatusClass(status: string) {
     if (status === "Pending") return "bg-orange-100 text-orange-700";
     if (status === "Confirmed") return "bg-blue-100 text-blue-700";
     if (status === "Completed") return "bg-emerald-100 text-emerald-700";
+    if (status === "Rejected") return "bg-rose-100 text-rose-700";
     if (status === "Cancelled") return "bg-red-100 text-red-700";
     return "bg-slate-100 text-slate-600";
 }

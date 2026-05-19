@@ -11,8 +11,6 @@ public class CreateSalesInvoiceDto
     [Required]
     public int VehicleId { get; set; }
 
-    [Range(0, double.MaxValue, ErrorMessage = "Discount amount cannot be negative.")]
-    public decimal DiscountAmount { get; set; }
 
     [Range(0, double.MaxValue, ErrorMessage = "Paid amount cannot be negative.")]
     public decimal PaidAmount { get; set; }

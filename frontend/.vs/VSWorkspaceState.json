@@ -2,15 +2,15 @@
   "ExpandedNodes": [
     "",
     "\\src",
-    "\\src\\api",
     "\\src\\components",
     "\\src\\components\\navbars",
     "\\src\\layouts",
     "\\src\\pages",
     "\\src\\pages\\customer",
     "\\src\\pages\\customer\\appointments",
-    "\\src\\pages\\customer\\parts"
+    "\\src\\pages\\customer\\parts",
+    "\\src\\pages\\staff"
   ],
-  "SelectedNode": "\\src\\pages\\customer\\appointments\\MyAppointments.tsx",
+  "SelectedNode": "\\src\\pages\\staff\\StaffAppointmentManagementPage.tsx",
   "PreviewInSolutionExplorer": false
 }

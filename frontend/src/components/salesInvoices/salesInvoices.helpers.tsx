@@ -142,13 +142,11 @@ export function getSalesLineTotal(quantity: number | string, pricePerUnit: numbe
 }
 
 export function buildSalesInvoicePayload(values: SalesInvoiceFormValues): CreateSalesInvoicePayload {
-  const normalizedDiscountAmount = Number.parseFloat(values.discountAmount || '0')
   const normalizedPaidAmount = Number.parseFloat(values.paidAmount || '0')
 
   return {
     customerId: values.customerId.trim(),
     vehicleId: Number.parseInt(values.vehicleId, 10),
-    discountAmount: Number.isNaN(normalizedDiscountAmount) ? 0 : normalizedDiscountAmount,
     paidAmount: Number.isNaN(normalizedPaidAmount) ? 0 : normalizedPaidAmount,
     dueDate: values.dueDate ? `${values.dueDate}T00:00:00Z` : null,
     items: values.items.map((item) => ({

@@ -1,7 +1,8 @@
-﻿using Coursework.Application.Common;
+using Coursework.Application.Common;
 using Coursework.Application.DTOs.Appointments;
 using Coursework.Application.DTOs.Vehicles;
 using Coursework.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coursework.Controllers;
@@ -33,15 +34,23 @@ public class AppointmentsController : ControllerBase
 
     [HttpGet("customer/{customerId}")]
     public async Task<ActionResult<ApiResponse<PagedResult<AppointmentResponseDto>>>> GetCustomerAppointments(
-     string customerId,
-     [FromQuery] int pageNumber = 1,
-     [FromQuery] int pageSize = 10)
+        string customerId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var response = await _appointmentService.GetCustomerAppointmentsAsync(
-            customerId,
-            pageNumber,
-            pageSize);
+        var response = await _appointmentService.GetCustomerAppointmentsAsync(customerId, pageNumber, pageSize);
+        return StatusCode(response.StatusCode, response);
+    }
 
+    [Authorize(Roles = "Staff")]
+    [HttpGet("staff")]
+    public async Task<ActionResult<ApiResponse<PagedResult<StaffAppointmentResponseDto>>>> GetStaffAppointments(
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? status = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var response = await _appointmentService.GetStaffAppointmentsAsync(searchTerm, status, pageNumber, pageSize);
         return StatusCode(response.StatusCode, response);
     }
 
@@ -49,6 +58,14 @@ public class AppointmentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<AppointmentResponseDto>>> GetAppointmentById(int id)
     {
         var response = await _appointmentService.GetAppointmentByIdAsync(id);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [Authorize(Roles = "Staff")]
+    [HttpPatch("{id}/status")]
+    public async Task<ActionResult<ApiResponse<StaffAppointmentResponseDto>>> UpdateAppointmentStatus(int id, UpdateAppointmentStatusDto dto)
+    {
+        var response = await _appointmentService.UpdateAppointmentStatusAsync(id, dto);
         return StatusCode(response.StatusCode, response);
     }
 

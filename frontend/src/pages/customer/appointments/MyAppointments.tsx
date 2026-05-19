@@ -5,7 +5,7 @@ import { useAuth } from "../../../shared/auth/useAuth";
 import { apiRequest, getApiErrorMessage } from "../../../shared/utils/api";
 import "./MyAppointments.css";
 
-type AppointmentStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled" | string;
+type AppointmentStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled" | "Rejected" | string;
 
 type Appointment = {
     appointmentId: number;
@@ -263,6 +263,7 @@ function MyAppointments() {
                                 <option>Confirmed</option>
                                 <option>Completed</option>
                                 <option>Cancelled</option>
+                                <option>Rejected</option>
                             </select>
 
                             <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
@@ -663,7 +664,9 @@ function StatusBadge({ status }: { status: string }) {
                 ? "bg-blue-100 text-blue-700"
                 : status === "Completed"
                     ? "bg-emerald-100 text-emerald-700"
-                    : status === "Cancelled"
+                    : status === "Rejected"
+                        ? "bg-rose-100 text-rose-700"
+                        : status === "Cancelled"
                         ? "bg-red-100 text-red-700"
                         : "bg-slate-100 text-slate-600";
 

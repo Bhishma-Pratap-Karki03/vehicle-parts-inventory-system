@@ -1,4 +1,4 @@
-﻿using Coursework.Application.Common;
+using Coursework.Application.Common;
 using Coursework.Application.DTOs.Appointments;
 using Coursework.Application.DTOs.Vehicles;
 using Coursework.Application.Interfaces;
@@ -10,9 +10,16 @@ namespace Coursework.Application.Services;
 
 public class AppointmentService : IAppointmentService
 {
+    private static readonly AppointmentStatus[] StaffManagedStatuses =
+    [
+        AppointmentStatus.Confirmed,
+        AppointmentStatus.Completed,
+        AppointmentStatus.Rejected,
+    ];
+
     private readonly IAppointmentRepository _appointmentRepository;
-    private readonly IVehicleRepository _vehicleRepository;
     private readonly IServiceRecordRepository _serviceRecordRepository;
+    private readonly IVehicleRepository _vehicleRepository;
 
     public AppointmentService(
         IAppointmentRepository appointmentRepository,
@@ -43,7 +50,7 @@ public class AppointmentService : IAppointmentService
                 LastServiceDate = g
                     .OrderByDescending(s => s.ServiceDate)
                     .Select(s => (DateTime?)s.ServiceDate)
-                    .FirstOrDefault()
+                    .FirstOrDefault(),
             })
             .ToListAsync();
 
@@ -57,7 +64,7 @@ public class AppointmentService : IAppointmentService
             Mileage = v.Mileage,
             LastServiceDate = lastServiceDates
                 .FirstOrDefault(s => s.VehicleId == v.VehicleId)
-                ?.LastServiceDate
+                ?.LastServiceDate,
         }).ToList();
 
         return ApiResponse<List<CustomerVehicleDto>>.SuccessResponse(
@@ -121,7 +128,7 @@ public class AppointmentService : IAppointmentService
             ServiceType = dto.ServiceType,
             Urgency = dto.Urgency,
             IssueDescription = dto.IssueDescription.Trim(),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         _appointmentRepository.Create(appointment);
@@ -135,62 +142,155 @@ public class AppointmentService : IAppointmentService
     }
 
     public async Task<ApiResponse<PagedResult<AppointmentResponseDto>>> GetCustomerAppointmentsAsync(
-    string customerId,
-    int pageNumber,
-    int pageSize)
-{
-    if (pageNumber < 1)
+        string customerId,
+        int pageNumber,
+        int pageSize)
     {
-        pageNumber = 1;
-    }
-
-    if (pageSize < 1)
-    {
-        pageSize = 10;
-    }
-
-    if (pageSize > 50)
-    {
-        pageSize = 50;
-    }
-
-    var query = _appointmentRepository
-        .FindByCondition(a => a.CustomerId == customerId);
-
-    var totalRecords = await query.CountAsync();
-
-    var appointments = await query
-        .Include(a => a.Vehicle)
-        .OrderByDescending(a => a.AppointmentDate)
-        .Skip((pageNumber - 1) * pageSize)
-        .Take(pageSize)
-        .Select(a => new AppointmentResponseDto
+        if (pageNumber < 1)
         {
-            AppointmentId = a.AppointmentId,
-            CustomerId = a.CustomerId,
-            VehicleId = a.VehicleId,
-            VehicleNumber = a.Vehicle.VehicleNumber,
-            VehicleName = $"{a.Vehicle.Brand} {a.Vehicle.Model} {a.Vehicle.Year}",
-            AppointmentDate = a.AppointmentDate,
-            AlternativeAppointmentDate = a.AlternativeAppointmentDate,
-            ServiceType = a.ServiceType,
-            Urgency = a.Urgency,
-            IssueDescription = a.IssueDescription,
-            Status = a.Status.ToString(),
-            CreatedAt = a.CreatedAt
-        })
-        .ToListAsync();
+            pageNumber = 1;
+        }
 
-    var pagedResult = PagedResult<AppointmentResponseDto>.Create(
-        appointments,
-        pageNumber,
-        pageSize,
-        totalRecords);
+        if (pageSize < 1)
+        {
+            pageSize = 10;
+        }
 
-    return ApiResponse<PagedResult<AppointmentResponseDto>>.SuccessResponse(
-        pagedResult,
-        "Customer appointments loaded successfully.");
-}
+        if (pageSize > 50)
+        {
+            pageSize = 50;
+        }
+
+        var query = _appointmentRepository
+            .FindByCondition(a => a.CustomerId == customerId);
+
+        var totalRecords = await query.CountAsync();
+
+        var appointments = await query
+            .Include(a => a.Vehicle)
+            .OrderByDescending(a => a.AppointmentDate)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(a => new AppointmentResponseDto
+            {
+                AppointmentId = a.AppointmentId,
+                CustomerId = a.CustomerId,
+                VehicleId = a.VehicleId,
+                VehicleNumber = a.Vehicle.VehicleNumber,
+                VehicleName = $"{a.Vehicle.Brand} {a.Vehicle.Model} {a.Vehicle.Year}",
+                AppointmentDate = a.AppointmentDate,
+                AlternativeAppointmentDate = a.AlternativeAppointmentDate,
+                ServiceType = a.ServiceType,
+                Urgency = a.Urgency,
+                IssueDescription = a.IssueDescription,
+                Status = a.Status.ToString(),
+                AdminRemarks = a.AdminRemarks,
+                CreatedAt = a.CreatedAt,
+                UpdatedAt = a.UpdatedAt,
+            })
+            .ToListAsync();
+
+        var pagedResult = PagedResult<AppointmentResponseDto>.Create(
+            appointments,
+            pageNumber,
+            pageSize,
+            totalRecords);
+
+        return ApiResponse<PagedResult<AppointmentResponseDto>>.SuccessResponse(
+            pagedResult,
+            "Customer appointments loaded successfully.");
+    }
+
+    public async Task<ApiResponse<PagedResult<StaffAppointmentResponseDto>>> GetStaffAppointmentsAsync(
+        string? searchTerm,
+        string? status,
+        int pageNumber,
+        int pageSize)
+    {
+        if (pageNumber < 1)
+        {
+            pageNumber = 1;
+        }
+
+        if (pageSize < 1)
+        {
+            pageSize = 10;
+        }
+
+        if (pageSize > 50)
+        {
+            pageSize = 50;
+        }
+
+        var query = _appointmentRepository
+            .FindAll()
+            .Include(a => a.Customer)
+            .Include(a => a.Vehicle)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            if (!Enum.TryParse<AppointmentStatus>(status.Trim(), true, out var parsedStatus))
+            {
+                return ApiResponse<PagedResult<StaffAppointmentResponseDto>>.FailureResponse(
+                    "Invalid appointment status filter.",
+                    400);
+            }
+
+            query = query.Where(a => a.Status == parsedStatus);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var normalizedSearchTerm = searchTerm.Trim().ToLower();
+
+            query = query.Where(a =>
+                a.Customer.FullName.ToLower().Contains(normalizedSearchTerm) ||
+                (a.Customer.Email != null && a.Customer.Email.ToLower().Contains(normalizedSearchTerm)) ||
+                (a.Customer.PhoneNumber != null && a.Customer.PhoneNumber.ToLower().Contains(normalizedSearchTerm)) ||
+                a.Vehicle.VehicleNumber.ToLower().Contains(normalizedSearchTerm) ||
+                a.ServiceType.ToLower().Contains(normalizedSearchTerm) ||
+                a.IssueDescription.ToLower().Contains(normalizedSearchTerm));
+        }
+
+        var totalRecords = await query.CountAsync();
+
+        var appointments = await query
+            .OrderBy(a => a.AppointmentDate)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(a => new StaffAppointmentResponseDto
+            {
+                AppointmentId = a.AppointmentId,
+                CustomerId = a.CustomerId,
+                CustomerName = a.Customer.FullName,
+                CustomerEmail = a.Customer.Email ?? string.Empty,
+                CustomerPhoneNumber = a.Customer.PhoneNumber ?? string.Empty,
+                VehicleId = a.VehicleId,
+                VehicleNumber = a.Vehicle.VehicleNumber,
+                VehicleName = $"{a.Vehicle.Brand} {a.Vehicle.Model} {a.Vehicle.Year}",
+                AppointmentDate = a.AppointmentDate,
+                AlternativeAppointmentDate = a.AlternativeAppointmentDate,
+                ServiceType = a.ServiceType,
+                Urgency = a.Urgency,
+                IssueDescription = a.IssueDescription,
+                Status = a.Status.ToString(),
+                AdminRemarks = a.AdminRemarks,
+                CreatedAt = a.CreatedAt,
+                UpdatedAt = a.UpdatedAt,
+            })
+            .ToListAsync();
+
+        var pagedResult = PagedResult<StaffAppointmentResponseDto>.Create(
+            appointments,
+            pageNumber,
+            pageSize,
+            totalRecords);
+
+        return ApiResponse<PagedResult<StaffAppointmentResponseDto>>.SuccessResponse(
+            pagedResult,
+            "Staff appointments loaded successfully.");
+    }
 
     public async Task<ApiResponse<AppointmentResponseDto>> GetAppointmentByIdAsync(int id)
     {
@@ -209,6 +309,88 @@ public class AppointmentService : IAppointmentService
         return ApiResponse<AppointmentResponseDto>.SuccessResponse(
             response,
             "Appointment loaded successfully.");
+    }
+
+    public async Task<ApiResponse<StaffAppointmentResponseDto>> UpdateAppointmentStatusAsync(int id, UpdateAppointmentStatusDto dto)
+    {
+        var appointment = await _appointmentRepository
+            .FindByCondition(a => a.AppointmentId == id, trackChanges: true)
+            .Include(a => a.Customer)
+            .Include(a => a.Vehicle)
+            .FirstOrDefaultAsync();
+
+        if (appointment == null)
+        {
+            return ApiResponse<StaffAppointmentResponseDto>.NotFoundResponse("Appointment not found.");
+        }
+
+        if (!Enum.TryParse<AppointmentStatus>(dto.Status.Trim(), true, out var nextStatus) ||
+            !StaffManagedStatuses.Contains(nextStatus))
+        {
+            return ApiResponse<StaffAppointmentResponseDto>.FailureResponse(
+                "Staff can only set appointment status to Confirmed, Completed, or Rejected.",
+                400);
+        }
+
+        if (appointment.Status == AppointmentStatus.Cancelled)
+        {
+            return ApiResponse<StaffAppointmentResponseDto>.FailureResponse(
+                "Cancelled appointments cannot be changed from the staff workspace.",
+                400);
+        }
+
+        if (appointment.Status == AppointmentStatus.Completed && nextStatus != AppointmentStatus.Completed)
+        {
+            return ApiResponse<StaffAppointmentResponseDto>.FailureResponse(
+                "Completed appointments cannot be moved to another status.",
+                400);
+        }
+
+        if (appointment.Status == AppointmentStatus.Rejected && nextStatus != AppointmentStatus.Rejected)
+        {
+            return ApiResponse<StaffAppointmentResponseDto>.FailureResponse(
+                "Rejected appointments cannot be moved to another status.",
+                400);
+        }
+
+        if (nextStatus == AppointmentStatus.Confirmed &&
+            appointment.Status != AppointmentStatus.Pending &&
+            appointment.Status != AppointmentStatus.Confirmed)
+        {
+            return ApiResponse<StaffAppointmentResponseDto>.FailureResponse(
+                "Only pending appointments can be confirmed.",
+                400);
+        }
+
+        if (nextStatus == AppointmentStatus.Completed &&
+            appointment.Status != AppointmentStatus.Confirmed &&
+            appointment.Status != AppointmentStatus.Completed)
+        {
+            return ApiResponse<StaffAppointmentResponseDto>.FailureResponse(
+                "Only confirmed appointments can be marked as completed.",
+                400);
+        }
+
+        if (nextStatus == AppointmentStatus.Rejected && appointment.Status == AppointmentStatus.Completed)
+        {
+            return ApiResponse<StaffAppointmentResponseDto>.FailureResponse(
+                "Completed appointments cannot be rejected.",
+                400);
+        }
+
+        appointment.Status = nextStatus;
+        appointment.AdminRemarks = string.IsNullOrWhiteSpace(dto.AdminRemarks)
+            ? null
+            : dto.AdminRemarks.Trim();
+        appointment.UpdatedAt = DateTime.UtcNow;
+
+        await _appointmentRepository.SaveChangesAsync();
+
+        var response = MapStaffAppointmentToDto(appointment);
+
+        return ApiResponse<StaffAppointmentResponseDto>.SuccessResponse(
+            response,
+            "Appointment status updated successfully.");
     }
 
     public async Task<ApiResponse<AppointmentResponseDto>> CancelAppointmentAsync(int id)
@@ -256,17 +438,47 @@ public class AppointmentService : IAppointmentService
             Urgency = appointment.Urgency,
             IssueDescription = appointment.IssueDescription,
             Status = appointment.Status.ToString(),
-            CreatedAt = appointment.CreatedAt
+            AdminRemarks = appointment.AdminRemarks,
+            CreatedAt = appointment.CreatedAt,
+            UpdatedAt = appointment.UpdatedAt,
+        };
+    }
+
+    private static StaffAppointmentResponseDto MapStaffAppointmentToDto(Appointment appointment)
+    {
+        return new StaffAppointmentResponseDto
+        {
+            AppointmentId = appointment.AppointmentId,
+            CustomerId = appointment.CustomerId,
+            CustomerName = appointment.Customer.FullName,
+            CustomerEmail = appointment.Customer.Email ?? string.Empty,
+            CustomerPhoneNumber = appointment.Customer.PhoneNumber ?? string.Empty,
+            VehicleId = appointment.VehicleId,
+            VehicleNumber = appointment.Vehicle.VehicleNumber,
+            VehicleName = $"{appointment.Vehicle.Brand} {appointment.Vehicle.Model} {appointment.Vehicle.Year}",
+            AppointmentDate = appointment.AppointmentDate,
+            AlternativeAppointmentDate = appointment.AlternativeAppointmentDate,
+            ServiceType = appointment.ServiceType,
+            Urgency = appointment.Urgency,
+            IssueDescription = appointment.IssueDescription,
+            Status = appointment.Status.ToString(),
+            AdminRemarks = appointment.AdminRemarks,
+            CreatedAt = appointment.CreatedAt,
+            UpdatedAt = appointment.UpdatedAt,
         };
     }
 
     private static DateTime ConvertToUtc(DateTime dateTime)
     {
         if (dateTime.Kind == DateTimeKind.Utc)
+        {
             return dateTime;
+        }
 
         if (dateTime.Kind == DateTimeKind.Local)
+        {
             return dateTime.ToUniversalTime();
+        }
 
         return DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
     }

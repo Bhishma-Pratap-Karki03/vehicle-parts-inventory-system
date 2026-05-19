@@ -1,12 +1,14 @@
-﻿using Coursework.Application.Common;
+using Coursework.Application.Common;
 using Coursework.Application.DTOs.Reports;
 using Coursework.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coursework.Controllers;
 
 [ApiController]
 [Route("api/admin/reports")]
+[Authorize(Roles = "Admin")]
 public class FinancialReportsController : ControllerBase
 {
     private readonly IFinancialReportService _service;

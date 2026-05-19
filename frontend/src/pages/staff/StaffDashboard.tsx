@@ -186,7 +186,7 @@ function SalesInvoiceItem({ invoice }: { invoice: SalesInvoiceListItemRecord }) 
       </div>
       <div className="mt-4 flex items-end justify-between gap-4">
         <p className="text-[14px] leading-6 text-[#597189]">
-          {invoice.vehicleNumber} • {formatDateLabel(invoice.invoiceDate)}
+          {invoice.vehicleNumber} â€¢ {formatDateLabel(invoice.invoiceDate)}
         </p>
         <p className="shrink-0 text-[15px] font-semibold text-[#123052]">{formatRupees(invoice.finalAmount)}</p>
       </div>
@@ -208,7 +208,7 @@ function CreditFollowUpItem({ customer }: { customer: PendingCreditReport }) {
       </div>
       <div className="mt-4 flex items-end justify-between gap-4">
         <p className="text-[14px] leading-6 text-[#597189]">
-          {customer.unpaidInvoiceCount} unpaid invoice{customer.unpaidInvoiceCount === 1 ? '' : 's'} • oldest {formatDateLabel(customer.oldestUnpaidInvoiceDate)}
+          {customer.unpaidInvoiceCount} unpaid invoice{customer.unpaidInvoiceCount === 1 ? '' : 's'} â€¢ oldest {formatDateLabel(customer.oldestUnpaidInvoiceDate)}
         </p>
         <p className="shrink-0 text-[15px] font-semibold text-[#A94E48]">{formatRupees(customer.outstandingBalance)}</p>
       </div>
@@ -403,6 +403,18 @@ export default function StaffDashboard() {
       to: '/staff/customer-reports',
     },
     {
+      description: 'Review and respond to customer appointment requests from the staff queue.',
+      icon: 'event_note',
+      label: 'Appointments',
+      to: '/staff/appointments',
+    },
+    {
+      description: 'Review unavailable part requests, update their status, and send staff responses.',
+      icon: 'inventory_2',
+      label: 'Part Requests',
+      to: '/staff/part-requests',
+    },
+    {
       description: 'Start a fresh billing flow for a customer purchase right away.',
       icon: 'add_shopping_cart',
       label: 'Create Invoice',
@@ -521,7 +533,7 @@ export default function StaffDashboard() {
                 <SpotlightItem
                   label="Top regular"
                   name={topRegular.fullName}
-                  supportingText={`${topRegular.purchaseCount} purchases • last order ${formatDateLabel(topRegular.lastPurchaseDate)}`}
+                  supportingText={`${topRegular.purchaseCount} purchases â€¢ last order ${formatDateLabel(topRegular.lastPurchaseDate)}`}
                   value={formatRupees(topRegular.totalSpent)}
                 />
               ) : (
@@ -534,7 +546,7 @@ export default function StaffDashboard() {
                 <SpotlightItem
                   label="Top spender"
                   name={topSpender.fullName}
-                  supportingText={`${topSpender.purchaseCount} purchases • last order ${formatDateLabel(topSpender.lastPurchaseDate)}`}
+                  supportingText={`${topSpender.purchaseCount} purchases â€¢ last order ${formatDateLabel(topSpender.lastPurchaseDate)}`}
                   value={formatRupees(topSpender.totalSpent)}
                 />
               ) : (

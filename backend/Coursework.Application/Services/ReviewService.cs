@@ -1,4 +1,4 @@
-﻿using Coursework.Application.Common;
+using Coursework.Application.Common;
 using Coursework.Application.DTOs.Reviews;
 using Coursework.Application.Interfaces;
 using Coursework.Domain.Entities;
@@ -9,8 +9,8 @@ namespace Coursework.Application.Services;
 
 public class ReviewService : IReviewService
 {
-    private readonly IReviewRepository _reviewRepository;
     private readonly IAppointmentRepository _appointmentRepository;
+    private readonly IReviewRepository _reviewRepository;
 
     public ReviewService(
         IReviewRepository reviewRepository,
@@ -56,7 +56,7 @@ public class ReviewService : IReviewService
             AppointmentId = dto.AppointmentId,
             Rating = dto.Rating,
             Comment = dto.Comment.Trim(),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         _reviewRepository.Create(review);
@@ -67,7 +67,43 @@ public class ReviewService : IReviewService
             "Review submitted successfully.");
     }
 
-    public async Task<ApiResponse<ReviewResponseDto>> GetReviewByAppointmentAsync(int appointmentId)
+    public async Task<ApiResponse<ReviewResponseDto>> GetCustomerReviewByAppointmentAsync(int appointmentId, string customerId)
+    {
+        var appointment = await _appointmentRepository
+            .FindByCondition(a => a.AppointmentId == appointmentId && a.CustomerId == customerId)
+            .FirstOrDefaultAsync();
+
+        if (appointment == null)
+        {
+            return ApiResponse<ReviewResponseDto>.NotFoundResponse(
+                "Appointment not found for this customer.");
+        }
+
+        var review = await _reviewRepository
+            .FindByCondition(r => r.AppointmentId == appointmentId)
+            .Select(r => new ReviewResponseDto
+            {
+                ReviewId = r.ReviewId,
+                CustomerId = r.CustomerId,
+                AppointmentId = r.AppointmentId,
+                Rating = r.Rating,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt,
+            })
+            .FirstOrDefaultAsync();
+
+        if (review == null)
+        {
+            return ApiResponse<ReviewResponseDto>.NotFoundResponse(
+                "Review not found for this appointment.");
+        }
+
+        return ApiResponse<ReviewResponseDto>.SuccessResponse(
+            review,
+            "Review loaded successfully.");
+    }
+
+    public async Task<ApiResponse<ReviewResponseDto>> GetStaffReviewByAppointmentAsync(int appointmentId)
     {
         var review = await _reviewRepository
             .FindByCondition(r => r.AppointmentId == appointmentId)
@@ -78,7 +114,7 @@ public class ReviewService : IReviewService
                 AppointmentId = r.AppointmentId,
                 Rating = r.Rating,
                 Comment = r.Comment,
-                CreatedAt = r.CreatedAt
+                CreatedAt = r.CreatedAt,
             })
             .FirstOrDefaultAsync();
 
@@ -102,7 +138,7 @@ public class ReviewService : IReviewService
             AppointmentId = review.AppointmentId,
             Rating = review.Rating,
             Comment = review.Comment,
-            CreatedAt = review.CreatedAt
+            CreatedAt = review.CreatedAt,
         };
     }
 }

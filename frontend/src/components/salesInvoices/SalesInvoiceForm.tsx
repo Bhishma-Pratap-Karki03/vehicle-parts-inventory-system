@@ -15,6 +15,9 @@ import {
   getSalesLineTotal,
 } from './salesInvoices.helpers'
 
+const LOYALTY_DISCOUNT_RATE = 0.1
+const LOYALTY_DISCOUNT_THRESHOLD = 5000
+
 type SalesInvoiceFormProps = {
   customerOptions: SalesInvoiceCustomerOption[]
   initialValues: SalesInvoiceFormValues
@@ -76,10 +79,6 @@ function SalesInvoiceForm({
     control,
     name: 'vehicleId',
   })
-  const watchedDiscountAmount = useWatch({
-    control,
-    name: 'discountAmount',
-  })
   const watchedPaidAmount = useWatch({
     control,
     name: 'paidAmount',
@@ -119,8 +118,10 @@ function SalesInvoiceForm({
       return sum + getSalesLineTotal(item.quantity, selectedPart?.sellingPricePerUnit ?? 0)
     }, 0)
 
-    const normalizedDiscountAmount = Number.parseFloat(watchedDiscountAmount || '0')
-    const discountAmount = Number.isNaN(normalizedDiscountAmount) ? 0 : normalizedDiscountAmount
+    const discountAmount =
+      subTotal > LOYALTY_DISCOUNT_THRESHOLD
+        ? Number((subTotal * LOYALTY_DISCOUNT_RATE).toFixed(2))
+        : 0
     const finalAmount = Math.max(subTotal - discountAmount, 0)
     const normalizedPaidAmount = Number.parseFloat(watchedPaidAmount || '0')
     const paidAmount = Number.isNaN(normalizedPaidAmount) ? 0 : normalizedPaidAmount
@@ -135,7 +136,20 @@ function SalesInvoiceForm({
       totalLines,
       totalQuantity,
     }
-  }, [invoiceItems, partLookup, watchedDiscountAmount, watchedPaidAmount])
+  }, [invoiceItems, partLookup, watchedPaidAmount])
+
+  const isLoyaltyDiscountApplied = summary.discountAmount > 0
+
+  useEffect(() => {
+    const nextDiscountAmount = summary.discountAmount.toFixed(2)
+
+    if (getValues('discountAmount') !== nextDiscountAmount) {
+      setValue('discountAmount', nextDiscountAmount, {
+        shouldDirty: false,
+        shouldValidate: false,
+      })
+    }
+  }, [getValues, setValue, summary.discountAmount])
 
   const customerField = register('customerId', {
     required: {
@@ -324,34 +338,23 @@ function SalesInvoiceForm({
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="relative">
                   <label className="mb-2 block text-[14px] font-semibold text-[#1B3554]" htmlFor="sales-invoice-discount">
-                    Discount Amount
+                    Loyalty Discount
                   </label>
                   <input
-                    {...register('discountAmount', {
-                      validate: (value) => {
-                        const numericValue = Number.parseFloat(value || '0')
-
-                        if (Number.isNaN(numericValue) || numericValue < 0) {
-                          return 'Discount amount cannot be negative.'
-                        }
-
-                        if (numericValue > summary.subTotal) {
-                          return 'Discount amount cannot be greater than subtotal.'
-                        }
-
-                        return true
-                      },
-                    })}
-                    className="h-13 w-full rounded-[18px] border border-[#D8E3EE] bg-[#FBFDFF] px-4 text-[15px] text-[#17314F] outline-none transition focus:border-[#9CB9D8] focus:bg-white focus:ring-4 focus:ring-[#15558D]/10"
-                    disabled={isSubmitting}
+                    {...register('discountAmount')}
+                    className="h-13 w-full rounded-[18px] border border-[#D8E3EE] bg-[#F4F8FC] px-4 text-[15px] font-medium text-[#17314F] outline-none"
                     id="sales-invoice-discount"
                     inputMode="decimal"
-                    min="0"
                     placeholder="0.00"
+                    readOnly
                     step="0.01"
                     type="number"
                   />
-                  {errors.discountAmount ? <p className="mt-2 text-[13px] text-[#C54141]">{errors.discountAmount.message}</p> : null}
+                  <p className="mt-2 text-[13px] leading-6 text-[#627A93]">
+                    {isLoyaltyDiscountApplied
+                      ? `Automatic 10% loyalty discount applied because the purchase exceeds ${formatRupees(LOYALTY_DISCOUNT_THRESHOLD)}.`
+                      : `A 10% loyalty discount will apply automatically when the purchase subtotal exceeds ${formatRupees(LOYALTY_DISCOUNT_THRESHOLD)}.`}
+                  </p>
                 </div>
 
                 <div className="relative">
@@ -586,7 +589,11 @@ function SalesInvoiceForm({
                   <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Final Amount</p>
                     <p className="mt-2 text-[18px] font-semibold text-[#112B49]">{formatRupees(summary.finalAmount)}</p>
-                    <p className="mt-1 text-[13px] text-[#627A93]">After {formatRupees(summary.discountAmount)} discount</p>
+                    <p className="mt-1 text-[13px] text-[#627A93]">
+                      {isLoyaltyDiscountApplied
+                        ? `Includes automatic loyalty discount of ${formatRupees(summary.discountAmount)}`
+                        : 'No loyalty discount applied yet'}
+                    </p>
                   </div>
 
                   <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">

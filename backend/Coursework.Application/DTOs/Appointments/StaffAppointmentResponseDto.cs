@@ -1,9 +1,12 @@
 namespace Coursework.Application.DTOs.Appointments;
 
-public class AppointmentResponseDto
+public class StaffAppointmentResponseDto
 {
     public int AppointmentId { get; set; }
     public string CustomerId { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerEmail { get; set; } = string.Empty;
+    public string CustomerPhoneNumber { get; set; } = string.Empty;
     public int VehicleId { get; set; }
     public string VehicleNumber { get; set; } = string.Empty;
     public string VehicleName { get; set; } = string.Empty;

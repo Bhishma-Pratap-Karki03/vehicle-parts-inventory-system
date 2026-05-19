@@ -102,6 +102,8 @@ public class CustomerPurchaseHistoryItemDto
 
     public PaymentStatus PaymentStatus { get; set; }
 
+    public bool HasInvoicePdf { get; set; }
+
     public DateTime? DueDate { get; set; }
 
     public int ItemCount { get; set; }

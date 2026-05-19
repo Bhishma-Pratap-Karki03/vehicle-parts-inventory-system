@@ -8,5 +8,7 @@ public interface ISalesInvoiceRepository : IRepositoryBase<SalesInvoice>
 
     Task<SalesInvoice?> GetSalesInvoiceForPdfAsync(int salesInvoiceId, bool trackChanges = false);
 
+    Task<SalesInvoice?> GetSalesInvoiceWithPaymentsAsync(int salesInvoiceId, bool trackChanges = false);
+
     Task<List<SalesInvoice>> GetUnpaidCreditsOlderThanAsync(DateTime dueBefore, bool trackChanges = false);
 }

@@ -12,6 +12,7 @@ import {
   createEmptySalesInvoiceFormValues,
   formatDateLabel,
   formatRupees,
+  getTodayDateInputValue,
   getSalesLineTotal,
 } from './salesInvoices.helpers'
 
@@ -33,6 +34,19 @@ type SalesInvoiceFormProps = {
 
 function buildEmptyItem(): SalesInvoiceFormItemValues {
   return createEmptySalesInvoiceFormValues().items[0]
+}
+
+function addMonthToDateInputValue(dateInputValue: string) {
+  const [year, month, day] = dateInputValue.split('-').map((value) => Number.parseInt(value, 10))
+
+  if (!year || !month || !day) {
+    return ''
+  }
+
+  const nextDueDate = new Date(Date.UTC(year, month - 1, day))
+  nextDueDate.setUTCMonth(nextDueDate.getUTCMonth() + 1)
+
+  return nextDueDate.toISOString().slice(0, 10)
 }
 
 function SalesInvoiceForm({
@@ -83,6 +97,10 @@ function SalesInvoiceForm({
     control,
     name: 'paidAmount',
   })
+  const watchedPaymentMethod = useWatch({
+    control,
+    name: 'paymentMethod',
+  })
   const watchedDueDate = useWatch({
     control,
     name: 'dueDate',
@@ -103,6 +121,9 @@ function SalesInvoiceForm({
     () => vehicleOptions.find((option) => String(option.vehicleId) === watchedVehicleId),
     [vehicleOptions, watchedVehicleId],
   )
+
+  const invoiceDateValue = useMemo(() => getTodayDateInputValue(), [])
+  const calculatedDueDateValue = useMemo(() => addMonthToDateInputValue(invoiceDateValue), [invoiceDateValue])
 
   const partLookup = useMemo(
     () => new Map(partOptions.map((part) => [String(part.partId), part])),
@@ -151,6 +172,15 @@ function SalesInvoiceForm({
     }
   }, [getValues, setValue, summary.discountAmount])
 
+  useEffect(() => {
+    if (calculatedDueDateValue && getValues('dueDate') !== calculatedDueDateValue) {
+      setValue('dueDate', calculatedDueDateValue, {
+        shouldDirty: false,
+        shouldValidate: false,
+      })
+    }
+  }, [calculatedDueDateValue, getValues, setValue])
+
   const customerField = register('customerId', {
     required: {
       value: true,
@@ -168,6 +198,7 @@ function SalesInvoiceForm({
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#F7FAFD_0%,#EEF4FA_55%,#F9FBFE_100%)] text-[#102B49]">
       <form className="mx-auto w-full max-w-380 px-4 py-8 sm:px-6 lg:px-8 lg:py-10" onSubmit={handleSubmit(onSubmitInvoice)}>
+        <input {...register('dueDate')} type="hidden" />
         <div className="flex flex-col gap-6 border-b border-[#DCE5EF] pb-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-4xl">
             <Link
@@ -303,93 +334,29 @@ function SalesInvoiceForm({
 
                 <div className="relative">
                   <label className="mb-2 block text-[14px] font-semibold text-[#1B3554]" htmlFor="sales-invoice-due-date">
+                    Invoice Date
+                  </label>
+                  <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">
+                    <p className="mt-2 text-[18px] font-semibold text-[#112B49]">{formatDateLabel(invoiceDateValue)}</p>
+                    <p className="mt-1 text-[13px] text-[#6F849B]">Today's Date</p>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <label className="mb-2 block text-[14px] font-semibold text-[#1B3554]" htmlFor="sales-invoice-due-date">
                     Due Date
                   </label>
-                  <input
-                    {...register('dueDate')}
-                    className="h-13 w-full rounded-[18px] border border-[#D8E3EE] bg-[#FBFDFF] px-4 text-[15px] text-[#17314F] outline-none transition focus:border-[#9CB9D8] focus:bg-white focus:ring-4 focus:ring-[#15558D]/10"
-                    disabled={isSubmitting}
-                    id="sales-invoice-due-date"
-                    type="date"
-                  />
+                  <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">
+                    <p className="mt-2 text-[18px] font-semibold text-[#112B49]">{formatDateLabel(watchedDueDate || calculatedDueDateValue)}</p>
+                    <p className="mt-1 text-[13px] text-[#6F849B]">Due 1 month from billing date</p>
+                  </div>
                 </div>
 
-                <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Invoice Timing</p>
-                  <p className="mt-2 text-[18px] font-semibold text-[#112B49]">{formatDateLabel(new Date().toISOString())}</p>
-                  <p className="mt-1 text-[13px] text-[#6F849B]">{watchedDueDate ? `Due ${formatDateLabel(watchedDueDate)}` : 'No due date selected yet'}</p>
-                </div>
+                
               </div>
             </section>
 
-            <section className="rounded-[28px] border border-[#DCE5EF] bg-white p-6 shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
-              <div className="mb-5 flex items-center gap-3 border-b border-[#E6EEF5] pb-4">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#EEF5FC] text-[#15558D]">
-                  <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
-                    payments
-                  </span>
-                </span>
-                <div>
-                  <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-[#102B49] [font-family:var(--font-display)]">Payment Preview</h2>
-                  <p className="mt-1 text-[14px] text-[#678099]">These amounts are previews only. The final invoice values are confirmed after submission.</p>
-                </div>
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <div className="relative">
-                  <label className="mb-2 block text-[14px] font-semibold text-[#1B3554]" htmlFor="sales-invoice-discount">
-                    Loyalty Discount
-                  </label>
-                  <input
-                    {...register('discountAmount')}
-                    className="h-13 w-full rounded-[18px] border border-[#D8E3EE] bg-[#F4F8FC] px-4 text-[15px] font-medium text-[#17314F] outline-none"
-                    id="sales-invoice-discount"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    readOnly
-                    step="0.01"
-                    type="number"
-                  />
-                  <p className="mt-2 text-[13px] leading-6 text-[#627A93]">
-                    {isLoyaltyDiscountApplied
-                      ? `Automatic 10% loyalty discount applied because the purchase exceeds ${formatRupees(LOYALTY_DISCOUNT_THRESHOLD)}.`
-                      : `A 10% loyalty discount will apply automatically when the purchase subtotal exceeds ${formatRupees(LOYALTY_DISCOUNT_THRESHOLD)}.`}
-                  </p>
-                </div>
-
-                <div className="relative">
-                  <label className="mb-2 block text-[14px] font-semibold text-[#1B3554]" htmlFor="sales-invoice-paid">
-                    Paid Amount
-                  </label>
-                  <input
-                    {...register('paidAmount', {
-                      validate: (value) => {
-                        const numericValue = Number.parseFloat(value || '0')
-
-                        if (Number.isNaN(numericValue) || numericValue < 0) {
-                          return 'Paid amount cannot be negative.'
-                        }
-
-                        if (numericValue > summary.finalAmount) {
-                          return 'Paid amount cannot be greater than final amount.'
-                        }
-
-                        return true
-                      },
-                    })}
-                    className="h-13 w-full rounded-[18px] border border-[#D8E3EE] bg-[#FBFDFF] px-4 text-[15px] text-[#17314F] outline-none transition focus:border-[#9CB9D8] focus:bg-white focus:ring-4 focus:ring-[#15558D]/10"
-                    disabled={isSubmitting}
-                    id="sales-invoice-paid"
-                    inputMode="decimal"
-                    min="0"
-                    placeholder="0.00"
-                    step="0.01"
-                    type="number"
-                  />
-                  {errors.paidAmount ? <p className="mt-2 text-[13px] text-[#C54141]">{errors.paidAmount.message}</p> : null}
-                </div>
-              </div>
-            </section>
+            
 
             <section className="rounded-[28px] border border-[#DCE5EF] bg-white p-6 shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
               <div className="mb-5 flex items-center gap-3 border-b border-[#E6EEF5] pb-4">
@@ -561,6 +528,106 @@ function SalesInvoiceForm({
                 Add Another Part
               </button>
             </section>
+
+            <section className="rounded-[28px] border border-[#DCE5EF] bg-white p-6 shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
+              <div className="mb-5 flex items-center gap-3 border-b border-[#E6EEF5] pb-4">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#EEF5FC] text-[#15558D]">
+                  <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
+                    payments
+                  </span>
+                </span>
+                <div>
+                  <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-[#102B49] [font-family:var(--font-display)]">Payment Preview</h2>
+                  <p className="mt-1 text-[14px] text-[#678099]">These amounts are previews only. The final invoice values are confirmed after submission.</p>
+                </div>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <div className="relative">
+                  <label className="mb-2 block text-[14px] font-semibold text-[#1B3554]" htmlFor="sales-invoice-discount">
+                    Loyalty Discount
+                  </label>
+                  <input
+                    {...register('discountAmount')}
+                    className="h-13 w-full rounded-[18px] border border-[#D8E3EE] bg-[#F4F8FC] px-4 text-[15px] font-medium text-[#17314F] outline-none"
+                    id="sales-invoice-discount"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    readOnly
+                    step="0.01"
+                    type="number"
+                  />
+                  <p className="mt-2 text-[13px] leading-6 text-[#627A93]">
+                    {isLoyaltyDiscountApplied
+                      ? `Automatic 10% loyalty discount applied because the purchase exceeds ${formatRupees(LOYALTY_DISCOUNT_THRESHOLD)}.`
+                      : `A 10% loyalty discount will apply automatically when the purchase subtotal exceeds ${formatRupees(LOYALTY_DISCOUNT_THRESHOLD)}.`}
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <label className="mb-2 block text-[14px] font-semibold text-[#1B3554]" htmlFor="sales-invoice-paid">
+                    Paid Amount
+                  </label>
+                  <input
+                    {...register('paidAmount', {
+                      validate: (value) => {
+                        const numericValue = Number.parseFloat(value || '0')
+
+                        if (Number.isNaN(numericValue) || numericValue < 0) {
+                          return 'Paid amount cannot be negative.'
+                        }
+
+                        if (numericValue > summary.finalAmount) {
+                          return 'Paid amount cannot be greater than final amount.'
+                        }
+
+                        return true
+                      },
+                    })}
+                    className="h-13 w-full rounded-[18px] border border-[#D8E3EE] bg-[#FBFDFF] px-4 text-[15px] text-[#17314F] outline-none transition focus:border-[#9CB9D8] focus:bg-white focus:ring-4 focus:ring-[#15558D]/10"
+                    disabled={isSubmitting}
+                    id="sales-invoice-paid"
+                    inputMode="decimal"
+                    min="0"
+                    placeholder="0.00"
+                    step="0.01"
+                    type="number"
+                  />
+                  {errors.paidAmount ? <p className="mt-2 text-[13px] text-[#C54141]">{errors.paidAmount.message}</p> : null}
+                </div>
+
+                <div className="relative">
+                  <label className="mb-2 block text-[14px] font-semibold text-[#1B3554]" htmlFor="sales-invoice-payment-method">
+                    Payment Method
+                  </label>
+                  <div className="relative">
+                    <select
+                      {...register('paymentMethod', {
+                        required: 'Payment method is required.',
+                      })}
+                      className="h-13 w-full appearance-none rounded-[18px] border border-[#D8E3EE] bg-[#FBFDFF] px-4 pr-11 text-[15px] text-[#17314F] outline-none transition focus:border-[#9CB9D8] focus:bg-white focus:ring-4 focus:ring-[#15558D]/10"
+                      disabled={isSubmitting}
+                      id="sales-invoice-payment-method"
+                    >
+                      <option value="Cash">Cash</option>
+                      <option value="Card">Card</option>
+                      <option value="Online Transfer">Online Transfer</option>
+                      <option value="Credit Card">Credit Card</option>
+                    </select>
+                    <span
+                      aria-hidden
+                      className="material-symbols-outlined pointer-events-none absolute right-4 top-1/2 inline-flex -translate-y-1/2 select-none items-center justify-center leading-none text-[22px] text-[#607389] not-italic"
+                    >
+                      expand_more
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[13px] leading-6 text-[#627A93]">
+                    Payemnt method of this invoice.
+                  </p>
+                  {errors.paymentMethod ? <p className="mt-2 text-[13px] text-[#C54141]">{errors.paymentMethod.message}</p> : null}
+                </div>
+              </div>
+            </section>
           </section>
 
           <aside className="space-y-6">
@@ -612,6 +679,10 @@ function SalesInvoiceForm({
                     <p>
                       <span className="font-semibold text-[#123052]">Vehicle:</span>{' '}
                       {selectedVehicle ? `${selectedVehicle.vehicleNumber} • ${selectedVehicle.brand} ${selectedVehicle.model}` : 'Not selected yet'}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-[#123052]">Initial Payment Method:</span>{' '}
+                      {watchedPaymentMethod || 'Cash'}
                     </p>
                     <p><span className="font-semibold text-[#123052]">Due Date:</span> {watchedDueDate ? formatDateLabel(watchedDueDate) : 'No due date selected'}</p>
                   </div>

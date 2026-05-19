@@ -1,10 +1,13 @@
-﻿namespace Coursework.Application.Interfaces;
+﻿using Coursework.Application.Common;
+using Coursework.Application.DTOs.Notifications;
+
+namespace Coursework.Application.Interfaces;
 
 public interface INotificationService
 {
-    Task<List<object>> GetAllAsync();
+    Task<ApiResponse<List<AdminNotificationDto>>> GetAdminNotificationsAsync();
 
-    Task<int> CheckLowStockAsync();
+    Task<ApiResponse<List<OverdueCreditReminderDto>>> GetOverdueCreditRemindersAsync();
 
-    Task<int> SendCreditRemindersAsync();
+    Task<ApiResponse<OverdueCreditReminderSendResultDto>> SendOverdueCreditReminderAsync(int salesInvoiceId);
 }

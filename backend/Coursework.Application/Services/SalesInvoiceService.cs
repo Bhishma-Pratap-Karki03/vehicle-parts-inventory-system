@@ -20,6 +20,7 @@ public class SalesInvoiceService : ISalesInvoiceService
     private readonly IPartRepository _partRepository;
     private readonly IVehicleRepository _vehicleRepository;
     private readonly IPartTransactionRepository _partTransactionRepository;
+    private readonly IPaymentRepository _paymentRepository;
     private readonly ISalesInvoicePdfService _salesInvoicePdfService;
     private readonly ICloudinaryService _cloudinaryService;
     private readonly UserManager<ApplicationUser> _userManager;
@@ -31,6 +32,7 @@ public class SalesInvoiceService : ISalesInvoiceService
         IPartRepository partRepository,
         IVehicleRepository vehicleRepository,
         IPartTransactionRepository partTransactionRepository,
+        IPaymentRepository paymentRepository,
         ISalesInvoicePdfService salesInvoicePdfService,
         ICloudinaryService cloudinaryService,
         IEmailAttachmentService emailService,
@@ -41,6 +43,7 @@ public class SalesInvoiceService : ISalesInvoiceService
         _partRepository = partRepository;
         _vehicleRepository = vehicleRepository;
         _partTransactionRepository = partTransactionRepository;
+        _paymentRepository = paymentRepository;
         _salesInvoicePdfService = salesInvoicePdfService;
         _cloudinaryService = cloudinaryService;
         _emailService = emailService;
@@ -232,6 +235,12 @@ public class SalesInvoiceService : ISalesInvoiceService
 
             var paymentStatus = CalculatePaymentStatus(finalAmount, dto.PaidAmount);
             var invoiceNumber = GenerateInvoiceNumber();
+            var invoiceDate = DateTime.UtcNow;
+            DateTime? resolvedDueDate = dto.DueDate.HasValue
+                ? ConvertToUtc(dto.DueDate.Value)
+                : dto.PaidAmount < finalAmount
+                    ? invoiceDate.AddMonths(1)
+                    : null;
 
             var salesInvoice = new SalesInvoice
             {
@@ -239,15 +248,27 @@ public class SalesInvoiceService : ISalesInvoiceService
                 CustomerId = dto.CustomerId,
                 StaffId = staffId,
                 VehicleId = dto.VehicleId,
-                InvoiceDate = DateTime.UtcNow,
+                InvoiceDate = invoiceDate,
                 SubTotal = subTotal,
                 DiscountAmount = discountAmount,
                 FinalAmount = finalAmount,
                 PaidAmount = dto.PaidAmount,
                 PaymentStatus = paymentStatus,
-                DueDate = dto.DueDate,
+                DueDate = resolvedDueDate,
                 CreatedAt = DateTime.UtcNow
             };
+
+            if (dto.PaidAmount > 0)
+            {
+                salesInvoice.Payments.Add(new Payment
+                {
+                    Amount = dto.PaidAmount,
+                    PaymentMethod = dto.PaymentMethod,
+                    PaymentDate = DateTime.UtcNow,
+                    Remarks = "Initial payment recorded at sales invoice creation.",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
 
             var itemPairs = new List<(SalesInvoiceItem InvoiceItem, Part Part)>();
 
@@ -495,6 +516,99 @@ public class SalesInvoiceService : ISalesInvoiceService
                 "An error occurred while retrieving the sales invoice.");
         }
     }
+
+    public async Task<ApiResponse<SalesInvoiceDetailDto>> AddPaymentAsync(
+        int salesInvoiceId,
+        AddSalesInvoicePaymentDto dto)
+    {
+        try
+        {
+            if (salesInvoiceId <= 0)
+            {
+                return ApiResponse<SalesInvoiceDetailDto>.FailureResponse(
+                    "Invalid sales invoice id.");
+            }
+
+            if (dto.Amount <= 0)
+            {
+                return ApiResponse<SalesInvoiceDetailDto>.FailureResponse(
+                    "Payment amount must be greater than zero.");
+            }
+
+            var invoice = await _salesInvoiceRepository.GetSalesInvoiceWithPaymentsAsync(
+                salesInvoiceId,
+                trackChanges: true);
+
+            if (invoice == null)
+            {
+                return ApiResponse<SalesInvoiceDetailDto>.NotFoundResponse(
+                    "Sales invoice was not found.");
+            }
+
+            var remainingAmount = invoice.FinalAmount - invoice.PaidAmount;
+
+            if (remainingAmount <= 0)
+            {
+                return ApiResponse<SalesInvoiceDetailDto>.ConflictResponse(
+                    "This sales invoice is already fully paid.");
+            }
+
+            if (dto.Amount > remainingAmount)
+            {
+                return ApiResponse<SalesInvoiceDetailDto>.FailureResponse(
+                    "Payment amount cannot exceed the remaining due amount.");
+            }
+
+            var paymentDate = dto.PaymentDate.HasValue
+                ? ConvertToUtc(dto.PaymentDate.Value)
+                : DateTime.UtcNow;
+
+            var payment = new Payment
+            {
+                SalesInvoiceId = salesInvoiceId,
+                Amount = dto.Amount,
+                PaymentMethod = dto.PaymentMethod,
+                PaymentDate = paymentDate,
+                Remarks = string.IsNullOrWhiteSpace(dto.Remarks)
+                    ? null
+                    : dto.Remarks.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _paymentRepository.Create(payment);
+
+            invoice.PaidAmount += dto.Amount;
+            invoice.PaymentStatus = CalculatePaymentStatus(
+                invoice.FinalAmount,
+                invoice.PaidAmount);
+
+            await _salesInvoiceRepository.SaveChangesAsync();
+
+            var updatedInvoice = await _salesInvoiceRepository.GetSalesInvoiceDetailsAsync(
+                salesInvoiceId,
+                trackChanges: false);
+
+            if (updatedInvoice == null)
+            {
+                return ApiResponse<SalesInvoiceDetailDto>.ServerErrorResponse(
+                    "Payment was recorded but the updated invoice could not be loaded.");
+            }
+
+            return ApiResponse<SalesInvoiceDetailDto>.SuccessResponse(
+                MapToDetailDto(updatedInvoice),
+                "Payment recorded successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while recording payment for sales invoice with id {SalesInvoiceId}.",
+                salesInvoiceId);
+
+            return ApiResponse<SalesInvoiceDetailDto>.ServerErrorResponse(
+                "An error occurred while recording the payment.");
+        }
+    }
     public async Task<ApiResponse<string>> GetSalesInvoicePdfDownloadUrlAsync(
         int salesInvoiceId)
     {
@@ -707,6 +821,7 @@ public class SalesInvoiceService : ISalesInvoiceService
             DiscountAmount = invoice.DiscountAmount,
             FinalAmount = invoice.FinalAmount,
             PaidAmount = invoice.PaidAmount,
+            RemainingAmount = invoice.FinalAmount - invoice.PaidAmount,
             PaymentStatus = invoice.PaymentStatus,
             DueDate = invoice.DueDate,
             HasInvoicePdf = !string.IsNullOrWhiteSpace(invoice.InvoicePdfPublicId),
@@ -749,7 +864,34 @@ public class SalesInvoiceService : ISalesInvoiceService
                 Quantity = item.Quantity,
                 PricePerUnit = item.PricePerUnit,
                 LineTotal = item.LineTotal
-            }).ToList()
+            }).ToList(),
+            Payments = invoice.Payments
+                .OrderByDescending(payment => payment.PaymentDate)
+                .ThenByDescending(payment => payment.PaymentId)
+                .Select(payment => new SalesInvoicePaymentResponseDto
+                {
+                    PaymentId = payment.PaymentId,
+                    Amount = payment.Amount,
+                    PaymentMethod = payment.PaymentMethod,
+                    PaymentDate = payment.PaymentDate,
+                    Remarks = payment.Remarks,
+                    CreatedAt = payment.CreatedAt
+                }).ToList()
         };
+    }
+
+    private static DateTime ConvertToUtc(DateTime dateTime)
+    {
+        if (dateTime.Kind == DateTimeKind.Utc)
+        {
+            return dateTime;
+        }
+
+        if (dateTime.Kind == DateTimeKind.Local)
+        {
+            return dateTime.ToUniversalTime();
+        }
+
+        return DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
     }
 }

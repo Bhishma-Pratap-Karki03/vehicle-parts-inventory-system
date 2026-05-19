@@ -149,15 +149,11 @@ function StaffNavbar() {
                 </div>
 
                 <div className="staff-topbar-right">
-                    <button className="staff-topbar-notification" type="button">
-                        <span className="material-symbols-outlined">notifications</span>
-                        <span className="staff-notification-dot"></span>
-                    </button>
 
                     <div className="staff-topbar-profile">
                         <div className="staff-profile-info">
                             <strong>{displayName}</strong>
-                            <span>Staff</span>
+                            
                         </div>
 
                         <div className="staff-profile-avatar">{displayName.charAt(0).toUpperCase()}</div>

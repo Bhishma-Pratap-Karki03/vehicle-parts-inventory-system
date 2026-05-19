@@ -66,6 +66,7 @@ export interface CustomerPurchaseHistoryItem {
   paidAmount: number
   remainingAmount: number
   paymentStatus: PaymentStatusValue
+  hasInvoicePdf: boolean
   dueDate?: null | string
   itemCount: number
   items: CustomerPurchaseHistoryLine[]
@@ -97,6 +98,25 @@ export interface CustomerHistorySummary {
   outstandingBalance: number
   totalServices: number
   vehicleCount: number
+}
+
+export interface StaffCustomerDetails {
+  id: string
+  fullName: string
+  email: string
+  phoneNumber: string
+  address?: null | string
+  vehicles: Array<{
+    vehicleId: number
+    vehicleNumber: string
+    brand: string
+    model: string
+    year: number
+    mileage: number
+  }>
+  historySummary: CustomerHistorySummary
+  purchaseHistory: CustomerPurchaseHistoryItem[]
+  serviceHistory: CustomerServiceHistoryItem[]
 }
 
 export interface RegularCustomerReport {

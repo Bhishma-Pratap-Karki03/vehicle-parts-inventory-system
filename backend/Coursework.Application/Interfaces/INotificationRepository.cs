@@ -13,4 +13,10 @@ public interface INotificationRepository : IRepositoryBase<Notification>
         string relatedEntityType,
         int relatedEntityId,
         DateTime utcNow);
+
+    Task<Dictionary<int, DateTime?>> GetLatestSentAtByEntityIdsAsync(
+        NotificationType notificationType,
+        string relatedEntityType,
+        IEnumerable<int> relatedEntityIds,
+        bool trackChanges = false);
 }

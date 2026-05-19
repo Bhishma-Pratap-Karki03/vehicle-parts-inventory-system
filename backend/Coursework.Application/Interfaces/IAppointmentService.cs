@@ -16,7 +16,10 @@ public interface IAppointmentService
 
     Task<ApiResponse<AppointmentResponseDto>> GetAppointmentByIdAsync(int id);
 
-    Task<ApiResponse<StaffAppointmentResponseDto>> UpdateAppointmentStatusAsync(int id, UpdateAppointmentStatusDto dto);
+    Task<ApiResponse<StaffAppointmentResponseDto>> UpdateAppointmentStatusAsync(
+        int id,
+        UpdateAppointmentStatusDto dto,
+        string staffId);
 
     Task<ApiResponse<AppointmentResponseDto>> CancelAppointmentAsync(int id);
 }

@@ -2,6 +2,7 @@ using Coursework.Application.Common;
 using Coursework.Application.DTOs.Appointments;
 using Coursework.Application.DTOs.Vehicles;
 using Coursework.Application.Interfaces;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -65,7 +66,18 @@ public class AppointmentsController : ControllerBase
     [HttpPatch("{id}/status")]
     public async Task<ActionResult<ApiResponse<StaffAppointmentResponseDto>>> UpdateAppointmentStatus(int id, UpdateAppointmentStatusDto dto)
     {
-        var response = await _appointmentService.UpdateAppointmentStatusAsync(id, dto);
+        var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(staffId))
+        {
+            return Unauthorized(new
+            {
+                success = false,
+                message = "User id was not found in token."
+            });
+        }
+
+        var response = await _appointmentService.UpdateAppointmentStatusAsync(id, dto, staffId);
         return StatusCode(response.StatusCode, response);
     }
 

@@ -26,6 +26,7 @@ public class SalesInvoiceRepository
             .Include(s => s.Vehicle)
             .Include(s => s.Items)
             .ThenInclude(i => i.Part)
+            .Include(s => s.Payments)
             .FirstOrDefaultAsync();
     }
 
@@ -41,6 +42,23 @@ public class SalesInvoiceRepository
             .Include(s => s.Vehicle)
             .Include(s => s.Items)
             .ThenInclude(i => i.Part)
+            .Include(s => s.Payments)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<SalesInvoice?> GetSalesInvoiceWithPaymentsAsync(
+        int salesInvoiceId,
+        bool trackChanges = false)
+    {
+        return await FindByCondition(
+                s => s.SalesInvoiceId == salesInvoiceId,
+                trackChanges)
+            .Include(s => s.Customer)
+            .Include(s => s.Staff)
+            .Include(s => s.Vehicle)
+            .Include(s => s.Items)
+            .ThenInclude(i => i.Part)
+            .Include(s => s.Payments)
             .FirstOrDefaultAsync();
     }
 
@@ -54,6 +72,7 @@ public class SalesInvoiceRepository
                      i.DueDate < dueBefore,
                 trackChanges)
             .Include(i => i.Customer)
+            .Include(i => i.Vehicle)
             .OrderBy(i => i.DueDate)
             .ToListAsync();
     }

@@ -15,6 +15,7 @@ public class CustomerService : ICustomerService
     private readonly IVehicleRepository _vehicleRepository;
     private readonly ISalesInvoiceRepository _salesInvoiceRepository;
     private readonly IServiceRecordRepository _serviceRecordRepository;
+    private readonly IAppointmentRepository _appointmentRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<CustomerService> _logger;
 
@@ -24,6 +25,7 @@ public class CustomerService : ICustomerService
         IVehicleRepository vehicleRepository,
         ISalesInvoiceRepository salesInvoiceRepository,
         IServiceRecordRepository serviceRecordRepository,
+        IAppointmentRepository appointmentRepository,
         UserManager<ApplicationUser> userManager,
         ILogger<CustomerService> logger)
     {
@@ -32,6 +34,7 @@ public class CustomerService : ICustomerService
         _vehicleRepository = vehicleRepository;
         _salesInvoiceRepository = salesInvoiceRepository;
         _serviceRecordRepository = serviceRecordRepository;
+        _appointmentRepository = appointmentRepository;
         _userManager = userManager;
         _logger = logger;
     }
@@ -192,6 +195,9 @@ public class CustomerService : ICustomerService
                     "Customer not found.");
             }
 
+            var purchaseHistory = await BuildPurchaseHistoryAsync(id);
+            var serviceHistory = await BuildServiceHistoryAsync(id);
+
             var response = new CustomerDetailsDto
             {
                 Id = customer.Id,
@@ -208,7 +214,17 @@ public class CustomerService : ICustomerService
                         Model = vehicle.Model,
                         Year = vehicle.Year,
                         Mileage = vehicle.Mileage
-                    }).ToList()
+                    }).ToList(),
+                PurchaseHistory = purchaseHistory,
+                ServiceHistory = serviceHistory,
+                HistorySummary = new CustomerHistorySummaryDto
+                {
+                    TotalPurchases = purchaseHistory.Count,
+                    TotalSpent = purchaseHistory.Sum(item => item.PaidAmount),
+                    OutstandingBalance = purchaseHistory.Sum(item => item.RemainingAmount),
+                    TotalServices = serviceHistory.Count,
+                    VehicleCount = customer.Vehicles.Count
+                }
             };
 
             return ApiResponse<CustomerDetailsDto>.SuccessResponse(
@@ -472,40 +488,7 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            var invoices = await _salesInvoiceRepository
-                .FindByCondition(s => s.CustomerId == customerId)
-                .Include(s => s.Vehicle)
-                .Include(s => s.Items)
-                    .ThenInclude(item => item.Part)
-                .OrderByDescending(s => s.InvoiceDate)
-                .ToListAsync();
-
-            var response = invoices.Select(invoice => new CustomerPurchaseHistoryItemDto
-            {
-                SalesInvoiceId = invoice.SalesInvoiceId,
-                InvoiceNumber = invoice.InvoiceNumber,
-                InvoiceDate = invoice.InvoiceDate,
-                VehicleNumber = invoice.Vehicle?.VehicleNumber ?? string.Empty,
-                VehicleBrandModel = invoice.Vehicle == null
-                    ? string.Empty
-                    : $"{invoice.Vehicle.Brand} {invoice.Vehicle.Model}".Trim(),
-                SubTotal = invoice.SubTotal,
-                DiscountAmount = invoice.DiscountAmount,
-                FinalAmount = invoice.FinalAmount,
-                PaidAmount = invoice.PaidAmount,
-                RemainingAmount = invoice.FinalAmount - invoice.PaidAmount,
-                PaymentStatus = invoice.PaymentStatus,
-                DueDate = invoice.DueDate,
-                ItemCount = invoice.Items.Count,
-                Items = invoice.Items.Select(item => new CustomerPurchaseHistoryLineDto
-                {
-                    PartName = item.Part?.PartName ?? "Unknown Part",
-                    PartNumber = item.Part?.PartNumber ?? string.Empty,
-                    Quantity = item.Quantity,
-                    PricePerUnit = item.PricePerUnit,
-                    LineTotal = item.LineTotal
-                }).ToList()
-            }).ToList();
+            var response = await BuildPurchaseHistoryAsync(customerId);
 
             return ApiResponse<List<CustomerPurchaseHistoryItemDto>>.SuccessResponse(
                 response,
@@ -528,27 +511,7 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            var records = await _serviceRecordRepository
-                .FindByCondition(s => s.CustomerId == customerId)
-                .Include(s => s.Vehicle)
-                .Include(s => s.Staff)
-                .OrderByDescending(s => s.ServiceDate)
-                .ToListAsync();
-
-            var response = records.Select(record => new CustomerServiceHistoryItemDto
-            {
-                ServiceRecordId = record.ServiceRecordId,
-                ServiceDate = record.ServiceDate,
-                VehicleNumber = record.Vehicle?.VehicleNumber ?? string.Empty,
-                VehicleBrandModel = record.Vehicle == null
-                    ? string.Empty
-                    : $"{record.Vehicle.Brand} {record.Vehicle.Model}".Trim(),
-                ServiceDescription = record.ServiceDescription,
-                PartsChangedOrSuggested = record.PartsChangedOrSuggested,
-                LaborCost = record.LaborCost,
-                Status = record.Status,
-                StaffName = record.Staff?.FullName ?? "Unknown Staff"
-            }).ToList();
+            var response = await BuildServiceHistoryAsync(customerId);
 
             return ApiResponse<List<CustomerServiceHistoryItemDto>>.SuccessResponse(
                 response,
@@ -582,9 +545,7 @@ public class CustomerService : ICustomerService
                 })
                 .FirstOrDefaultAsync();
 
-            var serviceCount = await _serviceRecordRepository
-                .FindByCondition(s => s.CustomerId == customerId)
-                .CountAsync();
+            var serviceHistory = await BuildServiceHistoryAsync(customerId);
 
             var vehicleCount = await _vehicleRepository
                 .FindByCondition(v => v.CustomerId == customerId)
@@ -595,7 +556,7 @@ public class CustomerService : ICustomerService
                 TotalPurchases = invoiceAggregates?.Count ?? 0,
                 TotalSpent = invoiceAggregates?.TotalSpent ?? 0m,
                 OutstandingBalance = invoiceAggregates?.Outstanding ?? 0m,
-                TotalServices = serviceCount,
+                TotalServices = serviceHistory.Count,
                 VehicleCount = vehicleCount
             };
 
@@ -642,5 +603,117 @@ public class CustomerService : ICustomerService
             CreatedAt = vehicle.CreatedAt,
             UpdatedAt = vehicle.UpdatedAt
         };
+    }
+
+    private async Task<List<CustomerPurchaseHistoryItemDto>> BuildPurchaseHistoryAsync(string customerId)
+    {
+        var invoices = await _salesInvoiceRepository
+            .FindByCondition(s => s.CustomerId == customerId)
+            .Include(s => s.Vehicle)
+            .Include(s => s.Items)
+                .ThenInclude(item => item.Part)
+            .OrderByDescending(s => s.InvoiceDate)
+            .ToListAsync();
+
+        return invoices.Select(invoice => new CustomerPurchaseHistoryItemDto
+        {
+            SalesInvoiceId = invoice.SalesInvoiceId,
+            InvoiceNumber = invoice.InvoiceNumber,
+            InvoiceDate = invoice.InvoiceDate,
+            VehicleNumber = invoice.Vehicle?.VehicleNumber ?? string.Empty,
+            VehicleBrandModel = invoice.Vehicle == null
+                ? string.Empty
+                : $"{invoice.Vehicle.Brand} {invoice.Vehicle.Model}".Trim(),
+            SubTotal = invoice.SubTotal,
+            DiscountAmount = invoice.DiscountAmount,
+            FinalAmount = invoice.FinalAmount,
+            PaidAmount = invoice.PaidAmount,
+            RemainingAmount = invoice.FinalAmount - invoice.PaidAmount,
+            PaymentStatus = invoice.PaymentStatus,
+            HasInvoicePdf = !string.IsNullOrWhiteSpace(invoice.InvoicePdfPublicId),
+            DueDate = invoice.DueDate,
+            ItemCount = invoice.Items.Count,
+            Items = invoice.Items.Select(item => new CustomerPurchaseHistoryLineDto
+            {
+                PartName = item.Part?.PartName ?? "Unknown Part",
+                PartNumber = item.Part?.PartNumber ?? string.Empty,
+                Quantity = item.Quantity,
+                PricePerUnit = item.PricePerUnit,
+                LineTotal = item.LineTotal
+            }).ToList()
+        }).ToList();
+    }
+
+    private async Task<List<CustomerServiceHistoryItemDto>> BuildServiceHistoryAsync(string customerId)
+    {
+        var records = await _serviceRecordRepository
+            .FindByCondition(s => s.CustomerId == customerId)
+            .Include(s => s.Appointment)
+            .Include(s => s.Vehicle)
+            .Include(s => s.Staff)
+            .OrderByDescending(s => s.ServiceDate)
+            .ToListAsync();
+
+        var serviceHistory = records.Select(record => new CustomerServiceHistoryItemDto
+        {
+            ServiceRecordId = record.ServiceRecordId,
+            ServiceDate = record.ServiceDate,
+            VehicleNumber = record.Vehicle?.VehicleNumber ?? string.Empty,
+            VehicleBrandModel = record.Vehicle == null
+                ? string.Empty
+                : $"{record.Vehicle.Brand} {record.Vehicle.Model}".Trim(),
+            ServiceDescription = record.ServiceDescription,
+            PartsChangedOrSuggested = record.PartsChangedOrSuggested,
+            LaborCost = record.LaborCost,
+            Status = record.Status,
+            StaffName = record.Staff?.FullName ?? "Unknown Staff"
+        }).ToList();
+
+        var serviceRecordAppointmentIds = records
+            .Select(record => record.AppointmentId)
+            .ToHashSet();
+
+        var completedAppointmentsWithoutServiceRecord = await _appointmentRepository
+            .FindByCondition(a =>
+                a.CustomerId == customerId &&
+                a.Status == Coursework.Domain.Enums.AppointmentStatus.Completed &&
+                !serviceRecordAppointmentIds.Contains(a.AppointmentId))
+            .Include(a => a.Vehicle)
+            .OrderByDescending(a => a.AppointmentDate)
+            .ToListAsync();
+
+        serviceHistory.AddRange(completedAppointmentsWithoutServiceRecord.Select(appointment =>
+            new CustomerServiceHistoryItemDto
+            {
+                ServiceRecordId = -appointment.AppointmentId,
+                ServiceDate = appointment.AppointmentDate,
+                VehicleNumber = appointment.Vehicle?.VehicleNumber ?? string.Empty,
+                VehicleBrandModel = appointment.Vehicle == null
+                    ? string.Empty
+                    : $"{appointment.Vehicle.Brand} {appointment.Vehicle.Model}".Trim(),
+                ServiceDescription = BuildAppointmentServiceDescription(appointment),
+                PartsChangedOrSuggested = appointment.AdminRemarks,
+                LaborCost = 0m,
+                Status = Coursework.Domain.Enums.ServiceStatus.Completed,
+                StaffName = "Recorded from completed appointment"
+            }));
+
+        return serviceHistory
+            .OrderByDescending(record => record.ServiceDate)
+            .ThenByDescending(record => record.ServiceRecordId)
+            .ToList();
+    }
+
+    private static string BuildAppointmentServiceDescription(Appointment appointment)
+    {
+        var serviceType = appointment.ServiceType.Trim();
+        var issueDescription = appointment.IssueDescription.Trim();
+
+        if (string.IsNullOrWhiteSpace(issueDescription))
+        {
+            return serviceType;
+        }
+
+        return $"{serviceType} - {issueDescription}";
     }
 }

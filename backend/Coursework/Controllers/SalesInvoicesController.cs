@@ -79,6 +79,16 @@ public class SalesInvoicesController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
+    [HttpPost("{id:int}/payments")]
+    public async Task<IActionResult> AddPayment(
+        int id,
+        [FromBody] AddSalesInvoicePaymentDto dto)
+    {
+        var response = await _salesInvoiceService.AddPaymentAsync(id, dto);
+
+        return StatusCode(response.StatusCode, response);
+    }
+
     [HttpGet("{id:int}/download")]
     public async Task<IActionResult> GetSalesInvoicePdfDownloadUrl(int id)
     {

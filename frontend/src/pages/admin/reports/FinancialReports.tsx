@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import jsPDF from "jspdf";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { apiRequest, getApiErrorMessage } from "../../../shared/utils/api";
 
 
 type ReportType = "Daily" | "Monthly" | "Yearly";
@@ -23,14 +23,6 @@ type TopSellingPart = {
     quantitySold: number;
     revenue: number;
     currentStock: number;
-};
-
-type ApiResponse<T> = {
-    success: boolean;
-    message: string;
-    data: T;
-    errors: string[] | null;
-    statusCode: number;
 };
 
 type FinancialReportResponse = {
@@ -95,7 +87,7 @@ function FinancialReports() {
     };
 
     const fetchFinancialReport = async (): Promise<FinancialReportResponse | null> => {
-        let url = "";
+        let path = "";
 
         if (reportType === "Daily") {
             if (!selectedDate) {
@@ -103,7 +95,7 @@ function FinancialReports() {
                 return null;
             }
 
-            url = `${API_BASE_URL}/api/admin/reports/financial/daily?date=${selectedDate}`;
+            path = `/api/admin/reports/financial/daily?date=${selectedDate}`;
         }
 
         if (reportType === "Monthly") {
@@ -113,7 +105,7 @@ function FinancialReports() {
             }
 
             const [year, month] = selectedMonth.split("-");
-            url = `${API_BASE_URL}/api/admin/reports/financial/monthly?year=${year}&month=${Number(month)}`;
+            path = `/api/admin/reports/financial/monthly?year=${year}&month=${Number(month)}`;
         }
 
         if (reportType === "Yearly") {
@@ -122,17 +114,16 @@ function FinancialReports() {
                 return null;
             }
 
-            url = `${API_BASE_URL}/api/admin/reports/financial/yearly?year=${selectedYear}`;
+            path = `/api/admin/reports/financial/yearly?year=${selectedYear}`;
         }
 
         try {
             setIsGenerating(true);
 
-            const response = await fetch(url);
-            const result: ApiResponse<FinancialReportResponse> = await response.json();
+            const result = await apiRequest<FinancialReportResponse>(path);
 
-            if (!response.ok || !result.success) {
-                throw new Error(result.message || "Failed to generate financial report.");
+            if (!result.success) {
+                throw new Error(getApiErrorMessage(result));
             }
 
             const data = result.data ?? { rows: [], topSellingParts: [] };

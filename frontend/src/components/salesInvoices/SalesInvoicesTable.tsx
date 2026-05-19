@@ -28,20 +28,6 @@ function PaymentStatusPill({ paymentStatus }: { paymentStatus: SalesInvoicePayme
   )
 }
 
-function PdfStatusPill({ hasInvoicePdf }: { hasInvoicePdf: boolean }) {
-  return (
-    <span
-      className={`inline-flex min-h-7.5 items-center justify-center rounded-full px-2.5 py-1 text-[11px] leading-none font-semibold uppercase tracking-[0.08em] ${
-        hasInvoicePdf
-          ? 'border border-[#C9E7D4] bg-[#EEFCF3] text-[#16784A]'
-          : 'border border-[#D9E3EE] bg-[#F4F7FA] text-[#516579]'
-      }`}
-    >
-      {hasInvoicePdf ? 'Ready' : 'Pending'}
-    </span>
-  )
-}
-
 function LoadingIndicator() {
   return (
     <div className="flex min-h-80 items-center justify-center px-6 py-10" role="status" aria-live="polite">
@@ -120,12 +106,7 @@ function MobileSalesInvoiceCard({
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6B7D8F]">Paid Amount</p>
           <p className="mt-1 text-[17px] font-semibold text-[#123052]">{formatRupees(invoice.paidAmount)}</p>
         </div>
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6B7D8F]">PDF</p>
-          <div className="mt-1">
-            <PdfStatusPill hasInvoicePdf={invoice.hasInvoicePdf} />
-          </div>
-        </div>
+       
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6B7D8F]">Created</p>
           <p className="mt-1 text-[14px] text-[#58708A]">{formatDateLabel(invoice.createdAt, { dateStyle: 'medium', timeStyle: 'short' })}</p>
@@ -212,7 +193,7 @@ function SalesInvoicesTable({
       </div>
 
       <div className="hidden overflow-x-auto lg:block">
-        <table className="w-full min-w-340 border-collapse text-left">
+        <table className="w-full min-w-7xl border-collapse text-left">
           <thead>
             <tr className="border-b border-[#E2EAF2] bg-[#F7FAFC]">
               <th className="px-6 py-3.5 align-middle text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6B7D8F]">Invoice</th>
@@ -222,44 +203,30 @@ function SalesInvoicesTable({
               <th className="px-6 py-3.5 align-middle text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6B7D8F]">Final Amount</th>
               <th className="px-6 py-3.5 align-middle text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6B7D8F]">Paid Amount</th>
               <th className="px-6 py-3.5 align-middle text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6B7D8F]">Payment</th>
-              <th className="px-6 py-3.5 align-middle text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6B7D8F]">PDF</th>
               <th className="px-6 py-3.5 align-middle text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6B7D8F]">Created At</th>
               <th className="px-6 py-3.5 align-middle text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6B7D8F]">Actions</th>
             </tr>
           </thead>
           <tbody>
             {invoices.map((invoice) => {
-              const isEmailBusy = sendingInvoiceId === invoice.salesInvoiceId || preparingInvoiceId === invoice.salesInvoiceId
               const isDownloadBusy = downloadingInvoiceId === invoice.salesInvoiceId
 
               return (
                 <tr className="border-b border-[#EDF2F7] bg-white transition hover:bg-[#FBFDFF]" key={invoice.salesInvoiceId}>
                   <td className="px-6 py-4.5 align-middle">
-                    <div className="flex flex-col items-center text-center">
-                      <p className="text-[16px] font-semibold text-[#112B49]">{invoice.invoiceNumber}</p>
-                      <p className="mt-1 text-[13px] text-[#617A95]">Invoice ID {invoice.salesInvoiceId}</p>
-                    </div>
+                    <p className="text-center text-[16px] font-semibold text-[#112B49]">{invoice.invoiceNumber}</p>
                   </td>
                   <td className="px-6 py-4.5 align-middle">
-                    <div className="flex flex-col items-center text-center">
-                      <p className="text-[15px] font-semibold text-[#17314F]">{invoice.customerName}</p>
-                      <p className="mt-1 text-[13px] text-[#617A95]">{invoice.customerId}</p>
-                    </div>
+                    <p className="text-center text-[15px] font-semibold text-[#17314F]">{invoice.customerName}</p>
                   </td>
                   <td className="px-6 py-4.5 align-middle text-center">
-                    <div className="flex flex-col items-center text-center">
-                      <p className="text-[15px] font-semibold text-[#17314F]">{invoice.vehicleNumber}</p>
-                      <p className="mt-1 text-[13px] text-[#617A95]">Vehicle ID {invoice.vehicleId}</p>
-                    </div>
+                    <p className="text-[15px] font-semibold text-[#17314F]">{invoice.vehicleNumber}</p>
                   </td>
                   <td className="px-6 py-4.5 text-center align-middle text-[14px] text-[#203852]">{formatDateLabel(invoice.invoiceDate)}</td>
                   <td className="px-6 py-4.5 text-center align-middle text-[14px] font-semibold text-[#123052]">{formatRupees(invoice.finalAmount)}</td>
                   <td className="px-6 py-4.5 text-center align-middle text-[14px] font-semibold text-[#123052]">{formatRupees(invoice.paidAmount)}</td>
                   <td className="px-6 py-4.5 text-center align-middle">
                     <PaymentStatusPill paymentStatus={invoice.paymentStatus} />
-                  </td>
-                  <td className="px-6 py-4.5 text-center align-middle">
-                    <PdfStatusPill hasInvoicePdf={invoice.hasInvoicePdf} />
                   </td>
                   <td className="px-6 py-4.5 text-center align-middle text-[13px] text-[#405470]">{formatDateLabel(invoice.createdAt, { dateStyle: 'medium', timeStyle: 'short' })}</td>
                   <td className="px-6 py-4.5 align-middle">
@@ -286,17 +253,7 @@ function SalesInvoicesTable({
                           {isDownloadBusy ? 'Downloading...' : 'Download'}
                         </button>
                       ) : null}
-                      <button
-                        className="inline-flex h-9 min-w-25 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#15558D] px-3.5 text-[12px] leading-none font-semibold text-white transition hover:bg-[#0E487C] disabled:cursor-not-allowed disabled:opacity-65"
-                        disabled={isEmailBusy}
-                        onClick={() => onRequestSendEmail(invoice)}
-                        type="button"
-                      >
-                        <span aria-hidden className="material-symbols-outlined inline-flex shrink-0 select-none items-center justify-center leading-none text-[18px] not-italic">
-                          outgoing_mail
-                        </span>
-                        Email
-                      </button>
+                     
                     </div>
                   </td>
                 </tr>

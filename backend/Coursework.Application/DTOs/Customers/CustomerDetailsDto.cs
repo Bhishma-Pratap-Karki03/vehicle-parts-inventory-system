@@ -13,6 +13,12 @@ public class CustomerDetailsDto
     public string? Address { get; set; }
 
     public List<VehicleDto> Vehicles { get; set; } = new();
+
+    public CustomerHistorySummaryDto HistorySummary { get; set; } = new();
+
+    public List<CustomerPurchaseHistoryItemDto> PurchaseHistory { get; set; } = new();
+
+    public List<CustomerServiceHistoryItemDto> ServiceHistory { get; set; } = new();
 }
 
 public class VehicleDto

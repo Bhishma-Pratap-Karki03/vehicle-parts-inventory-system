@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import AddSalesInvoicePaymentModal from '../../components/salesInvoices/AddSalesInvoicePaymentModal'
 import SendSalesInvoiceEmailModal from '../../components/salesInvoices/SendSalesInvoiceEmailModal'
 import {
+  buildSalesInvoicePaymentPayload,
   buildSendSalesInvoiceEmailPayload,
   formatDateLabel,
   formatRupees,
@@ -12,7 +14,13 @@ import {
   readApiResponse,
 } from '../../components/salesInvoices/salesInvoices.helpers'
 import backendUrl from '../../config'
-import type { SalesInvoiceDetailApiModel, SalesInvoiceDetailRecord, SalesInvoiceEmailFormValues, SalesInvoicePaymentStatusLabel } from '../../shared/interfaces/salesInvoices.interface'
+import type {
+  SalesInvoiceDetailApiModel,
+  SalesInvoiceDetailRecord,
+  SalesInvoiceEmailFormValues,
+  SalesInvoicePaymentFormValues,
+  SalesInvoicePaymentStatusLabel,
+} from '../../shared/interfaces/salesInvoices.interface'
 import NotFoundPage from '../NotFoundPage'
 
 const paymentStatusClasses: Record<SalesInvoicePaymentStatusLabel, string> = {
@@ -43,6 +51,8 @@ function SalesInvoiceDetailsPage() {
   const [isPdfLoading, setIsPdfLoading] = useState(false)
   const [pdfErrorMessage, setPdfErrorMessage] = useState<null | string>(null)
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
+  const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false)
+  const [isRecordingPayment, setIsRecordingPayment] = useState(false)
 
   const isInvalidId = Boolean(salesInvoiceId && (!numericInvoiceId || Number.isNaN(numericInvoiceId)))
 
@@ -225,6 +235,39 @@ function SalesInvoiceDetailsPage() {
     }
   }
 
+  async function handleConfirmAddPayment(values: SalesInvoicePaymentFormValues) {
+    if (!invoice) {
+      return
+    }
+
+    setIsRecordingPayment(true)
+
+    try {
+      const response = await fetch(`${backendUrl}/api/sales-invoices/${invoice.salesInvoiceId}/payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(buildSalesInvoicePaymentPayload(values)),
+      })
+
+      const result = await readApiResponse<SalesInvoiceDetailApiModel>(response)
+
+      if (!result.success || !result.data) {
+        toast.error(getApiErrorMessage(result.message, result.errors))
+        return
+      }
+
+      setInvoice(mapSalesInvoiceDetailFromApi(result.data))
+      setIsAddPaymentModalOpen(false)
+      toast.success(result.message || 'Payment recorded successfully.')
+    } catch (error) {
+      toast.error(getRequestErrorMessage(error, 'Unable to record this payment right now.'))
+    } finally {
+      setIsRecordingPayment(false)
+    }
+  }
+
   if (isInvalidId || isNotFound) {
     return <NotFoundPage />
   }
@@ -299,12 +342,7 @@ function SalesInvoiceDetailsPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#C8D6E5] bg-white px-5 text-[14px] font-semibold text-[#24405E] no-underline shadow-[0_10px_24px_rgba(18,43,74,0.05)] transition hover:border-[#AEC3D9] hover:bg-[#F7FBFE]"
-              to="/sales-invoices"
-            >
-              Back to List
-            </Link>
+           
             {invoice.hasInvoicePdf ? (
               <button
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-5 text-[14px] font-semibold text-[#2E4C70] shadow-[0_10px_24px_rgba(18,43,74,0.05)] transition hover:bg-[#F7FBFE] disabled:cursor-not-allowed disabled:opacity-70"
@@ -316,6 +354,19 @@ function SalesInvoiceDetailsPage() {
                   download
                 </span>
                 {isDownloadingPdf ? 'Downloading...' : 'Download PDF'}
+              </button>
+            ) : null}
+            {invoice.remainingAmount > 0 ? (
+              <button
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-5 text-[14px] font-semibold text-[#2E4C70] shadow-[0_10px_24px_rgba(18,43,74,0.05)] transition hover:bg-[#F7FBFE] disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={isRecordingPayment}
+                onClick={() => setIsAddPaymentModalOpen(true)}
+                type="button"
+              >
+                <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
+                  payments
+                </span>
+                Record Payment
               </button>
             ) : null}
             <button
@@ -418,6 +469,61 @@ function SalesInvoiceDetailsPage() {
                     <p className="mt-2 text-[18px] font-semibold text-[#112B49]">{formatDateLabel(invoice.createdAt, { dateStyle: 'medium', timeStyle: 'short' })}</p>
                   </div>
                 </div>
+              </section>
+
+              <section className="rounded-[28px] border border-[#DCE5EF] bg-white p-6 shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
+                <div className="mb-5 flex items-center gap-3 border-b border-[#E6EEF5] pb-4">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#EEF5FC] text-[#15558D]">
+                    <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
+                      account_balance_wallet
+                    </span>
+                  </span>
+                  <div>
+                    <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-[#102B49] [font-family:var(--font-display)]">Payment History</h2>
+                    <p className="mt-1 text-[14px] text-[#678099]">Every payment recorded against this invoice, including method, date, and notes.</p>
+                  </div>
+                </div>
+
+                {invoice.payments.length === 0 ? (
+                  <div className="rounded-[22px] border border-dashed border-[#D6E1EC] bg-[#F8FBFE] px-5 py-8 text-center text-[14px] text-[#647B93]">
+                    No payment records have been stored for this invoice yet.
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-[22px] border border-[#E4EBF3]">
+                    <div className="hidden grid-cols-[1.1fr_0.9fr_0.9fr_1fr] gap-4 bg-[#F7FAFD] px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6E8298] md:grid">
+                      <span>Paid At</span>
+                      <span>Amount</span>
+                      <span>Method</span>
+                      <span>Remarks</span>
+                    </div>
+                    <ul className="divide-y divide-[#E6EDF5]">
+                      {invoice.payments.map((payment) => (
+                        <li className="px-5 py-4" key={payment.paymentId}>
+                          <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr_0.9fr_1fr] md:items-start md:gap-4">
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6E8298] md:hidden">Paid At</p>
+                              <p className="text-[15px] font-semibold text-[#102B49]">
+                                {formatDateLabel(payment.paymentDate, { dateStyle: 'medium', timeStyle: 'short' })}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6E8298] md:hidden">Amount</p>
+                              <p className="text-[15px] font-semibold text-[#102B49]">{formatRupees(payment.amount)}</p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6E8298] md:hidden">Method</p>
+                              <p className="text-[15px] font-semibold text-[#102B49]">{payment.paymentMethod}</p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6E8298] md:hidden">Remarks</p>
+                              <p className="text-[14px] leading-7 text-[#566E87]">{payment.remarks?.trim() || 'No remarks added.'}</p>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </section>
             </div>
 
@@ -550,7 +656,7 @@ function SalesInvoiceDetailsPage() {
             ) : pdfUrl ? (
               <div className="overflow-hidden rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE]">
                 <iframe
-                  className="h-[860px] w-full bg-white"
+                  className="h-215 w-full bg-white"
                   src={pdfUrl}
                   title={`${invoice.invoiceNumber} PDF preview`}
                 />
@@ -576,6 +682,19 @@ function SalesInvoiceDetailsPage() {
             }
           }}
           onConfirm={handleConfirmSendEmail}
+        />
+      ) : null}
+      {isAddPaymentModalOpen ? (
+        <AddSalesInvoicePaymentModal
+          invoiceNumber={invoice.invoiceNumber}
+          isBusy={isRecordingPayment}
+          onCancel={() => {
+            if (!isRecordingPayment) {
+              setIsAddPaymentModalOpen(false)
+            }
+          }}
+          onConfirm={handleConfirmAddPayment}
+          remainingAmount={invoice.remainingAmount}
         />
       ) : null}
     </main>

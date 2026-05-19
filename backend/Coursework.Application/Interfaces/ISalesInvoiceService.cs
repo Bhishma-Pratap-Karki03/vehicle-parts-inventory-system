@@ -21,6 +21,10 @@ public interface ISalesInvoiceService
     Task<ApiResponse<SalesInvoiceDetailDto>> GetSalesInvoiceByIdAsync(
         int salesInvoiceId);
 
+    Task<ApiResponse<SalesInvoiceDetailDto>> AddPaymentAsync(
+        int salesInvoiceId,
+        AddSalesInvoicePaymentDto dto);
+
     Task<ApiResponse<string>> GetSalesInvoicePdfDownloadUrlAsync(
         int salesInvoiceId);
     

@@ -311,7 +311,10 @@ public class AppointmentService : IAppointmentService
             "Appointment loaded successfully.");
     }
 
-    public async Task<ApiResponse<StaffAppointmentResponseDto>> UpdateAppointmentStatusAsync(int id, UpdateAppointmentStatusDto dto)
+    public async Task<ApiResponse<StaffAppointmentResponseDto>> UpdateAppointmentStatusAsync(
+        int id,
+        UpdateAppointmentStatusDto dto,
+        string staffId)
     {
         var appointment = await _appointmentRepository
             .FindByCondition(a => a.AppointmentId == id, trackChanges: true)
@@ -383,6 +386,39 @@ public class AppointmentService : IAppointmentService
             ? null
             : dto.AdminRemarks.Trim();
         appointment.UpdatedAt = DateTime.UtcNow;
+
+        if (nextStatus == AppointmentStatus.Completed)
+        {
+            var existingServiceRecord = await _serviceRecordRepository
+                .FindByCondition(s => s.AppointmentId == appointment.AppointmentId, trackChanges: true)
+                .FirstOrDefaultAsync();
+
+            if (existingServiceRecord == null)
+            {
+                _serviceRecordRepository.Create(new ServiceRecord
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    CustomerId = appointment.CustomerId,
+                    StaffId = staffId,
+                    VehicleId = appointment.VehicleId,
+                    ServiceDate = DateTime.UtcNow,
+                    ServiceDescription = BuildServiceDescription(appointment),
+                    PartsChangedOrSuggested = appointment.AdminRemarks,
+                    LaborCost = 0m,
+                    Status = ServiceStatus.Completed,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                existingServiceRecord.StaffId = staffId;
+                existingServiceRecord.ServiceDate = DateTime.UtcNow;
+                existingServiceRecord.ServiceDescription = BuildServiceDescription(appointment);
+                existingServiceRecord.PartsChangedOrSuggested = appointment.AdminRemarks;
+                existingServiceRecord.Status = ServiceStatus.Completed;
+                existingServiceRecord.UpdatedAt = DateTime.UtcNow;
+            }
+        }
 
         await _appointmentRepository.SaveChangesAsync();
 
@@ -481,5 +517,18 @@ public class AppointmentService : IAppointmentService
         }
 
         return DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+    }
+
+    private static string BuildServiceDescription(Appointment appointment)
+    {
+        var serviceType = appointment.ServiceType.Trim();
+        var issueDescription = appointment.IssueDescription.Trim();
+
+        if (string.IsNullOrWhiteSpace(issueDescription))
+        {
+            return serviceType;
+        }
+
+        return $"{serviceType} - {issueDescription}";
     }
 }

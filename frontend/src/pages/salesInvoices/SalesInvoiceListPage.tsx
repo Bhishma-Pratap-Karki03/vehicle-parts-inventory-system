@@ -217,25 +217,8 @@ function SalesInvoiceListPage() {
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap sm:justify-end">
-              <Link
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-5 text-[14px] font-semibold text-[#2E4C70] no-underline shadow-[0_10px_24px_rgba(18,43,74,0.05)] transition hover:bg-[#F7FBFE]"
-                to="/parts"
-              >
-                <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
-                  inventory
-                </span>
-                Parts Management
-              </Link>
-              <Link
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#D7E2ED] bg-white px-5 text-[14px] font-semibold text-[#2E4C70] no-underline shadow-[0_10px_24px_rgba(18,43,74,0.05)] transition hover:bg-[#F7FBFE]"
-                to="/purchase-invoices"
-              >
-                <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[18px] not-italic">
-                  receipt_long
-                </span>
-                Purchase Invoices
-              </Link>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:flex-wrap sm:h-full sm:content-center">
+              
               <Link
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#15558D] px-5 text-[14px] font-semibold text-white no-underline shadow-[0_14px_30px_rgba(21,85,141,0.25)] transition hover:-translate-y-0.5 hover:bg-[#0B4376]"
                 to="/sales-invoices/create"

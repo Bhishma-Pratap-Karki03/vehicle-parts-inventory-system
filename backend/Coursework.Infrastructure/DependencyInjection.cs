@@ -1,7 +1,6 @@
 using Coursework.Application.Interfaces;
 using Coursework.Application.Services;
 using Coursework.Domain.Entities;
-using Coursework.Infrastructure.BackgroundServices;
 using Coursework.Infrastructure.Data;
 using Coursework.Infrastructure.Repositories;
 using Coursework.Infrastructure.Services;
@@ -41,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IPurchaseInvoiceRepository, PurchaseInvoiceRepository>();
         services.AddScoped<IPartTransactionRepository, PartTransactionRepository>();
         services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
@@ -56,7 +56,6 @@ public static class DependencyInjection
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IInvoicePdfService, InvoicePdfService>();
         services.AddScoped<ISalesInvoicePdfService, SalesInvoicePdfService>();
-        services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IEmailAttachmentService, SendGridEmailService>();
 
 
@@ -69,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<IServiceRecordRepository, ServiceRecordRepository>();
         services.AddScoped<IPartRequestRepository, PartRequestRepository>();
         services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<ISalesInvoiceItemRepository, SalesInvoiceItemRepository>();
         services.AddScoped<IPurchaseInvoiceItemRepository, PurchaseInvoiceItemRepository>();
 
@@ -85,14 +85,11 @@ public static class DependencyInjection
         services.AddScoped<IStaffService, StaffService>();
         services.AddScoped<IVendorService, VendorService>();
         services.AddScoped<INotificationService, NotificationService>();
-        services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IPartRepository, PartRepository>();
         services.AddScoped<IVendorRepository, VendorRepository>();
         services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
-
-        services.AddHostedService<NotificationBackgroundService>();
 
         return services;
     }

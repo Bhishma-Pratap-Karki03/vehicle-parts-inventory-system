@@ -1,6 +1,8 @@
 import type { ApiResponse } from '../../shared/interfaces/api.interface'
 import type {
+  AddSalesInvoicePaymentPayload,
   BackendPaymentStatus,
+  BackendPaymentMethod,
   CreateSalesInvoicePayload,
   SalesInvoiceDetailApiModel,
   SalesInvoiceDetailRecord,
@@ -9,6 +11,8 @@ import type {
   SalesInvoiceFormValues,
   SalesInvoiceListItemApiModel,
   SalesInvoiceListItemRecord,
+  SalesInvoicePaymentFormValues,
+  SalesInvoicePaymentMethodLabel,
   SalesInvoicePaymentStatusFilter,
   SalesInvoicePaymentStatusLabel,
   SendSalesInvoiceEmailPayload,
@@ -26,6 +30,20 @@ const paymentStatusQueryMap: Record<SalesInvoicePaymentStatusLabel, 1 | 2 | 3 | 
   Paid: 3,
   'Partially Paid': 2,
   Unpaid: 1,
+}
+
+const paymentMethodLabelMap: Record<1 | 2 | 3 | 4, SalesInvoicePaymentMethodLabel> = {
+  1: 'Cash',
+  2: 'Card',
+  3: 'Online Transfer',
+  4: 'Credit',
+}
+
+const paymentMethodPayloadMap: Record<SalesInvoicePaymentMethodLabel, 1 | 2 | 3 | 4> = {
+  Cash: 1,
+  Card: 2,
+  'Online Transfer': 3,
+  Credit: 4,
 }
 
 export function formatDateLabel(
@@ -87,6 +105,18 @@ export function getSalesInvoicePaymentStatusLabel(status: BackendPaymentStatus):
   return paymentStatusLabelMap[status] ?? 'Unpaid'
 }
 
+export function getSalesInvoicePaymentMethodLabel(method: BackendPaymentMethod): SalesInvoicePaymentMethodLabel {
+  if (method === 'Cash' || method === 'Card' || method === 'Credit') {
+    return method
+  }
+
+  if (method === 'OnlineTransfer') {
+    return 'Online Transfer'
+  }
+
+  return paymentMethodLabelMap[method] ?? 'Cash'
+}
+
 export function mapSalesInvoiceListFromApi(invoice: SalesInvoiceListItemApiModel): SalesInvoiceListItemRecord {
   return {
     ...invoice,
@@ -97,6 +127,10 @@ export function mapSalesInvoiceListFromApi(invoice: SalesInvoiceListItemApiModel
 export function mapSalesInvoiceDetailFromApi(invoice: SalesInvoiceDetailApiModel): SalesInvoiceDetailRecord {
   return {
     ...invoice,
+    payments: invoice.payments.map((payment) => ({
+      ...payment,
+      paymentMethod: getSalesInvoicePaymentMethodLabel(payment.paymentMethod),
+    })),
     paymentStatus: getSalesInvoicePaymentStatusLabel(invoice.paymentStatus),
   }
 }
@@ -119,6 +153,7 @@ export function createEmptySalesInvoiceFormValues(
     customerId: prefilledCustomerId,
     vehicleId: prefilledVehicleId,
     discountAmount: '0',
+    paymentMethod: 'Cash',
     dueDate: '',
     items: [
       {
@@ -148,6 +183,7 @@ export function buildSalesInvoicePayload(values: SalesInvoiceFormValues): Create
     customerId: values.customerId.trim(),
     vehicleId: Number.parseInt(values.vehicleId, 10),
     paidAmount: Number.isNaN(normalizedPaidAmount) ? 0 : normalizedPaidAmount,
+    paymentMethod: paymentMethodPayloadMap[values.paymentMethod],
     dueDate: values.dueDate ? `${values.dueDate}T00:00:00Z` : null,
     items: values.items.map((item) => ({
       partId: Number.parseInt(item.partId, 10),
@@ -170,6 +206,27 @@ export function buildSendSalesInvoiceEmailPayload(values: SalesInvoiceEmailFormV
   }
 
   return payload
+}
+
+export function createDefaultSalesInvoicePaymentValues(remainingAmount: number): SalesInvoicePaymentFormValues {
+  return {
+    amount: remainingAmount > 0 ? remainingAmount.toFixed(2) : '0.00',
+    paymentDate: getTodayDateInputValue(),
+    paymentMethod: 'Cash',
+    remarks: '',
+  }
+}
+
+export function buildSalesInvoicePaymentPayload(values: SalesInvoicePaymentFormValues): AddSalesInvoicePaymentPayload {
+  const normalizedAmount = Number.parseFloat(values.amount || '0')
+  const trimmedRemarks = values.remarks.trim()
+
+  return {
+    amount: Number.isNaN(normalizedAmount) ? 0 : normalizedAmount,
+    paymentMethod: paymentMethodPayloadMap[values.paymentMethod],
+    paymentDate: values.paymentDate ? `${values.paymentDate}T00:00:00Z` : null,
+    ...(trimmedRemarks ? { remarks: trimmedRemarks } : {}),
+  }
 }
 
 export function buildSalesInvoiceQueryString(query: Pick<SalesInvoiceFiltersState, 'pageNumber' | 'pageSize' | 'paymentStatus' | 'searchTerm'>) {

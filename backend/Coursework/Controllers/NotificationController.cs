@@ -1,4 +1,3 @@
-using Coursework.Application.Common;
 using Coursework.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,32 +20,23 @@ public class NotificationController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var notifications = await _service.GetAllAsync();
-        var response = ApiResponse<object>.SuccessResponse(
-            notifications,
-            "Notifications retrieved successfully.");
+        var response = await _service.GetAdminNotificationsAsync();
 
         return StatusCode(response.StatusCode, response);
     }
 
-    [HttpPost("low-stock")]
-    public async Task<IActionResult> CheckLowStock()
+    [HttpGet("overdue-credits")]
+    public async Task<IActionResult> GetOverdueCredits()
     {
-        var count = await _service.CheckLowStockAsync();
-        var response = ApiResponse<object>.SuccessResponse(
-            new { NotificationsCreated = count },
-            "Low stock checked successfully.");
+        var response = await _service.GetOverdueCreditRemindersAsync();
 
         return StatusCode(response.StatusCode, response);
     }
 
-    [HttpPost("credit-reminders")]
-    public async Task<IActionResult> SendReminders()
+    [HttpPost("overdue-credits/{salesInvoiceId:int}/send")]
+    public async Task<IActionResult> SendReminder(int salesInvoiceId)
     {
-        var count = await _service.SendCreditRemindersAsync();
-        var response = ApiResponse<object>.SuccessResponse(
-            new { RemindersSent = count },
-            "Reminders sent successfully.");
+        var response = await _service.SendOverdueCreditReminderAsync(salesInvoiceId);
 
         return StatusCode(response.StatusCode, response);
     }

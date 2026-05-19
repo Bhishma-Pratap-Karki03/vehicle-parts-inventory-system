@@ -15,11 +15,28 @@ public class CreateSalesInvoiceDto
     [Range(0, double.MaxValue, ErrorMessage = "Paid amount cannot be negative.")]
     public decimal PaidAmount { get; set; }
 
+    [Required]
+    public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
+
     public DateTime? DueDate { get; set; }
 
     [Required]
     [MinLength(1, ErrorMessage = "At least one part must be added to the sales invoice.")]
     public List<CreateSalesInvoiceItemDto> Items { get; set; } = new();
+}
+
+public class AddSalesInvoicePaymentDto
+{
+    [Range(0.01, double.MaxValue, ErrorMessage = "Payment amount must be greater than zero.")]
+    public decimal Amount { get; set; }
+
+    [Required]
+    public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
+
+    public DateTime? PaymentDate { get; set; }
+
+    [MaxLength(250)]
+    public string? Remarks { get; set; }
 }
 
 public class CreateSalesInvoiceItemDto
@@ -59,11 +76,28 @@ public class SalesInvoiceResponseDto
 
     public decimal PaidAmount { get; set; }
 
+    public decimal RemainingAmount { get; set; }
+
     public PaymentStatus PaymentStatus { get; set; }
 
     public DateTime? DueDate { get; set; }
 
     public bool HasInvoicePdf { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+}
+
+public class SalesInvoicePaymentResponseDto
+{
+    public int PaymentId { get; set; }
+
+    public decimal Amount { get; set; }
+
+    public PaymentMethod PaymentMethod { get; set; }
+
+    public DateTime PaymentDate { get; set; }
+
+    public string? Remarks { get; set; }
 
     public DateTime CreatedAt { get; set; }
 }
@@ -115,6 +149,8 @@ public class SalesInvoiceDetailDto
     public DateTime CreatedAt { get; set; }
 
     public List<SalesInvoiceItemResponseDto> Items { get; set; } = new();
+
+    public List<SalesInvoicePaymentResponseDto> Payments { get; set; } = new();
 }
 
 public class SalesInvoiceItemResponseDto

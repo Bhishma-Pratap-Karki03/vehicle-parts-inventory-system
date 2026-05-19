@@ -10,6 +10,10 @@ export type BackendPaymentStatus =
 
 export type SalesInvoicePaymentStatusLabel = 'Overdue' | 'Paid' | 'Partially Paid' | 'Unpaid'
 
+export type BackendPaymentMethod = 1 | 2 | 3 | 4 | 'Cash' | 'Card' | 'Credit' | 'OnlineTransfer'
+
+export type SalesInvoicePaymentMethodLabel = 'Cash' | 'Card' | 'Credit' | 'Online Transfer'
+
 export type SalesInvoicePaymentStatusFilter = 'all' | SalesInvoicePaymentStatusLabel
 
 export interface SalesInvoiceItemApiModel {
@@ -20,6 +24,15 @@ export interface SalesInvoiceItemApiModel {
   quantity: number
   pricePerUnit: number
   lineTotal: number
+}
+
+export interface SalesInvoicePaymentApiModel {
+  paymentId: number
+  amount: number
+  paymentMethod: BackendPaymentMethod
+  paymentDate: string
+  remarks?: null | string
+  createdAt: string
 }
 
 export interface SalesInvoiceListItemApiModel {
@@ -49,15 +62,21 @@ export interface SalesInvoiceDetailApiModel extends SalesInvoiceListItemApiModel
   vehicleModel: string
   remainingAmount: number
   items: SalesInvoiceItemApiModel[]
+  payments: SalesInvoicePaymentApiModel[]
 }
 
 export interface SalesInvoiceListItemRecord extends Omit<SalesInvoiceListItemApiModel, 'paymentStatus'> {
   paymentStatus: SalesInvoicePaymentStatusLabel
 }
 
-export interface SalesInvoiceDetailRecord extends Omit<SalesInvoiceDetailApiModel, 'items' | 'paymentStatus'> {
+export interface SalesInvoiceDetailRecord extends Omit<SalesInvoiceDetailApiModel, 'items' | 'paymentStatus' | 'payments'> {
   items: SalesInvoiceItemApiModel[]
+  payments: SalesInvoicePaymentRecord[]
   paymentStatus: SalesInvoicePaymentStatusLabel
+}
+
+export interface SalesInvoicePaymentRecord extends Omit<SalesInvoicePaymentApiModel, 'paymentMethod'> {
+  paymentMethod: SalesInvoicePaymentMethodLabel
 }
 
 export interface SalesInvoiceCustomerOption {
@@ -91,6 +110,7 @@ export interface SalesInvoiceFormValues {
   vehicleId: string
   discountAmount: string
   paidAmount: string
+  paymentMethod: SalesInvoicePaymentMethodLabel
   dueDate: string
   items: SalesInvoiceFormItemValues[]
 }
@@ -104,6 +124,7 @@ export interface CreateSalesInvoicePayload {
   customerId: string
   vehicleId: number
   paidAmount: number
+  paymentMethod: 1 | 2 | 3 | 4
   dueDate: null | string
   items: CreateSalesInvoiceItemPayload[]
 }
@@ -113,7 +134,21 @@ export interface SendSalesInvoiceEmailPayload {
   toEmail?: string
 }
 
+export interface AddSalesInvoicePaymentPayload {
+  amount: number
+  paymentMethod: 1 | 2 | 3 | 4
+  paymentDate: null | string
+  remarks?: string
+}
+
 export interface SalesInvoiceEmailFormValues {
   message: string
   toEmail: string
+}
+
+export interface SalesInvoicePaymentFormValues {
+  amount: string
+  paymentDate: string
+  paymentMethod: SalesInvoicePaymentMethodLabel
+  remarks: string
 }

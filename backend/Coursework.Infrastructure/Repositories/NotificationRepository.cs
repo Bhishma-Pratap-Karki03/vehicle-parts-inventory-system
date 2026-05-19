@@ -35,4 +35,36 @@ public class NotificationRepository(ApplicationDbContext context)
                 n.CreatedAt < endOfDay)
             .AnyAsync();
     }
+
+    public async Task<Dictionary<int, DateTime?>> GetLatestSentAtByEntityIdsAsync(
+        NotificationType notificationType,
+        string relatedEntityType,
+        IEnumerable<int> relatedEntityIds,
+        bool trackChanges = false)
+    {
+        var entityIdList = relatedEntityIds
+            .Distinct()
+            .ToList();
+
+        if (entityIdList.Count == 0)
+        {
+            return new Dictionary<int, DateTime?>();
+        }
+
+        return await FindByCondition(
+                n => n.NotificationType == notificationType &&
+                     n.RelatedEntityType == relatedEntityType &&
+                     n.RelatedEntityId.HasValue &&
+                     entityIdList.Contains(n.RelatedEntityId.Value),
+                trackChanges)
+            .GroupBy(n => n.RelatedEntityId!.Value)
+            .Select(group => new
+            {
+                RelatedEntityId = group.Key,
+                LatestSentAt = group.Max(item => item.SentAt ?? item.CreatedAt),
+            })
+            .ToDictionaryAsync(
+                item => item.RelatedEntityId,
+                item => (DateTime?)item.LatestSentAt);
+    }
 }

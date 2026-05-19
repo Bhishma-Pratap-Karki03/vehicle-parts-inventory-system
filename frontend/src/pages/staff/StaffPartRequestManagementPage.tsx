@@ -62,7 +62,7 @@ function SummaryCard({ card }: { card: SummaryCardDefinition }) {
   const tone = toneClasses(card.tone)
 
   return (
-    <article className={`rounded-[24px] border ${tone.border} bg-white p-5 shadow-[0_14px_34px_rgba(18,43,74,0.05)]`}>
+    <article className={`rounded-3xl border ${tone.border} bg-white p-5 shadow-[0_14px_34px_rgba(18,43,74,0.05)]`}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">
@@ -478,7 +478,7 @@ export default function StaffPartRequestManagementPage() {
         ) : (
           <>
             <div className="hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[1120px] text-left text-[13px]">
+              <table className="w-full min-w-280 text-left text-[13px]">
                 <thead className="bg-[#F2F7FC] text-[11px] uppercase tracking-[0.12em] text-[#6D8197]">
                   <tr>
                     <th className="px-6 py-4 font-semibold">Requested On</th>
@@ -635,7 +635,7 @@ export default function StaffPartRequestManagementPage() {
 
             <div className="grid gap-6 px-5 py-5 sm:px-6 lg:grid-cols-[1.25fr_0.95fr]">
               <section className="space-y-6">
-                <div className="rounded-[24px] border border-[#E4EBF3] bg-[#FBFDFF] p-5">
+                <div className="rounded-3xl border border-[#E4EBF3] bg-[#FBFDFF] p-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">Current status</p>
@@ -651,7 +651,7 @@ export default function StaffPartRequestManagementPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-[#E4EBF3] bg-white p-5">
+                <div className="rounded-3xl border border-[#E4EBF3] bg-white p-5">
                   <h3 className="text-[18px] font-semibold text-[#0C2544] [font-family:var(--font-display)]">Customer and vehicle</h3>
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     <DetailBlock label="Customer" value={selectedRequest.customerName} />
@@ -663,7 +663,7 @@ export default function StaffPartRequestManagementPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-[#E4EBF3] bg-white p-5">
+                <div className="rounded-3xl border border-[#E4EBF3] bg-white p-5">
                   <h3 className="text-[18px] font-semibold text-[#0C2544] [font-family:var(--font-display)]">Requested part details</h3>
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     <DetailBlock label="Part Name" value={selectedRequest.partName} />
@@ -676,7 +676,7 @@ export default function StaffPartRequestManagementPage() {
               </section>
 
               <section className="space-y-6">
-                <div className="rounded-[24px] border border-[#E4EBF3] bg-white p-5">
+                <div className="rounded-3xl border border-[#E4EBF3] bg-white p-5">
                   <h3 className="text-[18px] font-semibold text-[#0C2544] [font-family:var(--font-display)]">Staff action</h3>
                   <p className="mt-2 text-[14px] leading-6 text-[#597189]">
                     Review the request, mark final availability, and leave a clear response for the customer.
@@ -686,7 +686,7 @@ export default function StaffPartRequestManagementPage() {
                     <label className="block">
                       <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">Update status</span>
                       <select
-                        className="mt-2 h-12 w-full rounded-[16px] border border-[#D7E2ED] bg-[#F8FBFE] px-4 text-[14px] font-medium text-[#123052] outline-none transition focus:border-[#15558D] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                        className="mt-2 h-12 w-full rounded-2xl border border-[#D7E2ED] bg-[#F8FBFE] px-4 text-[14px] font-medium text-[#123052] outline-none transition focus:border-[#15558D] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
                         disabled={!canSave || isSaving}
                         onChange={(event) => setSelectedStatus(event.target.value as ManagedPartRequestStatus)}
                         value={selectedStatus}
@@ -706,7 +706,7 @@ export default function StaffPartRequestManagementPage() {
                     <label className="block">
                       <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">Staff response</span>
                       <textarea
-                        className="mt-2 h-36 w-full rounded-[20px] border border-[#D7E2ED] bg-[#F8FBFE] px-4 py-3 text-[14px] leading-6 text-[#123052] outline-none transition focus:border-[#15558D] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                        className="mt-2 h-36 w-full rounded-2xl border border-[#D7E2ED] bg-[#F8FBFE] px-4 py-3 text-[14px] leading-6 text-[#123052] outline-none transition focus:border-[#15558D] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
                         disabled={!canSave || isSaving}
                         onChange={(event) => setResponseNotes(event.target.value)}
                         placeholder="Add supplier feedback, estimated next steps, or an availability explanation for the customer..."
@@ -737,7 +737,7 @@ export default function StaffPartRequestManagementPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-[#E4EBF3] bg-[#FBFDFF] p-5">
+                <div className="rounded-3xl border border-[#E4EBF3] bg-[#FBFDFF] p-5">
                   <h3 className="text-[18px] font-semibold text-[#0C2544] [font-family:var(--font-display)]">Timeline</h3>
                   <div className="mt-5 grid gap-4">
                     <DetailBlock label="Requested On" value={formatDateTime(selectedRequest.requestedAt)} />

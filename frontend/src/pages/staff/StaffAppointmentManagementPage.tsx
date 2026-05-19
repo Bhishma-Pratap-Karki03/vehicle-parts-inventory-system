@@ -63,7 +63,7 @@ function SummaryCard({ card }: { card: SummaryCardDefinition }) {
   const tone = toneClasses(card.tone)
 
   return (
-    <article className={`rounded-[24px] border ${tone.border} bg-white p-5 shadow-[0_14px_34px_rgba(18,43,74,0.05)]`}>
+    <article className={`rounded-3xl border ${tone.border} bg-white p-5 shadow-[0_14px_34px_rgba(18,43,74,0.05)]`}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">
@@ -187,6 +187,17 @@ function getPreferredManagedStatus(status: string): ManagedAppointmentStatus {
   return 'Confirmed'
 }
 
+function buildDefaultServiceDescription(appointment: StaffAppointmentRecord) {
+  const serviceType = appointment.serviceType.trim()
+  const issueDescription = appointment.issueDescription.trim()
+
+  if (!issueDescription) {
+    return serviceType
+  }
+
+  return `${serviceType} - ${issueDescription}`
+}
+
 export default function StaffAppointmentManagementPage() {
   const [appointments, setAppointments] = useState<StaffAppointmentRecord[]>([])
   const [errorMessage, setErrorMessage] = useState<null | string>(null)
@@ -206,6 +217,9 @@ export default function StaffAppointmentManagementPage() {
   const [staffRemarks, setStaffRemarks] = useState('')
   const [submittedSearch, setSubmittedSearch] = useState('')
   const [submittedStatus, setSubmittedStatus] = useState('')
+  const [serviceDescription, setServiceDescription] = useState('')
+  const [servicePartsChangedOrSuggested, setServicePartsChangedOrSuggested] = useState('')
+  const [serviceLaborCost, setServiceLaborCost] = useState('')
   const [totalPages, setTotalPages] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
 
@@ -359,6 +373,9 @@ export default function StaffAppointmentManagementPage() {
     setSelectedAppointment(appointment)
     setSelectedStatus(getPreferredManagedStatus(appointment.status))
     setStaffRemarks(appointment.adminRemarks ?? '')
+    setServiceDescription(appointment.serviceRecord?.serviceDescription ?? buildDefaultServiceDescription(appointment))
+    setServicePartsChangedOrSuggested(appointment.serviceRecord?.partsChangedOrSuggested ?? '')
+    setServiceLaborCost(appointment.serviceRecord ? String(appointment.serviceRecord.laborCost) : '')
   }
 
   async function saveStatusUpdate() {
@@ -369,6 +386,37 @@ export default function StaffAppointmentManagementPage() {
     const payload: UpdateAppointmentStatusRequest = {
       adminRemarks: staffRemarks.trim() ? staffRemarks.trim() : null,
       status: selectedStatus,
+    }
+
+    if (selectedStatus === 'Completed') {
+      const trimmedServiceDescription = serviceDescription.trim()
+      const trimmedPartsChangedOrSuggested = servicePartsChangedOrSuggested.trim()
+      const trimmedLaborCost = serviceLaborCost.trim()
+      const normalizedLaborCost = Number.parseFloat(serviceLaborCost || '0')
+
+      if (!trimmedServiceDescription) {
+        toast.error('Service description is required before marking the appointment as completed.')
+        return
+      }
+
+      if (!trimmedPartsChangedOrSuggested) {
+        toast.error('Please record the parts changed or suggested before completing the appointment.')
+        return
+      }
+
+      if (!trimmedLaborCost) {
+        toast.error('Please enter the labor cost before completing the appointment.')
+        return
+      }
+
+      if (Number.isNaN(normalizedLaborCost) || normalizedLaborCost < 0) {
+        toast.error('Labor cost must be zero or greater.')
+        return
+      }
+
+      payload.serviceDescription = trimmedServiceDescription
+      payload.partsChangedOrSuggested = trimmedPartsChangedOrSuggested
+      payload.laborCost = normalizedLaborCost
     }
 
     try {
@@ -395,6 +443,9 @@ export default function StaffAppointmentManagementPage() {
       setSelectedAppointment(response.data)
       setSelectedStatus(getPreferredManagedStatus(response.data.status))
       setStaffRemarks(response.data.adminRemarks ?? '')
+      setServiceDescription(response.data.serviceRecord?.serviceDescription ?? buildDefaultServiceDescription(response.data))
+      setServicePartsChangedOrSuggested(response.data.serviceRecord?.partsChangedOrSuggested ?? '')
+      setServiceLaborCost(response.data.serviceRecord ? String(response.data.serviceRecord.laborCost) : '')
       toast.success(response.message || 'Appointment updated successfully.')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not update the appointment status.')
@@ -406,6 +457,7 @@ export default function StaffAppointmentManagementPage() {
   const selectedOptions = selectedAppointment ? getStatusOptions(selectedAppointment.status) : []
   const canSave = selectedAppointment !== null && selectedOptions.length > 0
   const showReviewPanel = selectedAppointment?.status === 'Completed'
+  const shouldShowServiceRecordFields = selectedAppointment !== null && selectedStatus === 'Completed'
 
   return (
     <main className="mx-auto w-full max-w-380 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
@@ -535,7 +587,7 @@ export default function StaffAppointmentManagementPage() {
         ) : (
           <>
             <div className="hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[1120px] text-left text-[13px]">
+              <table className="w-full min-w-280 text-left text-[13px]">
                 <thead className="bg-[#F2F7FC] text-[11px] uppercase tracking-[0.12em] text-[#6D8197]">
                   <tr>
                     <th className="px-6 py-4 font-semibold">Schedule</th>
@@ -691,7 +743,7 @@ export default function StaffAppointmentManagementPage() {
 
             <div className="grid gap-6 px-5 py-5 sm:px-6 lg:grid-cols-[1.25fr_0.95fr]">
               <section className="space-y-6">
-                <div className="rounded-[24px] border border-[#E4EBF3] bg-[#FBFDFF] p-5">
+                <div className="rounded-3xl border border-[#E4EBF3] bg-[#FBFDFF] p-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">Current status</p>
@@ -707,7 +759,7 @@ export default function StaffAppointmentManagementPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-[#E4EBF3] bg-white p-5">
+                <div className="rounded-3xl border border-[#E4EBF3] bg-white p-5">
                   <h3 className="text-[18px] font-semibold text-[#0C2544] [font-family:var(--font-display)]">Customer and vehicle</h3>
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     <DetailBlock label="Customer" value={selectedAppointment.customerName} />
@@ -719,7 +771,7 @@ export default function StaffAppointmentManagementPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-[#E4EBF3] bg-white p-5">
+                <div className="rounded-3xl border border-[#E4EBF3] bg-white p-5">
                   <h3 className="text-[18px] font-semibold text-[#0C2544] [font-family:var(--font-display)]">Customer issue description</h3>
                   <p className="mt-4 rounded-[20px] bg-[#F6FAFD] px-4 py-4 text-[14px] leading-7 text-[#52677F]">
                     {selectedAppointment.issueDescription}
@@ -727,7 +779,7 @@ export default function StaffAppointmentManagementPage() {
                 </div>
 
                 {showReviewPanel ? (
-                  <div className="rounded-[24px] border border-[#D9E8F6] bg-[#F7FBFF] p-5">
+                  <div className="rounded-3xl border border-[#D9E8F6] bg-[#F7FBFF] p-5">
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <h3 className="text-[18px] font-semibold text-[#0C2544] [font-family:var(--font-display)]">Submitted customer review</h3>
@@ -779,7 +831,7 @@ export default function StaffAppointmentManagementPage() {
               </section>
 
               <section className="space-y-6">
-                <div className="rounded-[24px] border border-[#E4EBF3] bg-white p-5">
+                <div className="rounded-3xl border border-[#E4EBF3] bg-white p-5">
                   <h3 className="text-[18px] font-semibold text-[#0C2544] [font-family:var(--font-display)]">Staff action</h3>
                   <p className="mt-2 text-[14px] leading-6 text-[#597189]">
                     Confirm the booking, close a finished service, or reject the request with a clear note.
@@ -789,7 +841,7 @@ export default function StaffAppointmentManagementPage() {
                     <label className="block">
                       <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">Update status</span>
                       <select
-                        className="mt-2 h-12 w-full rounded-[16px] border border-[#D7E2ED] bg-[#F8FBFE] px-4 text-[14px] font-medium text-[#123052] outline-none transition focus:border-[#15558D] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                        className="mt-2 h-12 w-full rounded-2xl border border-[#D7E2ED] bg-[#F8FBFE] px-4 text-[14px] font-medium text-[#123052] outline-none transition focus:border-[#15558D] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
                         disabled={!canSave || isSaving}
                         onChange={(event) => setSelectedStatus(event.target.value as ManagedAppointmentStatus)}
                         value={selectedStatus}
@@ -816,6 +868,58 @@ export default function StaffAppointmentManagementPage() {
                         value={staffRemarks}
                       />
                     </label>
+
+                    {shouldShowServiceRecordFields ? (
+                      <div className="space-y-4 rounded-[20px] border border-[#D9E8F6] bg-[#F7FBFF] px-4 py-4">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">Service record details</p>
+                          <p className="mt-2 text-[13px] leading-6 text-[#597189]">
+                            Complete the service notes that should be saved to the customer&apos;s history when this appointment is closed.
+                          </p>
+                        </div>
+
+                        <label className="block">
+                          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">Service description</span>
+                          <textarea
+                            className="mt-2 h-28 w-full rounded-[20px] border border-[#D7E2ED] bg-white px-4 py-3 text-[14px] leading-6 text-[#123052] outline-none transition focus:border-[#15558D] disabled:cursor-not-allowed disabled:opacity-60"
+                            disabled={isSaving}
+                            onChange={(event) => setServiceDescription(event.target.value)}
+                            placeholder="Summarize the work completed for this appointment..."
+                            value={serviceDescription}
+                          />
+                        </label>
+
+                        <label className="block">
+                          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">Parts changed or suggested</span>
+                          <textarea
+                            className="mt-2 h-24 w-full rounded-[20px] border border-[#D7E2ED] bg-white px-4 py-3 text-[14px] leading-6 text-[#123052] outline-none transition focus:border-[#15558D] disabled:cursor-not-allowed disabled:opacity-60"
+                            disabled={isSaving}
+                            onChange={(event) => setServicePartsChangedOrSuggested(event.target.value)}
+                            placeholder="List replaced parts, recommended follow-up items, or leave blank if none..."
+                            value={servicePartsChangedOrSuggested}
+                          />
+                        </label>
+
+                        <label className="block">
+                          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">Labor cost</span>
+                          <input
+                            className="mt-2 h-12 w-full rounded-2xl border border-[#D7E2ED] bg-white px-4 text-[14px] font-medium text-[#123052] outline-none transition focus:border-[#15558D] disabled:cursor-not-allowed disabled:opacity-60"
+                            disabled={isSaving}
+                            min="0"
+                            onChange={(event) => setServiceLaborCost(event.target.value)}
+                            step="0.01"
+                            type="number"
+                            value={serviceLaborCost}
+                          />
+                        </label>
+
+                        {selectedAppointment.serviceRecord ? (
+                          <p className="text-[12px] text-[#6A8198]">
+                            Existing record saved on {formatDateTime(selectedAppointment.serviceRecord.serviceDate)} will be updated when you save this completion.
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-3">
@@ -840,7 +944,7 @@ export default function StaffAppointmentManagementPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-[#E4EBF3] bg-[#FBFDFF] p-5">
+                <div className="rounded-3xl border border-[#E4EBF3] bg-[#FBFDFF] p-5">
                   <h3 className="text-[18px] font-semibold text-[#0C2544] [font-family:var(--font-display)]">Timeline</h3>
                   <div className="mt-5 grid gap-4">
                     <DetailBlock label="Requested On" value={formatDateTime(selectedAppointment.createdAt || selectedAppointment.appointmentDate)} />
@@ -856,4 +960,3 @@ export default function StaffAppointmentManagementPage() {
     </main>
   )
 }
-

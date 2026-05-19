@@ -64,7 +64,9 @@ public class AppointmentsController : ControllerBase
 
     [Authorize(Roles = "Staff")]
     [HttpPatch("{id}/status")]
-    public async Task<ActionResult<ApiResponse<StaffAppointmentResponseDto>>> UpdateAppointmentStatus(int id, UpdateAppointmentStatusDto dto)
+    public async Task<ActionResult<ApiResponse<StaffAppointmentResponseDto>>> UpdateAppointmentStatus(
+        int id,
+        [FromBody] UpdateAppointmentStatusDto dto)
     {
         var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 

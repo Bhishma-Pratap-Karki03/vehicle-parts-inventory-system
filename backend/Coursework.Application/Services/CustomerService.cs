@@ -669,51 +669,9 @@ public class CustomerService : ICustomerService
             StaffName = record.Staff?.FullName ?? "Unknown Staff"
         }).ToList();
 
-        var serviceRecordAppointmentIds = records
-            .Select(record => record.AppointmentId)
-            .ToHashSet();
-
-        var completedAppointmentsWithoutServiceRecord = await _appointmentRepository
-            .FindByCondition(a =>
-                a.CustomerId == customerId &&
-                a.Status == Coursework.Domain.Enums.AppointmentStatus.Completed &&
-                !serviceRecordAppointmentIds.Contains(a.AppointmentId))
-            .Include(a => a.Vehicle)
-            .OrderByDescending(a => a.AppointmentDate)
-            .ToListAsync();
-
-        serviceHistory.AddRange(completedAppointmentsWithoutServiceRecord.Select(appointment =>
-            new CustomerServiceHistoryItemDto
-            {
-                ServiceRecordId = -appointment.AppointmentId,
-                ServiceDate = appointment.AppointmentDate,
-                VehicleNumber = appointment.Vehicle?.VehicleNumber ?? string.Empty,
-                VehicleBrandModel = appointment.Vehicle == null
-                    ? string.Empty
-                    : $"{appointment.Vehicle.Brand} {appointment.Vehicle.Model}".Trim(),
-                ServiceDescription = BuildAppointmentServiceDescription(appointment),
-                PartsChangedOrSuggested = appointment.AdminRemarks,
-                LaborCost = 0m,
-                Status = Coursework.Domain.Enums.ServiceStatus.Completed,
-                StaffName = "Recorded from completed appointment"
-            }));
-
         return serviceHistory
             .OrderByDescending(record => record.ServiceDate)
             .ThenByDescending(record => record.ServiceRecordId)
             .ToList();
-    }
-
-    private static string BuildAppointmentServiceDescription(Appointment appointment)
-    {
-        var serviceType = appointment.ServiceType.Trim();
-        var issueDescription = appointment.IssueDescription.Trim();
-
-        if (string.IsNullOrWhiteSpace(issueDescription))
-        {
-            return serviceType;
-        }
-
-        return $"{serviceType} - {issueDescription}";
     }
 }

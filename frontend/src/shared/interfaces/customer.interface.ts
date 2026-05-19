@@ -44,6 +44,14 @@ export interface CustomerVehicleInput {
   mileage: number
 }
 
+export interface CustomerSearchResult {
+  id: string
+  fullName: string
+  email: string
+  phoneNumber: string
+  vehicleNumber: string
+}
+
 export interface CustomerPurchaseHistoryLine {
   partName: string
   partNumber: string

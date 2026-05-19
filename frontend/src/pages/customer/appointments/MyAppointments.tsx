@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../shared/auth/useAuth";
@@ -50,49 +50,52 @@ function MyAppointments() {
     const [hasPreviousPage, setHasPreviousPage] = useState(false);
     const [hasNextPage, setHasNextPage] = useState(false);
 
+    const loadAppointments = useCallback(
+        async (page: number) => {
+            if (!user?.userId) {
+                return;
+            }
+
+            try {
+                setIsLoading(true);
+
+                const result = await apiRequest<PagedResult<Appointment>>(
+                    `/api/appointments/customer/${user.userId}?pageNumber=${page}&pageSize=${pageSize}`
+                );
+
+                if (!result.success || !result.data) {
+                    throw new Error(getApiErrorMessage(result));
+                }
+
+                const pagedData = result.data;
+
+                setAppointments(pagedData.items ?? []);
+                setTotalRecords(pagedData.totalRecords);
+                setTotalPages(pagedData.totalPages);
+                setHasPreviousPage(pagedData.hasPreviousPage);
+                setHasNextPage(pagedData.hasNextPage);
+            } catch (error) {
+                console.error(error);
+                toast.error(
+                    error instanceof Error
+                        ? error.message
+                        : "Could not load appointments.",
+                    { toastId: "load-appointments-error" }
+                );
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [user?.userId, pageSize]
+    );
+
     useEffect(() => {
         if (!user?.userId) {
             return;
         }
 
         void loadAppointments(pageNumber);
-    }, [pageNumber, user?.userId]);
-
-    const loadAppointments = async (page: number) => {
-        if (!user?.userId) {
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-
-            const result = await apiRequest<PagedResult<Appointment>>(
-                `/api/appointments/customer/${user.userId}?pageNumber=${page}&pageSize=${pageSize}`
-            );
-
-            if (!result.success || !result.data) {
-                throw new Error(getApiErrorMessage(result));
-            }
-
-            const pagedData = result.data;
-
-            setAppointments(pagedData.items ?? []);
-            setTotalRecords(pagedData.totalRecords);
-            setTotalPages(pagedData.totalPages);
-            setHasPreviousPage(pagedData.hasPreviousPage);
-            setHasNextPage(pagedData.hasNextPage);
-        } catch (error) {
-            console.error(error);
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : "Could not load appointments.",
-                { toastId: "load-appointments-error" }
-            );
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    }, [pageNumber, user?.userId, loadAppointments]);
 
     const handleCancelAppointment = async () => {
         if (!appointmentToCancel) return;

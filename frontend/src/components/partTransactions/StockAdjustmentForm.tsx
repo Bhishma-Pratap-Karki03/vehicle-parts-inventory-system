@@ -293,20 +293,20 @@ function StockAdjustmentForm({
               </div>
 
               <div className="space-y-4 p-5">
-                <div className="rounded-[24px] border border-[#DCE7F2] bg-[#F8FBFE] p-4">
+                <div className="rounded-3xl border border-[#DCE7F2] bg-[#F8FBFE] p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Selected Part</p>
                   <p className="mt-2 text-[20px] font-semibold text-[#112B49]">{selectedPart?.partName || 'Choose a part'}</p>
                   <p className="mt-1 text-[13px] text-[#627A93]">{selectedPart ? `${selectedPart.partNumber} • ${selectedPart.vendorName}` : 'Part details appear here'}</p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-                  <div className="rounded-[24px] border border-[#E3EAF2] bg-[#FBFDFF] p-4">
+                  <div className="rounded-3xl border border-[#E3EAF2] bg-[#FBFDFF] p-4">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Quantity Changed</p>
                     <p className={`mt-3 text-[28px] font-semibold leading-none [font-family:var(--font-display)] ${adjustmentPreview >= 0 ? 'text-[#16784A]' : 'text-[#A05A11]'}`}>
                       {formatQuantityChanged(adjustmentPreview)}
                     </p>
                   </div>
-                  <div className="rounded-[24px] border border-[#E3EAF2] bg-[#FBFDFF] p-4">
+                  <div className="rounded-3xl border border-[#E3EAF2] bg-[#FBFDFF] p-4">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Resulting Stock</p>
                     <p className="mt-3 text-[28px] font-semibold leading-none text-[#123E69] [font-family:var(--font-display)]">
                       {selectedPart ? `${resultingStock} units` : '—'}
@@ -314,7 +314,7 @@ function StockAdjustmentForm({
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-[#E3EAF2] bg-[#FBFDFF] p-4 text-[14px] leading-7 text-[#4D6580]">
+                <div className="rounded-3xl border border-[#E3EAF2] bg-[#FBFDFF] p-4 text-[14px] leading-7 text-[#4D6580]">
                   <p><span className="font-semibold text-[#123052]">Stock before:</span> {selectedPart ? `${selectedPart.stockQuantity} units` : '—'}</p>
                   <p className="mt-2"><span className="font-semibold text-[#123052]">Cost at record:</span> {selectedPart ? formatRupees(selectedPart.costPricePerUnit) : '—'}</p>
                   <p className="mt-2"><span className="font-semibold text-[#123052]">Remarks preview:</span> {watchedRemarks?.trim() ? watchedRemarks.trim() : 'Add a short explanation for the correction.'}</p>

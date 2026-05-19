@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import {
@@ -104,11 +104,7 @@ function CustomerDetailsPage() {
   const [openingInvoiceId, setOpeningInvoiceId] = useState<null | number>(null)
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<null | number>(null)
 
-  useEffect(() => {
-    void fetchCustomer()
-  }, [id])
-
-  const fetchCustomer = async () => {
+  const fetchCustomer = useCallback(async () => {
     try {
       setIsLoading(true)
 
@@ -118,8 +114,7 @@ function CustomerDetailsPage() {
 
       if (!result.success || !result.data) {
         setErrorMessage(
-          getApiErrorMessage(result) ||
-            'Customer not found.',
+          getApiErrorMessage(result) || 'Customer not found.',
         )
 
         setCustomer(null)
@@ -129,13 +124,15 @@ function CustomerDetailsPage() {
       setCustomer(result.data)
       setErrorMessage('')
     } catch {
-      setErrorMessage(
-        'Failed to load customer details.',
-      )
+      setErrorMessage('Failed to load customer details.')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    void fetchCustomer()
+  }, [fetchCustomer])
 
   async function handleOpenInvoicePdf(
     salesInvoiceId: number,
@@ -507,7 +504,7 @@ function CustomerDetailsPage() {
           <div className="mt-8 grid gap-4 md:grid-cols-4">
             {summaryCards.map((card) => (
               <div
-                className="rounded-[24px] border border-[#E3ECF5] bg-[#FBFDFF] p-5"
+                className="rounded-3xl border border-[#E3ECF5] bg-[#FBFDFF] p-5"
                 key={card.label}
               >
                 <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6D8197]">
@@ -543,7 +540,7 @@ function CustomerDetailsPage() {
               </div>
 
               {customer.purchaseHistory.length === 0 ? (
-                <div className="mt-8 rounded-[24px] border border-dashed border-[#D4E0EC] bg-white px-6 py-12 text-center">
+                <div className="mt-8 rounded-3xl border border-dashed border-[#D4E0EC] bg-white px-6 py-12 text-center">
                   <h4 className="text-[24px] font-semibold text-[#17324F]">
                     No purchase history
                   </h4>
@@ -562,7 +559,7 @@ function CustomerDetailsPage() {
 
                     return (
                       <div
-                        className="rounded-[24px] border border-[#E3ECF5] bg-white p-5"
+                        className="rounded-3xl border border-[#E3ECF5] bg-white p-5"
                         key={invoice.salesInvoiceId}
                       >
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -776,7 +773,7 @@ function CustomerDetailsPage() {
               </div>
 
               {customer.serviceHistory.length === 0 ? (
-                <div className="mt-8 rounded-[24px] border border-dashed border-[#D4E0EC] bg-white px-6 py-12 text-center">
+                <div className="mt-8 rounded-3xl border border-dashed border-[#D4E0EC] bg-white px-6 py-12 text-center">
                   <h4 className="text-[24px] font-semibold text-[#17324F]">
                     No service history
                   </h4>
@@ -791,7 +788,7 @@ function CustomerDetailsPage() {
                 <div className="mt-8 space-y-5">
                   {customer.serviceHistory.map((record) => (
                     <div
-                      className="rounded-[24px] border border-[#E3ECF5] bg-white p-5"
+                      className="rounded-3xl border border-[#E3ECF5] bg-white p-5"
                       key={record.serviceRecordId}
                     >
                       <div className="flex flex-wrap items-start justify-between gap-3">

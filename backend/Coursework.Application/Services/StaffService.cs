@@ -86,7 +86,7 @@ public class StaffService : IStaffService
         {
             var roles = await _userManager.GetRolesAsync(user);
 
-            if (roles.Contains("Admin") || roles.Contains("Staff"))
+            if (roles.Contains(StaffRole))
             {
                 staffList.Add(new
                 {

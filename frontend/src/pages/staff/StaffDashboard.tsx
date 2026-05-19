@@ -76,7 +76,7 @@ function SummaryCard({ card }: { card: SummaryCardDefinition }) {
   const tone = toneClasses(card.tone)
 
   return (
-    <article className={`rounded-[24px] border ${tone.border} bg-white p-5 shadow-[0_14px_34px_rgba(18,43,74,0.05)]`}>
+    <article className={`rounded-3xl border ${tone.border} bg-white p-5 shadow-[0_14px_34px_rgba(18,43,74,0.05)]`}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">
@@ -165,7 +165,7 @@ function LoadingGrid() {
       {Array.from({ length: 6 }).map((_, index) => (
         <div
           key={index}
-          className="h-42 animate-pulse rounded-[24px] border border-[#E5EDF5] bg-[linear-gradient(135deg,#FFFFFF_0%,#F6FAFD_100%)]"
+          className="h-42 animate-pulse rounded-3xl border border-[#E5EDF5] bg-[linear-gradient(135deg,#FFFFFF_0%,#F6FAFD_100%)]"
         />
       ))}
     </div>
@@ -449,7 +449,7 @@ export default function StaffDashboard() {
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[420px]">
+            <div className="grid gap-3 sm:grid-cols-2 xl:min-w-105">
               <div className="rounded-[22px] border border-[#DCE5EF] bg-white/90 p-4 shadow-[0_12px_28px_rgba(18,43,74,0.05)]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6D8197]">Today&apos;s Focus</p>
                 <p className="mt-3 text-[20px] font-semibold text-[#123052] [font-family:var(--font-display)]">

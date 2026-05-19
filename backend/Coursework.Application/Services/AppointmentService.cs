@@ -281,6 +281,42 @@ public class AppointmentService : IAppointmentService
             })
             .ToListAsync();
 
+        var appointmentIds = appointments
+            .Select(a => a.AppointmentId)
+            .ToList();
+
+        if (appointmentIds.Count > 0)
+        {
+            var serviceRecords = await _serviceRecordRepository
+                .FindByCondition(s => appointmentIds.Contains(s.AppointmentId))
+                .Select(s => new
+                {
+                    s.AppointmentId,
+                    Dto = new StaffAppointmentServiceRecordDto
+                    {
+                        ServiceRecordId = s.ServiceRecordId,
+                        ServiceDate = s.ServiceDate,
+                        ServiceDescription = s.ServiceDescription,
+                        PartsChangedOrSuggested = s.PartsChangedOrSuggested,
+                        LaborCost = s.LaborCost,
+                        Status = s.Status.ToString(),
+                    }
+                })
+                .ToListAsync();
+
+            var serviceRecordByAppointmentId = serviceRecords.ToDictionary(
+                item => item.AppointmentId,
+                item => item.Dto);
+
+            foreach (var appointmentDto in appointments)
+            {
+                if (serviceRecordByAppointmentId.TryGetValue(appointmentDto.AppointmentId, out var serviceRecordDto))
+                {
+                    appointmentDto.ServiceRecord = serviceRecordDto;
+                }
+            }
+        }
+
         var pagedResult = PagedResult<StaffAppointmentResponseDto>.Create(
             appointments,
             pageNumber,
@@ -389,6 +425,33 @@ public class AppointmentService : IAppointmentService
 
         if (nextStatus == AppointmentStatus.Completed)
         {
+            var trimmedServiceDescription = dto.ServiceDescription?.Trim();
+
+            if (string.IsNullOrWhiteSpace(trimmedServiceDescription))
+            {
+                return ApiResponse<StaffAppointmentResponseDto>.FailureResponse(
+                    "Service description is required when completing an appointment.",
+                    400);
+            }
+
+            if (!dto.LaborCost.HasValue || dto.LaborCost.Value < 0)
+            {
+                return ApiResponse<StaffAppointmentResponseDto>.FailureResponse(
+                    "Labor cost must be zero or greater when completing an appointment.",
+                    400);
+            }
+
+            var trimmedPartsChangedOrSuggested = string.IsNullOrWhiteSpace(dto.PartsChangedOrSuggested)
+                ? null
+                : dto.PartsChangedOrSuggested.Trim();
+
+            if (string.IsNullOrWhiteSpace(trimmedPartsChangedOrSuggested))
+            {
+                return ApiResponse<StaffAppointmentResponseDto>.FailureResponse(
+                    "Parts changed or suggested is required when completing an appointment.",
+                    400);
+            }
+
             var existingServiceRecord = await _serviceRecordRepository
                 .FindByCondition(s => s.AppointmentId == appointment.AppointmentId, trackChanges: true)
                 .FirstOrDefaultAsync();
@@ -402,9 +465,9 @@ public class AppointmentService : IAppointmentService
                     StaffId = staffId,
                     VehicleId = appointment.VehicleId,
                     ServiceDate = DateTime.UtcNow,
-                    ServiceDescription = BuildServiceDescription(appointment),
-                    PartsChangedOrSuggested = appointment.AdminRemarks,
-                    LaborCost = 0m,
+                    ServiceDescription = trimmedServiceDescription,
+                    PartsChangedOrSuggested = trimmedPartsChangedOrSuggested,
+                    LaborCost = dto.LaborCost.Value,
                     Status = ServiceStatus.Completed,
                     CreatedAt = DateTime.UtcNow
                 });
@@ -413,16 +476,20 @@ public class AppointmentService : IAppointmentService
             {
                 existingServiceRecord.StaffId = staffId;
                 existingServiceRecord.ServiceDate = DateTime.UtcNow;
-                existingServiceRecord.ServiceDescription = BuildServiceDescription(appointment);
-                existingServiceRecord.PartsChangedOrSuggested = appointment.AdminRemarks;
+                existingServiceRecord.ServiceDescription = trimmedServiceDescription;
+                existingServiceRecord.PartsChangedOrSuggested = trimmedPartsChangedOrSuggested;
+                existingServiceRecord.LaborCost = dto.LaborCost.Value;
                 existingServiceRecord.Status = ServiceStatus.Completed;
                 existingServiceRecord.UpdatedAt = DateTime.UtcNow;
+                _serviceRecordRepository.Update(existingServiceRecord);
             }
+
+            await _serviceRecordRepository.SaveChangesAsync();
         }
 
         await _appointmentRepository.SaveChangesAsync();
 
-        var response = MapStaffAppointmentToDto(appointment);
+        var response = await MapStaffAppointmentToDtoAsync(appointment);
 
         return ApiResponse<StaffAppointmentResponseDto>.SuccessResponse(
             response,
@@ -480,8 +547,21 @@ public class AppointmentService : IAppointmentService
         };
     }
 
-    private static StaffAppointmentResponseDto MapStaffAppointmentToDto(Appointment appointment)
+    private async Task<StaffAppointmentResponseDto> MapStaffAppointmentToDtoAsync(Appointment appointment)
     {
+        var serviceRecord = await _serviceRecordRepository
+            .FindByCondition(s => s.AppointmentId == appointment.AppointmentId)
+            .Select(s => new StaffAppointmentServiceRecordDto
+            {
+                ServiceRecordId = s.ServiceRecordId,
+                ServiceDate = s.ServiceDate,
+                ServiceDescription = s.ServiceDescription,
+                PartsChangedOrSuggested = s.PartsChangedOrSuggested,
+                LaborCost = s.LaborCost,
+                Status = s.Status.ToString(),
+            })
+            .FirstOrDefaultAsync();
+
         return new StaffAppointmentResponseDto
         {
             AppointmentId = appointment.AppointmentId,
@@ -501,6 +581,7 @@ public class AppointmentService : IAppointmentService
             AdminRemarks = appointment.AdminRemarks,
             CreatedAt = appointment.CreatedAt,
             UpdatedAt = appointment.UpdatedAt,
+            ServiceRecord = serviceRecord,
         };
     }
 
@@ -517,18 +598,5 @@ public class AppointmentService : IAppointmentService
         }
 
         return DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
-    }
-
-    private static string BuildServiceDescription(Appointment appointment)
-    {
-        var serviceType = appointment.ServiceType.Trim();
-        var issueDescription = appointment.IssueDescription.Trim();
-
-        if (string.IsNullOrWhiteSpace(issueDescription))
-        {
-            return serviceType;
-        }
-
-        return $"{serviceType} - {issueDescription}";
     }
 }

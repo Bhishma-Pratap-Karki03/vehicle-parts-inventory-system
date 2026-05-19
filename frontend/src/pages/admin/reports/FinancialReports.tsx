@@ -482,7 +482,7 @@ function FinancialReports() {
                         </h3>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[760px] text-left table-fixed">
+                            <table className="w-full min-w-190t-left table-fixed">
                                 <thead>
                                     <tr className="border-b border-slate-100">
                                         <th className="w-[30%] px-4 py-4 text-[11px] text-[#505f76] uppercase tracking-wider font-bold">Part Name</th>

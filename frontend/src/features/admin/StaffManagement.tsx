@@ -134,7 +134,11 @@ export default function StaffManagement() {
                 console.log("Unexpected staff response format:", response);
             }
 
-            setStaff(staffList);
+            const normalizedStaffList = staffList.filter((member) =>
+                Array.isArray(member.roles) && member.roles.includes("Staff") && !member.roles.includes("Admin")
+            );
+
+            setStaff(normalizedStaffList);
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "Failed to load staff.");
             setStaff([]);

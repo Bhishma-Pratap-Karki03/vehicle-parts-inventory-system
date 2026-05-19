@@ -19,4 +19,15 @@ public class StaffAppointmentResponseDto
     public string? AdminRemarks { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public StaffAppointmentServiceRecordDto? ServiceRecord { get; set; }
+}
+
+public class StaffAppointmentServiceRecordDto
+{
+    public int ServiceRecordId { get; set; }
+    public DateTime ServiceDate { get; set; }
+    public string ServiceDescription { get; set; } = string.Empty;
+    public string? PartsChangedOrSuggested { get; set; }
+    public decimal LaborCost { get; set; }
+    public string Status { get; set; } = string.Empty;
 }

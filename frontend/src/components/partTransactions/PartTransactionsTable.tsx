@@ -103,7 +103,7 @@ function MobileTransactionCard({ transaction }: { transaction: PartTransactionRe
           Cost at transaction: <span className="font-semibold text-[#16314F]">{formatRupees(transaction.costPricePerUnit)}</span>
         </div>
         <Link
-          className="inline-flex h-9 min-w-[92px] items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#D7E2ED] bg-white px-4 text-[12px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
+          className="inline-flex h-9 min-w-23 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#D7E2ED] bg-white px-4 text-[12px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
           to={`/stock-transactions/${transaction.partTransactionId}`}
         >
           <span aria-hidden className="material-symbols-outlined inline-flex shrink-0 select-none items-center justify-center leading-none text-[18px] not-italic">
@@ -140,7 +140,7 @@ function PartTransactionsTable({ transactions, isLoading, errorMessage }: PartTr
       </div>
 
       <div className="hidden overflow-x-auto lg:block">
-        <table className="w-full min-w-320 border-collapse text-left">
+        <table className="w-full min-w-7xl border-collapse text-left">
           <thead>
             <tr className="border-b border-[#E2EAF2] bg-[#F7FAFC]">
               <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6B7D8F]">Part</th>
@@ -189,7 +189,7 @@ function PartTransactionsTable({ transactions, isLoading, errorMessage }: PartTr
                 <td className="px-6 py-5 align-middle">
                   <div className="flex justify-end">
                     <Link
-                      className="inline-flex h-9 min-w-[92px] items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#D7E2ED] bg-white px-4 text-[12px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
+                      className="inline-flex h-9 min-w-23 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#D7E2ED] bg-white px-4 text-[12px] font-semibold text-[#2E4C70] no-underline transition hover:bg-[#F7FBFE]"
                       to={`/stock-transactions/${transaction.partTransactionId}`}
                     >
                       <span aria-hidden className="material-symbols-outlined inline-flex shrink-0 select-none items-center justify-center leading-none text-[18px] not-italic">

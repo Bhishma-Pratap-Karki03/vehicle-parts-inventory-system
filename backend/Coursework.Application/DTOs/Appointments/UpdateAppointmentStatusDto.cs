@@ -10,4 +10,12 @@ public class UpdateAppointmentStatusDto
 
     [MaxLength(500)]
     public string? AdminRemarks { get; set; }
+
+    [MaxLength(500)]
+    public string? ServiceDescription { get; set; }
+
+    [MaxLength(500)]
+    public string? PartsChangedOrSuggested { get; set; }
+
+    public decimal? LaborCost { get; set; }
 }

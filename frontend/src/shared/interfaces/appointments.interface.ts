@@ -27,9 +27,22 @@ export interface StaffAppointmentRecord extends AppointmentRecord {
   customerEmail: string
   customerName: string
   customerPhoneNumber: string
+  serviceRecord?: null | StaffAppointmentServiceRecord
 }
 
 export interface UpdateAppointmentStatusRequest {
   adminRemarks?: null | string
+  laborCost?: number
+  partsChangedOrSuggested?: null | string
+  serviceDescription?: null | string
   status: 'Completed' | 'Confirmed' | 'Rejected'
+}
+
+export interface StaffAppointmentServiceRecord {
+  serviceRecordId: number
+  serviceDate: string
+  serviceDescription: string
+  partsChangedOrSuggested?: null | string
+  laborCost: number
+  status: string
 }

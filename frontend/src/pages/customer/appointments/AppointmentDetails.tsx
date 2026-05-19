@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../shared/auth/useAuth";
@@ -47,11 +47,23 @@ function AppointmentDetails() {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
 
-    useEffect(() => {
-        loadAppointmentDetails();
-    }, [id]);
+    const loadExistingReview = useCallback(async (appointmentId: number) => {
+        try {
+            const result = await apiRequest<Review>(
+                `/api/reviews/appointment/${appointmentId}`
+            );
 
-    const loadAppointmentDetails = async () => {
+            if (result.success && result.data) {
+                setExistingReview(result.data);
+                setRating(result.data.rating);
+                setReviewComment(result.data.comment);
+            }
+        } catch (error) {
+            console.error("No existing review found:", error);
+        }
+    }, []);
+
+    const loadAppointmentDetails = useCallback(async () => {
         if (!id) {
             toast.error("Appointment id is missing.");
             navigate("/appointments/my");
@@ -82,23 +94,11 @@ function AppointmentDetails() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [id, navigate, loadExistingReview]);
 
-    const loadExistingReview = async (appointmentId: number) => {
-        try {
-            const result = await apiRequest<Review>(
-                `/api/reviews/appointment/${appointmentId}`
-            );
-
-            if (result.success && result.data) {
-                setExistingReview(result.data);
-                setRating(result.data.rating);
-                setReviewComment(result.data.comment);
-            }
-        } catch (error) {
-            console.error("No existing review found:", error);
-        }
-    };
+    useEffect(() => {
+        loadAppointmentDetails();
+    }, [id, loadAppointmentDetails]);
 
     const handleSubmitReview = async () => {
         if (!appointment) return;

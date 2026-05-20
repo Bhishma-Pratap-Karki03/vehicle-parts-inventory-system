@@ -91,6 +91,4 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate();
 }
 
-await DevelopmentIdentitySeeder.SeedAsync(app.Services);
-
 app.Run();

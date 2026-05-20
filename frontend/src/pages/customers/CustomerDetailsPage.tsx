@@ -6,14 +6,13 @@ import {
   Car,
   ClipboardList,
 } from 'lucide-react'
-import backendUrl from '../../config'
 import type {
   CustomerPurchaseHistoryItem,
   PaymentStatusValue,
   ServiceStatusValue,
   StaffCustomerDetails,
 } from '../../shared/interfaces/customer.interface'
-import { apiRequest, getApiErrorMessage } from '../../shared/utils/api'
+import { apiRequest, apiRequestBlob, downloadBlob, getApiErrorMessage } from '../../shared/utils/api'
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString(undefined, {
@@ -167,47 +166,21 @@ function CustomerDetailsPage() {
     setDownloadingInvoiceId(invoice.salesInvoiceId)
 
     try {
-      const response = await fetch(
-        `${backendUrl}/api/sales-invoices/${invoice.salesInvoiceId}/download-pdf`,
+      const result = await apiRequestBlob(
+        `/api/sales-invoices/${invoice.salesInvoiceId}/download-pdf`,
       )
 
-      if (!response.ok) {
-        let message = `Request failed with status ${response.status}.`
-
-        try {
-          const result = (await response.json()) as {
-            errors?: string[]
-            message?: string
-          }
-
-          if (result.errors?.length) {
-            message = result.errors.join(' ')
-          } else if (result.message) {
-            message = result.message
-          }
-        } catch {
-          // ignore json parsing and keep generic message
-        }
-
-        throw new Error(message)
+      if (!result.success || !result.data) {
+        throw new Error(getApiErrorMessage(result))
       }
 
-      const pdfBlob = await response.blob()
-      const objectUrl =
-        window.URL.createObjectURL(pdfBlob)
-      const downloadLink =
-        document.createElement('a')
-
-      downloadLink.href = objectUrl
-      downloadLink.download = `${
-        invoice.invoiceNumber ||
-        `sales-invoice-${invoice.salesInvoiceId}`
-      }.pdf`
-
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      downloadLink.remove()
-      window.URL.revokeObjectURL(objectUrl)
+      downloadBlob(
+        result.data,
+        `${
+          invoice.invoiceNumber ||
+          `sales-invoice-${invoice.salesInvoiceId}`
+        }.pdf`,
+      )
     } catch (error) {
       toast.error(
         error instanceof Error

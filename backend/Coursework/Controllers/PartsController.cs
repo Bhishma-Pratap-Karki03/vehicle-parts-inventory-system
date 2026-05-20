@@ -1,13 +1,14 @@
 using Coursework.Application.DTOs.Parts;
 using Coursework.Application.Interfaces;
 using Coursework.Application.DTOs.Cloudinary;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coursework.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-// [Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Staff")]
 public class PartsController(IPartService partService) : ControllerBase
 {
     [HttpGet]
@@ -53,6 +54,7 @@ public class PartsController(IPartService partService) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreatePart([FromBody] CreatePartDto dto)
     {
         var response = await partService.CreateAsync(dto);
@@ -69,6 +71,7 @@ public class PartsController(IPartService partService) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdatePart(
         [FromRoute] int id,
         [FromBody] UpdatePartDto dto)
@@ -78,6 +81,7 @@ public class PartsController(IPartService partService) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeletePart([FromRoute] int id)
     {
         var response = await partService.DeleteAsync(id);
@@ -85,6 +89,7 @@ public class PartsController(IPartService partService) : ControllerBase
     }
 
     [HttpPost("{id:int}/image")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UploadPartImage(
         [FromRoute] int id,
         [FromForm] IFormFile image)
@@ -108,6 +113,7 @@ public class PartsController(IPartService partService) : ControllerBase
     }
 
     [HttpPatch("{id:int}/image")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ReplacePartImage(
         [FromRoute] int id,
         [FromForm] IFormFile image)
@@ -131,6 +137,7 @@ public class PartsController(IPartService partService) : ControllerBase
     }
 
     [HttpDelete("{id:int}/image")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeletePartImage([FromRoute] int id)
     {
         var response = await partService.DeleteImageAsync(id);

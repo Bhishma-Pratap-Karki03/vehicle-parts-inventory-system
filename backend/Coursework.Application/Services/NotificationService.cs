@@ -82,8 +82,8 @@ public class NotificationService : INotificationService
             }));
 
             var orderedNotifications = notifications
-                .OrderByDescending(notification => notification.NotificationType == NotificationType.CreditReminder.ToString())
-                .ThenBy(notification => notification.CreatedAt)
+                .OrderByDescending(notification => notification.CreatedAt)
+                .ThenByDescending(notification => notification.NotificationId)
                 .ToList();
 
             return ApiResponse<List<AdminNotificationDto>>.SuccessResponse(
@@ -130,8 +130,8 @@ public class NotificationService : INotificationService
                     HasInvoicePdf = !string.IsNullOrWhiteSpace(invoice.InvoicePdfPublicId),
                     LastReminderSentAt = latestSentLookup.GetValueOrDefault(invoice.SalesInvoiceId),
                 })
-                .OrderBy(item => item.DueDate ?? item.InvoiceDate)
-                .ThenBy(item => item.CustomerName)
+                .OrderByDescending(item => item.DueDate ?? item.InvoiceDate)
+                .ThenByDescending(item => item.SalesInvoiceId)
                 .ToList();
 
             return ApiResponse<List<OverdueCreditReminderDto>>.SuccessResponse(

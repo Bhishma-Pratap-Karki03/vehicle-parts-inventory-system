@@ -9,7 +9,7 @@ namespace Coursework.Controllers;
 [ApiController]
 [Route("api/admin/vendors")]
 [Authorize]
-//[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin")]
 public class VendorsController : ControllerBase
 {
     private readonly IVendorService _vendorService;

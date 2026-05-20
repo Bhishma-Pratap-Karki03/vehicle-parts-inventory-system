@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { User, Car } from 'lucide-react'
-import backendUrl from '../../config'
+import { apiRequest, getApiErrorMessage } from '../../shared/utils/api'
 
 function CustomerCreatePage() {
   const [formData, setFormData] = useState({
@@ -73,24 +73,16 @@ function CustomerCreatePage() {
     e.preventDefault()
 
     try {
-      const response = await fetch(
-        `${backendUrl}/api/Customers`,
+      const result = await apiRequest<boolean>(
+        '/api/customers',
         {
+          body: formData,
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
         },
       )
 
-      const result = await response.json()
-
       if (!result.success) {
-        toast.error(
-          result.message ||
-            'Failed to register customer.',
-        )
+        toast.error(getApiErrorMessage(result))
 
         return
       }

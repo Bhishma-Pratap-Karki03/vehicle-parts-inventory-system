@@ -1,6 +1,8 @@
 import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
-import { apiRequest } from "../../api/apiClient";
+import ConfirmationDialog from "../../components/parts/ConfirmationDialog";
 import type { Staff } from "../../types/staff";
+import { toast } from "react-toastify";
+import { apiRequest, getApiErrorMessage } from "../../shared/utils/api";
 
 type IconName = "users" | "shield" | "userPlus" | "mail" | "phone" | "map" | "key" | "search" | "edit" | "x";
 
@@ -89,9 +91,10 @@ function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: str
 export default function StaffManagement() {
     const [staff, setStaff] = useState<Staff[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [message, setMessage] = useState("");
     const [search, setSearch] = useState("");
     const [staffStatusFilter, setStaffStatusFilter] = useState<"active" | "inactive">("active");
+    const [staffPendingDelete, setStaffPendingDelete] = useState<Staff | null>(null);
+    const [deletingStaffId, setDeletingStaffId] = useState<string | null>(null);
 
     const [form, setForm] = useState({
         fullName: "",
@@ -103,35 +106,16 @@ export default function StaffManagement() {
 
     async function loadStaff() {
         try {
-            const response = await apiRequest<unknown>("/admin/staff");
+            const response = await apiRequest<Staff[]>("/api/admin/staff");
+
+            if (!response.success) {
+                throw new Error(getApiErrorMessage(response));
+            }
 
             let staffList: Staff[] = [];
 
-            if (Array.isArray(response)) {
-                staffList = response as Staff[];
-            } else if (
-                typeof response === "object" &&
-                response !== null &&
-                "data" in response &&
-                Array.isArray((response as { data?: unknown }).data)
-            ) {
-                staffList = (response as { data: Staff[] }).data;
-            } else if (
-                typeof response === "object" &&
-                response !== null &&
-                "result" in response &&
-                Array.isArray((response as { result?: unknown }).result)
-            ) {
-                staffList = (response as { result: Staff[] }).result;
-            } else if (
-                typeof response === "object" &&
-                response !== null &&
-                "items" in response &&
-                Array.isArray((response as { items?: unknown }).items)
-            ) {
-                staffList = (response as { items: Staff[] }).items;
-            } else {
-                console.log("Unexpected staff response format:", response);
+            if (Array.isArray(response.data)) {
+                staffList = response.data;
             }
 
             const normalizedStaffList = staffList.filter((member) =>
@@ -140,7 +124,7 @@ export default function StaffManagement() {
 
             setStaff(normalizedStaffList);
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "Failed to load staff.");
+            toast.error(error instanceof Error ? error.message : "Failed to load staff.");
             setStaff([]);
         }
     }
@@ -179,29 +163,42 @@ export default function StaffManagement() {
                     : form;
 
             if (editingId) {
-                await apiRequest(`/admin/staff/${editingId}`, {
+                const result = await apiRequest<Staff>(`/api/admin/staff/${editingId}`, {
                     method: "PUT",
-                    body: JSON.stringify(payload),
+                    body: payload,
                 });
 
-                setMessage("Staff updated successfully.");
+                if (!result.success) {
+                    throw new Error(getApiErrorMessage(result));
+                }
+
+                toast.success("Staff updated successfully.");
             } else {
-                await apiRequest("/admin/staff", {
+                const result = await apiRequest<Staff>("/api/admin/staff", {
                     method: "POST",
-                    body: JSON.stringify(payload),
+                    body: payload,
                 });
 
-                setMessage("Staff created successfully.");
+                if (!result.success) {
+                    throw new Error(getApiErrorMessage(result));
+                }
+
+                toast.success("Staff created successfully.");
             }
 
             resetForm();
             await loadStaff();
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "Failed to save staff.");
+            toast.error(error instanceof Error ? error.message : "Failed to save staff.");
         }
     }
 
     function startEdit(member: Staff) {
+        if (member.isActive === false) {
+            toast.info("Inactive staff members cannot be edited.");
+            return;
+        }
+
         setEditingId(member.id);
         setForm({
             fullName: member.fullName || "",
@@ -212,26 +209,35 @@ export default function StaffManagement() {
         });
     }
 
-    async function deleteStaff(id: string) {
-        if (!window.confirm("Delete this staff member?")) {
+    async function deleteStaff() {
+        if (!staffPendingDelete) {
             return;
         }
 
         try {
-            await apiRequest(`/admin/staff/${id}`, { method: "DELETE" });
+            setDeletingStaffId(staffPendingDelete.id);
 
-            setMessage("Staff deleted successfully.");
+            const result = await apiRequest<null>(`/api/admin/staff/${staffPendingDelete.id}`, { method: "DELETE" });
+
+            if (!result.success) {
+                throw new Error(getApiErrorMessage(result));
+            }
+
+            toast.success("Staff deactivated successfully.");
             setStaff((currentStaff) =>
                 currentStaff.map((member) =>
-                    member.id === id ? { ...member, isActive: false } : member
+                    member.id === staffPendingDelete.id ? { ...member, isActive: false } : member
                 )
             );
-            if (editingId === id) {
+            if (editingId === staffPendingDelete.id) {
                 resetForm();
             }
+            setStaffPendingDelete(null);
             await loadStaff();
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "Failed to delete staff.");
+            toast.error(error instanceof Error ? error.message : "Failed to deactivate staff.");
+        } finally {
+            setDeletingStaffId(null);
         }
     }
 
@@ -273,12 +279,6 @@ export default function StaffManagement() {
                     </p>
                 </div>
             </div>
-
-            {message && (
-                <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-5 py-4 font-medium text-blue-900">
-                    {message}
-                </div>
-            )}
 
             <div className="mb-8 grid gap-6 md:grid-cols-3">
                 <div className="rounded-xl bg-white p-6 shadow-sm">
@@ -395,22 +395,23 @@ export default function StaffManagement() {
                             </div>
                         </label>
 
-                        <label className="grid gap-2">
-                            <span className="text-xs font-bold uppercase tracking-widest text-slate-600">
-                                Password
-                            </span>
-                            <div className="flex h-12 items-center gap-3 rounded-lg border border-slate-300 px-4 focus-within:border-[#0b4f86] focus-within:ring-4 focus-within:ring-blue-50">
-                                
-                                <input
-                                    className="w-full outline-none placeholder:text-slate-400"
-                                    placeholder="Create password"
-                                    type="password"
-                                    value={form.password}
-                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                    required={!editingId}
-                                />
-                            </div>
-                        </label>
+                        {!editingId && (
+                            <label className="grid gap-2">
+                                <span className="text-xs font-bold uppercase tracking-widest text-slate-600">
+                                    Password
+                                </span>
+                                <div className="flex h-12 items-center gap-3 rounded-lg border border-slate-300 px-4 focus-within:border-[#0b4f86] focus-within:ring-4 focus-within:ring-blue-50">
+                                    <input
+                                        className="w-full outline-none placeholder:text-slate-400"
+                                        placeholder="Create password"
+                                        type="password"
+                                        value={form.password}
+                                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                            </label>
+                        )}
 
                     </div>
 
@@ -529,23 +530,30 @@ export default function StaffManagement() {
                                             </td>
                                             <td className="px-7 py-6">
                                                 <div className="flex items-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => startEdit(s)}
-                                                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-blue-200 px-3 text-sm font-bold text-[#0b4f86] hover:bg-blue-50"
-                                                    >
-                                                        <Icon name="edit" className="h-4 w-4" />
-                                                        Edit
-                                                    </button>
-                                                    {s.isActive !== false && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => deleteStaff(s.id)}
-                                                            className="inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-bold text-red-700 hover:bg-red-50"
-                                                        >
-                                                            <Icon name="x" className="h-4 w-4" />
-                                                            Delete
-                                                        </button>
+                                                    {s.isActive !== false ? (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => startEdit(s)}
+                                                                className="inline-flex h-10 items-center gap-2 rounded-lg border border-blue-200 px-3 text-sm font-bold text-[#0b4f86] hover:bg-blue-50"
+                                                            >
+                                                                <Icon name="edit" className="h-4 w-4" />
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setStaffPendingDelete(s)}
+                                                                className="inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-bold text-red-700 hover:bg-red-50"
+                                                                disabled={deletingStaffId === s.id}
+                                                            >
+                                                                <Icon name="x" className="h-4 w-4" />
+                                                                Delete
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <span className="inline-flex h-10 items-center rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-500">
+                                                            Inactive record
+                                                        </span>
                                                     )}
                                                 </div>
                                             </td>
@@ -565,6 +573,43 @@ export default function StaffManagement() {
                     </div>
                 </section>
             </div>
+
+            {staffPendingDelete ? (
+                <ConfirmationDialog
+                    eyebrow="Deactivate confirmation"
+                    title="Deactivate this staff member?"
+                    description={(
+                        <>
+                            <span className="font-semibold text-[#123052]">{staffPendingDelete.fullName}</span> will be marked inactive and removed from the active staff directory. Their existing history and records will stay in the system.
+                        </>
+                    )}
+                    details={(
+                        <>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Selected staff member</p>
+                            <div className="mt-4 grid gap-3 text-[14px] text-[#4D6580] sm:grid-cols-2">
+                                <div className="rounded-[18px] border border-[#E3EAF2] bg-white px-4 py-3">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#70849A]">Name</p>
+                                    <p className="mt-1 font-semibold text-[#123052]">{staffPendingDelete.fullName}</p>
+                                </div>
+                                <div className="rounded-[18px] border border-[#E3EAF2] bg-white px-4 py-3">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#70849A]">Email</p>
+                                    <p className="mt-1 font-semibold text-[#123052]">{staffPendingDelete.email}</p>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                    confirmLabel={deletingStaffId === staffPendingDelete.id ? "Deactivating Staff..." : "Deactivate Staff"}
+                    confirmTone="danger"
+                    icon="delete"
+                    isBusy={deletingStaffId === staffPendingDelete.id}
+                    onCancel={() => {
+                        if (deletingStaffId !== staffPendingDelete.id) {
+                            setStaffPendingDelete(null);
+                        }
+                    }}
+                    onConfirm={deleteStaff}
+                />
+            ) : null}
         </div>
     );
 }

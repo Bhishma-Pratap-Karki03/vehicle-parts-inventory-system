@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Coursework.Application.Interfaces;
 using Coursework.Infrastructure;
 using Coursework.Infrastructure.Data;
+using Coursework.Middleware;
 using Coursework.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -12,17 +13,6 @@ using QuestPDF.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy
-            .WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
 
 builder.Services.AddOpenApi();
 builder.Services.AddHttpClient();
@@ -81,13 +71,15 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
 
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
 app.UseRouting();
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();

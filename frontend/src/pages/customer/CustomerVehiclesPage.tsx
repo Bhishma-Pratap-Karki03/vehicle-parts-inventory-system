@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
+import ConfirmationDialog from '../../components/parts/ConfirmationDialog'
 import type {
   CustomerVehicle,
   CustomerVehicleInput,
@@ -66,6 +67,7 @@ function CustomerVehiclesPage() {
   const [editingId, setEditingId] = useState<null | number>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<null | number>(null)
+  const [vehicleToDelete, setVehicleToDelete] = useState<CustomerVehicle | null>(null)
 
   async function fetchVehicles() {
     setIsLoading(true)
@@ -127,16 +129,16 @@ function CustomerVehiclesPage() {
     }
   }
 
-  async function handleDelete(vehicle: CustomerVehicle) {
-    if (!window.confirm(`Remove vehicle ${vehicle.vehicleNumber}?`)) {
+  async function handleDelete() {
+    if (!vehicleToDelete) {
       return
     }
 
-    setDeletingId(vehicle.vehicleId)
+    setDeletingId(vehicleToDelete.vehicleId)
 
     try {
       const response = await apiRequest<number>(
-        `/api/customers/me/vehicles/${vehicle.vehicleId}`,
+        `/api/customers/me/vehicles/${vehicleToDelete.vehicleId}`,
         { method: 'DELETE' },
       )
 
@@ -147,10 +149,11 @@ function CustomerVehiclesPage() {
 
       toast.success('Vehicle removed.')
 
-      if (editingId === vehicle.vehicleId) {
+      if (editingId === vehicleToDelete.vehicleId) {
         resetForm()
       }
 
+      setVehicleToDelete(null)
       await fetchVehicles()
     } finally {
       setDeletingId(null)
@@ -317,7 +320,7 @@ function CustomerVehiclesPage() {
                     <button
                       className="inline-flex h-10 items-center gap-2 rounded-full border border-[#F1D6D2] bg-white px-4 text-[13px] font-semibold text-[#A94E48] transition hover:bg-[#FBF1EF] disabled:cursor-not-allowed disabled:opacity-70"
                       disabled={deletingId === vehicle.vehicleId}
-                      onClick={() => handleDelete(vehicle)}
+                      onClick={() => setVehicleToDelete(vehicle)}
                       type="button"
                     >
                       <span aria-hidden className="material-symbols-outlined text-[18px]">
@@ -332,6 +335,45 @@ function CustomerVehiclesPage() {
           )}
         </section>
       </div>
+
+      {vehicleToDelete ? (
+        <ConfirmationDialog
+          confirmLabel={deletingId === vehicleToDelete.vehicleId ? 'Removing Vehicle...' : 'Remove Vehicle'}
+          confirmTone="danger"
+          description={(
+            <>
+              <span className="font-semibold text-[#123052]">{vehicleToDelete.vehicleNumber}</span> will be removed from your garage profile and will no longer appear in appointments, history, or dashboard vehicle lists.
+            </>
+          )}
+          details={(
+            <>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Selected vehicle</p>
+              <div className="mt-4 grid gap-3 text-[14px] text-[#4D6580] sm:grid-cols-2">
+                <div className="rounded-[18px] border border-[#E3EAF2] bg-white px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#70849A]">Vehicle number</p>
+                  <p className="mt-1 font-semibold text-[#123052]">{vehicleToDelete.vehicleNumber}</p>
+                </div>
+                <div className="rounded-[18px] border border-[#E3EAF2] bg-white px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#70849A]">Vehicle</p>
+                  <p className="mt-1 font-semibold text-[#123052]">
+                    {vehicleToDelete.brand} {vehicleToDelete.model}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+          eyebrow="Delete confirmation"
+          icon="delete"
+          isBusy={deletingId === vehicleToDelete.vehicleId}
+          onCancel={() => {
+            if (deletingId !== vehicleToDelete.vehicleId) {
+              setVehicleToDelete(null)
+            }
+          }}
+          onConfirm={handleDelete}
+          title="Remove this vehicle?"
+        />
+      ) : null}
     </main>
   )
 }

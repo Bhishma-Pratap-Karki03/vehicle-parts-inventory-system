@@ -2,7 +2,7 @@
     min-height: 100vh;
     background: #f7f9fb;
     color: #191c1e;
-    font-family: Inter, Arial, sans-serif;
+    font-family: var(--font-body);
 }
 
 .request-part-container {
@@ -15,7 +15,7 @@
 .request-part-page h2,
 .request-part-page h3,
 .request-part-page h4 {
-    font-family: Manrope, Inter, Arial, sans-serif;
+    font-family: var(--font-display);
 }
 
 .material-symbols-outlined {

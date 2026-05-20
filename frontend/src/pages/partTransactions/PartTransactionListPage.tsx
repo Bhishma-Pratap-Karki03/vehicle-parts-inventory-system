@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { apiRequest } from '../../shared/utils/api'
 import PartTransactionsTable from '../../components/partTransactions/PartTransactionsTable'
 import PartTransactionToolbar from '../../components/partTransactions/PartTransactionToolbar'
 import TablePagination from '../../components/parts/TablePagination'
@@ -10,9 +11,7 @@ import {
   getApiErrorMessage,
   getRequestErrorMessage,
   mapPartTransactionFromApi,
-  readApiResponse,
 } from '../../components/partTransactions/partTransactions.helpers'
-import backendUrl from '../../config'
 import type { PagedResult } from '../../shared/interfaces/api.interface'
 import type { PartApiModel, PartRecord } from '../../shared/interfaces/parts.interface'
 import type {
@@ -106,8 +105,7 @@ function PartTransactionListPage() {
       setErrorMessage(null)
 
       try {
-        const response = await fetch(`${backendUrl}/api/part-transactions${queryString}`)
-        const result = await readApiResponse<PagedResult<PartTransactionApiModel>>(response)
+        const result = await apiRequest<PagedResult<PartTransactionApiModel>>(`/api/part-transactions${queryString}`)
 
         if (isCancelled) {
           return
@@ -161,8 +159,7 @@ function PartTransactionListPage() {
 
     const fetchPartContext = async () => {
       try {
-        const response = await fetch(`${backendUrl}/api/Parts/${numericPartId}`)
-        const result = await readApiResponse<PartApiModel>(response)
+        const result = await apiRequest<PartApiModel>(`/api/Parts/${numericPartId}`)
 
         if (isCancelled) {
           return

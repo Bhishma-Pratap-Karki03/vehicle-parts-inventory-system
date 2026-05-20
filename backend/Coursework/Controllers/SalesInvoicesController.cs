@@ -8,7 +8,7 @@ namespace Coursework.API.Controllers;
 
 [Route("api/sales-invoices")]
 [ApiController]
-// [Authorize(Roles = "Admin,Staff")]
+[Authorize(Roles = "Staff")]
 public class SalesInvoicesController : ControllerBase
 {
     private readonly ISalesInvoiceService _salesInvoiceService;

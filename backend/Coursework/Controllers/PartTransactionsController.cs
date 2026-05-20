@@ -1,11 +1,15 @@
+using System.Security.Claims;
+using Coursework.Application.Common;
 using Coursework.Application.DTOs.PartTransactions;
 using Coursework.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Coursework.Controllers;
 
 [ApiController]
 [Route("api/part-transactions")]
+[Authorize(Roles = "Admin")]
 public class PartTransactionsController : ControllerBase
 {
     private readonly IPartTransactionService _partTransactionService;
@@ -18,9 +22,15 @@ public class PartTransactionsController : ControllerBase
     [HttpPost("adjust-stock")]
     public async Task<IActionResult> AdjustPartStock([FromBody] AdjustPartStockDto dto)
     {
-        // Temporary default user for testing without JWT/authentication.
-        // Later replace this with logged-in user's id from token.
-        var createdById = "dev-admin-user";
+        var createdById = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(createdById))
+        {
+            var unauthorizedResponse = ApiResponse<object>.UnauthorizedResponse(
+                "User id was not found in token.");
+
+            return StatusCode(unauthorizedResponse.StatusCode, unauthorizedResponse);
+        }
 
         var response = await _partTransactionService.AdjustPartStockAsync(
             dto,

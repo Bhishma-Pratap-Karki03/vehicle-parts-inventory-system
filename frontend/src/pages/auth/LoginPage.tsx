@@ -3,16 +3,63 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import { useAuth } from '../../shared/auth/useAuth'
-import type { AuthResponse } from '../../shared/interfaces/customer.interface'
+import type { AuthResponse, UserRole } from '../../shared/interfaces/customer.interface'
 import { apiRequest, getApiErrorMessage } from '../../shared/utils/api'
 
 interface LocationState {
   from?: string
 }
 
+const CUSTOMER_ROUTE_MATCHERS = [
+  /^\/home$/,
+  /^\/appointments\/(?:book|my|[^/]+)$/,
+  /^\/parts\/(?:request|my|requests\/[^/]+)$/,
+  /^\/customer\/(?:profile|vehicles|purchase-history|service-history)$/,
+  /^\/change-password$/,
+]
+
+const ADMIN_ROUTE_MATCHERS = [
+  /^\/admin\/(?:dashboard|notifications|vendors|staff|reports\/financial)$/,
+  /^\/parts$/,
+  /^\/parts\/new$/,
+  /^\/parts\/[^/]+$/,
+  /^\/parts\/[^/]+\/edit$/,
+  /^\/stock-transactions$/,
+  /^\/stock-transactions\/adjust$/,
+  /^\/stock-transactions\/[^/]+$/,
+  /^\/purchase-invoices$/,
+  /^\/purchase-invoices\/create$/,
+  /^\/purchase-invoices\/[^/]+$/,
+  /^\/change-password$/,
+]
+
+const STAFF_ROUTE_MATCHERS = [
+  /^\/staff(?:\/(?:customer-reports|appointments|part-requests))?$/,
+  /^\/customers(?:\/(?:create|search|[^/]+))?$/,
+  /^\/sales-invoices(?:\/(?:create|[^/]+))?$/,
+  /^\/change-password$/,
+]
+
+function isAllowedRedirectPath(roles: UserRole[], from?: string): boolean {
+  if (!from || from === '/login' || from === '/register' || from === '/unauthorized') {
+    return false
+  }
+
+  return roles.some((role) => {
+    const matchers =
+      role === 'Admin'
+        ? ADMIN_ROUTE_MATCHERS
+        : role === 'Staff'
+          ? STAFF_ROUTE_MATCHERS
+          : CUSTOMER_ROUTE_MATCHERS
+
+    return matchers.some((matcher) => matcher.test(from))
+  })
+}
+
 function resolveRedirectPath(roles: string[], from?: string): string {
-  if (from && from !== '/login' && from !== '/register') {
-    return from
+  if (isAllowedRedirectPath(roles as UserRole[], from)) {
+    return from ?? '/'
   }
 
   if (roles.includes('Customer')) {

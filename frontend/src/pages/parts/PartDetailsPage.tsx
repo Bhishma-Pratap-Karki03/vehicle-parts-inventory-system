@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { formatPartCode, formatRupees, getApiErrorMessage, getPartDisplayStatus, getRequestErrorMessage, mapPartFromApi, readApiResponse } from '../../components/parts/parts.helpers'
+import { formatPartCode, formatRupees, getApiErrorMessage, getPartDisplayStatus, getRequestErrorMessage, mapPartFromApi } from '../../components/parts/parts.helpers'
 import NotFoundPage from '../../pages/NotFoundPage'
 import type { PartApiModel, PartRecord } from '../../shared/interfaces/parts.interface'
 import { getCloudinaryImageUrl } from '../../shared/utils/cloudinary'
-
-import backendUrl from '../../config';
+import { apiRequest } from '../../shared/utils/api'
 
 const statusClasses = {
   Available: 'border border-[#C9E7D4] bg-[#EEFCF3] text-[#16784A]',
@@ -58,8 +57,7 @@ function PartDetailsPage() {
       setIsNotFound(false)
 
       try {
-        const response = await fetch(`${backendUrl}/api/Parts/${partIdToLoad}`)
-        const result = await readApiResponse<PartApiModel>(response)
+        const result = await apiRequest<PartApiModel>(`/api/Parts/${partIdToLoad}`)
 
         if (isCancelled) {
           return

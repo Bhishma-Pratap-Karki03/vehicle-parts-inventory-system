@@ -8,7 +8,7 @@ namespace Coursework.API.Controllers;
 
 [ApiController]
 [Route("api/purchase-invoices")]
-// [Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin")]
 public class PurchaseInvoicesController : ControllerBase
 {
     private readonly IPurchaseInvoiceService _purchaseInvoiceService;

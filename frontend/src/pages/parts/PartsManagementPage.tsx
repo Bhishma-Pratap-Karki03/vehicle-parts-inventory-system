@@ -12,8 +12,8 @@ import {
   getRequestErrorMessage,
   mapPartFromApi,
   mapStatusLabelToApi,
-  readApiResponse,
 } from '../../components/parts/parts.helpers'
+import { apiRequest } from '../../shared/utils/api'
 import type { PagedResult } from '../../shared/interfaces/api.interface'
 import type {
   CategoryOption,
@@ -25,9 +25,6 @@ import type {
   PartsFiltersState,
   VendorOption,
 } from '../../shared/interfaces/parts.interface'
-
-import backendUrl from '../../config';
-
 function createEmptyPagination(pageNumber: number, pageSize: number): PagedResult<PartRecord> {
   return {
     items: [],
@@ -173,13 +170,10 @@ function PartsManagementPage() {
 
     const fetchFilterOptions = async () => {
       try {
-        const [vendorsResponse, categoriesResponse] = await Promise.all([
-          fetch(`${backendUrl}/api/Parts/vendors/options`),
-          fetch(`${backendUrl}/api/Parts/categories/options`),
+        const [vendorsResult, categoriesResult] = await Promise.all([
+          apiRequest<VendorOption[]>('/api/Parts/vendors/options'),
+          apiRequest<CategoryOption[]>('/api/Parts/categories/options'),
         ])
-
-        const vendorsResult = await readApiResponse<VendorOption[]>(vendorsResponse)
-        const categoriesResult = await readApiResponse<CategoryOption[]>(categoriesResponse)
 
         if (isCancelled) {
           return
@@ -212,8 +206,7 @@ function PartsManagementPage() {
       setErrorMessage(null)
 
       try {
-        const response = await fetch(`${backendUrl}/api/Parts${buildPartsQueryString(listQuery)}`)
-        const result = await readApiResponse<PagedResult<PartApiModel>>(response)
+        const result = await apiRequest<PagedResult<PartApiModel>>(`/api/Parts${buildPartsQueryString(listQuery)}`)
 
         if (isCancelled) {
           return
@@ -258,13 +251,10 @@ function PartsManagementPage() {
       setSummaryError(null)
 
       try {
-        const [summaryResponse, lowStockResponse] = await Promise.all([
-          fetch(`${backendUrl}/api/Parts/summary`),
-          fetch(`${backendUrl}/api/Parts/low-stock`),
+        const [summaryResult, lowStockResult] = await Promise.all([
+          apiRequest<PartSummaryApiModel>('/api/Parts/summary'),
+          apiRequest<PartApiModel[]>('/api/Parts/low-stock'),
         ])
-
-        const summaryResult = await readApiResponse<PartSummaryApiModel>(summaryResponse)
-        const lowStockResult = await readApiResponse<PartApiModel[]>(lowStockResponse)
 
         if (isCancelled) {
           return
@@ -328,11 +318,9 @@ function PartsManagementPage() {
     setDeletingPartId(pendingPart.partId)
 
     try {
-      const response = await fetch(`${backendUrl}/api/Parts/${pendingPart.partId}`, {
+      const result = await apiRequest<{ deletedAt: string; partId: number }>(`/api/Parts/${pendingPart.partId}`, {
         method: 'DELETE',
       })
-
-      const result = await readApiResponse<{ deletedAt: string; partId: number }>(response)
 
       if (!result.success) {
         toast.error(getApiErrorMessage(result.message, result.errors))

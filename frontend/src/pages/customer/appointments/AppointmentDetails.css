@@ -2,7 +2,7 @@
     min-height: 100vh;
     background: #f7f9fb;
     color: #191c1e;
-    font-family: Inter, Arial, sans-serif;
+    font-family: var(--font-body);
 }
 
 .appointment-details-container {
@@ -14,7 +14,7 @@
 .appointment-details-page h1,
 .appointment-details-page h2,
 .appointment-details-page h3 {
-    font-family: Manrope, Inter, Arial, sans-serif;
+    font-family: var(--font-display);
 }
 
 .material-symbols-outlined {

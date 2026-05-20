@@ -8,12 +8,10 @@ import {
   getApiErrorMessage,
   getRequestErrorMessage,
   mapPurchaseInvoiceDetailFromApi,
-  readApiResponse,
 } from '../../components/purchaseInvoices/purchaseInvoices.helpers'
+import { apiRequest, apiRequestBlob, downloadBlob } from '../../shared/utils/api'
 import NotFoundPage from '../NotFoundPage'
 import type { PurchaseInvoiceDetailApiModel, PurchaseInvoiceDetailRecord, PurchaseInvoiceStatusLabel } from '../../shared/interfaces/purchaseInvoices.interface'
-
-import backendUrl from '../../config';
 
 const statusClasses: Record<PurchaseInvoiceStatusLabel, string> = {
   Cancelled: 'border border-[#E7D7D4] bg-[#FFF6F5] text-[#9A5650]',
@@ -70,8 +68,7 @@ function PurchaseInvoiceDetailsPage() {
       setIsNotFound(false)
 
       try {
-        const response = await fetch(`${backendUrl}/api/purchase-invoices/${invoiceIdToLoad}`)
-        const result = await readApiResponse<PurchaseInvoiceDetailApiModel>(response)
+        const result = await apiRequest<PurchaseInvoiceDetailApiModel>(`/api/purchase-invoices/${invoiceIdToLoad}`)
 
         if (isCancelled) {
           return
@@ -122,8 +119,7 @@ function PurchaseInvoiceDetailsPage() {
       setPdfErrorMessage(null)
 
       try {
-        const response = await fetch(`${backendUrl}/api/purchase-invoices/${invoice.purchaseInvoiceId}/pdf-url`)
-        const result = await readApiResponse<string>(response)
+        const result = await apiRequest<string>(`/api/purchase-invoices/${invoice.purchaseInvoiceId}/pdf-url`)
 
         if (isCancelled) {
           return
@@ -165,11 +161,9 @@ function PurchaseInvoiceDetailsPage() {
     setIsSendingEmail(true)
 
     try {
-      const response = await fetch(`${backendUrl}/api/purchase-invoices/${invoice.purchaseInvoiceId}/send-email`, {
+      const result = await apiRequest<string>(`/api/purchase-invoices/${invoice.purchaseInvoiceId}/send-email`, {
         method: 'POST',
       })
-
-      const result = await readApiResponse<string>(response)
 
       if (!result.success) {
         toast.error(getApiErrorMessage(result.message, result.errors))
@@ -195,23 +189,13 @@ function PurchaseInvoiceDetailsPage() {
     setIsDownloadingPdf(true)
 
     try {
-      const response = await fetch(`${backendUrl}/api/purchase-invoices/${invoice.purchaseInvoiceId}/download-pdf`)
+      const result = await apiRequestBlob(`/api/purchase-invoices/${invoice.purchaseInvoiceId}/download-pdf`)
 
-      if (!response.ok) {
-        const result = await readApiResponse<never>(response)
+      if (!result.success || !result.data) {
         throw new Error(getApiErrorMessage(result.message, result.errors))
       }
 
-      const pdfBlob = await response.blob()
-      const objectUrl = window.URL.createObjectURL(pdfBlob)
-      const downloadLink = document.createElement('a')
-
-      downloadLink.href = objectUrl
-      downloadLink.download = `${invoice.invoiceNumber || `purchase-invoice-${invoice.purchaseInvoiceId}`}.pdf`
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      downloadLink.remove()
-      window.URL.revokeObjectURL(objectUrl)
+      downloadBlob(result.data, `${invoice.invoiceNumber || `purchase-invoice-${invoice.purchaseInvoiceId}`}.pdf`)
     } catch (error) {
       toast.error(getRequestErrorMessage(error, 'Unable to download this invoice PDF right now.'))
     } finally {

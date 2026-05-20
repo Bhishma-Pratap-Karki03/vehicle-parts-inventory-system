@@ -1,7 +1,7 @@
 import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
-import { apiRequest } from "../../api/apiClient";
 import type { Vendor } from "../../types/vendor";
 import { toast } from "react-toastify";
+import { apiRequest, getApiErrorMessage } from "../../shared/utils/api";
 
 type IconName = "truck" | "plus" | "mail" | "phone" | "map" | "user" | "search" | "edit" | "x";
 
@@ -95,35 +95,16 @@ export default function VendorManagement() {
 
     async function loadVendors() {
         try {
-            const response = await apiRequest<unknown>("/admin/vendors");
+            const response = await apiRequest<Vendor[]>("/api/admin/vendors");
+
+            if (!response.success) {
+                throw new Error(getApiErrorMessage(response));
+            }
 
             let vendorList: Vendor[] = [];
 
-            if (Array.isArray(response)) {
-                vendorList = response as Vendor[];
-            } else if (
-                typeof response === "object" &&
-                response !== null &&
-                "data" in response &&
-                Array.isArray((response as { data?: unknown }).data)
-            ) {
-                vendorList = (response as { data: Vendor[] }).data;
-            } else if (
-                typeof response === "object" &&
-                response !== null &&
-                "result" in response &&
-                Array.isArray((response as { result?: unknown }).result)
-            ) {
-                vendorList = (response as { result: Vendor[] }).result;
-            } else if (
-                typeof response === "object" &&
-                response !== null &&
-                "items" in response &&
-                Array.isArray((response as { items?: unknown }).items)
-            ) {
-                vendorList = (response as { items: Vendor[] }).items;
-            } else {
-                console.log("Unexpected vendor response format:", response);
+            if (Array.isArray(response.data)) {
+                vendorList = response.data;
             }
 
             setVendors(vendorList);
@@ -158,17 +139,25 @@ export default function VendorManagement() {
 
         try {
             if (editingId) {
-                await apiRequest(`/admin/vendors/${editingId}`, {
+                const result = await apiRequest<Vendor>(`/api/admin/vendors/${editingId}`, {
                     method: "PUT",
-                    body: JSON.stringify(form),
+                    body: form,
                 });
+
+                if (!result.success) {
+                    throw new Error(getApiErrorMessage(result));
+                }
 
                 toast.success("Vendor updated successfully.");
             } else {
-                await apiRequest("/admin/vendors", {
+                const result = await apiRequest<Vendor>("/api/admin/vendors", {
                     method: "POST",
-                    body: JSON.stringify(form),
+                    body: form,
                 });
+
+                if (!result.success) {
+                    throw new Error(getApiErrorMessage(result));
+                }
 
                 toast.success("Vendor created successfully.");
             }
@@ -194,7 +183,12 @@ export default function VendorManagement() {
 
     async function deleteVendor(id: number) {
         try {
-            await apiRequest(`/admin/vendors/${id}`, { method: "DELETE" });
+            const result = await apiRequest<null>(`/api/admin/vendors/${id}`, { method: "DELETE" });
+
+            if (!result.success) {
+                throw new Error(getApiErrorMessage(result));
+            }
+
             toast.success("Vendor deleted or deactivated successfully.");
             await loadVendors();
         } catch (error) {

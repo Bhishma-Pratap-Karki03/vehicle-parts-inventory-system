@@ -6,7 +6,7 @@ namespace Coursework.Controllers;
 
 [ApiController]
 [Route("api/customer-reports")]
-[Authorize(Roles = "Staff,Admin")]
+[Authorize(Roles = "Staff")]
 public class CustomerReportsController : ControllerBase
 {
     private readonly ICustomerReportService _customerReportService;

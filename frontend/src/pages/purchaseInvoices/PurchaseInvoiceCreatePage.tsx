@@ -8,14 +8,12 @@ import {
   getApiErrorMessage,
   getRequestErrorMessage,
   mapPurchaseInvoiceDetailFromApi,
-  readApiResponse,
 } from '../../components/purchaseInvoices/purchaseInvoices.helpers'
 import { mapPartFromApi } from '../../components/parts/parts.helpers'
+import { apiRequest } from '../../shared/utils/api'
 import type { PagedResult } from '../../shared/interfaces/api.interface'
 import type { PartApiModel, PartRecord, VendorOption } from '../../shared/interfaces/parts.interface'
 import type { PurchaseInvoiceDetailApiModel, PurchaseInvoiceFormValues } from '../../shared/interfaces/purchaseInvoices.interface'
-
-import backendUrl from '../../config';
 
 function PurchaseInvoiceCreatePage() {
   const navigate = useNavigate()
@@ -42,8 +40,7 @@ function PurchaseInvoiceCreatePage() {
       setIsOptionsLoading(true)
 
       try {
-        const response = await fetch(`${backendUrl}/api/Parts/vendors/options`)
-        const result = await readApiResponse<VendorOption[]>(response)
+        const result = await apiRequest<VendorOption[]>('/api/Parts/vendors/options')
 
         if (isCancelled) {
           return
@@ -110,8 +107,7 @@ function PurchaseInvoiceCreatePage() {
             vendorId: String(numericVendorId),
           })
 
-          const response = await fetch(`${backendUrl}/api/Parts?${query.toString()}`)
-          const result = await readApiResponse<PagedResult<PartApiModel>>(response)
+          const result = await apiRequest<PagedResult<PartApiModel>>(`/api/Parts?${query.toString()}`)
 
           if (!result.success || !result.data) {
             throw new Error(getApiErrorMessage(result.message, result.errors))
@@ -156,15 +152,10 @@ function PurchaseInvoiceCreatePage() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch(`${backendUrl}/api/purchase-invoices`, {
+      const result = await apiRequest<PurchaseInvoiceDetailApiModel>('/api/purchase-invoices', {
+        body: buildPurchaseInvoicePayload(values),
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(buildPurchaseInvoicePayload(values)),
       })
-
-      const result = await readApiResponse<PurchaseInvoiceDetailApiModel>(response)
 
       if (!result.success || !result.data) {
         toast.error(getApiErrorMessage(result.message, result.errors))

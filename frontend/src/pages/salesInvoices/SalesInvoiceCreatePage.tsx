@@ -9,9 +9,8 @@ import {
   getApiErrorMessage,
   getRequestErrorMessage,
   mapSalesInvoiceDetailFromApi,
-  readApiResponse,
 } from '../../components/salesInvoices/salesInvoices.helpers'
-import backendUrl from '../../config'
+import { apiRequest } from '../../shared/utils/api'
 import type { PagedResult } from '../../shared/interfaces/api.interface'
 import type { PartApiModel, PartRecord } from '../../shared/interfaces/parts.interface'
 import type {
@@ -49,8 +48,7 @@ function SalesInvoiceCreatePage() {
       setIsCustomerOptionsLoading(true)
 
       try {
-        const response = await fetch(`${backendUrl}/api/sales-invoices/customers/options`)
-        const result = await readApiResponse<SalesInvoiceCustomerOption[]>(response)
+        const result = await apiRequest<SalesInvoiceCustomerOption[]>('/api/sales-invoices/customers/options')
 
         if (isCancelled) {
           return
@@ -98,10 +96,9 @@ function SalesInvoiceCreatePage() {
       setIsVehiclesLoading(true)
 
       try {
-        const response = await fetch(
-          `${backendUrl}/api/sales-invoices/customers/${encodeURIComponent(selectedCustomerId)}/vehicles/options`,
+        const result = await apiRequest<SalesInvoiceVehicleOption[]>(
+          `/api/sales-invoices/customers/${encodeURIComponent(selectedCustomerId)}/vehicles/options`,
         )
-        const result = await readApiResponse<SalesInvoiceVehicleOption[]>(response)
 
         if (isCancelled) {
           return
@@ -153,8 +150,7 @@ function SalesInvoiceCreatePage() {
             pageSize: '100',
           })
 
-          const response = await fetch(`${backendUrl}/api/Parts?${query.toString()}`)
-          const result = await readApiResponse<PagedResult<PartApiModel>>(response)
+          const result = await apiRequest<PagedResult<PartApiModel>>(`/api/Parts?${query.toString()}`)
 
           if (!result.success || !result.data) {
             throw new Error(getApiErrorMessage(result.message, result.errors))
@@ -199,15 +195,10 @@ function SalesInvoiceCreatePage() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch(`${backendUrl}/api/sales-invoices`, {
+      const result = await apiRequest<SalesInvoiceDetailApiModel>('/api/sales-invoices', {
+        body: buildSalesInvoicePayload(values),
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(buildSalesInvoicePayload(values)),
       })
-
-      const result = await readApiResponse<SalesInvoiceDetailApiModel>(response)
 
       if (!result.success || !result.data) {
         toast.error(getApiErrorMessage(result.message, result.errors))

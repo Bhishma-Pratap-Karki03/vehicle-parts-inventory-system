@@ -14,6 +14,9 @@ namespace Coursework.Application.Services;
 public class PartService(
     IPartRepository partRepository,
     IVendorRepository vendorRepository,
+    IPurchaseInvoiceItemRepository purchaseInvoiceItemRepository,
+    ISalesInvoiceItemRepository salesInvoiceItemRepository,
+    IPartTransactionRepository partTransactionRepository,
     ICloudinaryService cloudinaryService,
     ILogger<PartService> logger) : IPartService
 {
@@ -229,6 +232,30 @@ public class PartService(
         if (part is null)
         {
             return ApiResponse<DeletePartResultDto>.NotFoundResponse("Part not found.");
+        }
+
+        if (part.StockQuantity > 0)
+        {
+            return ApiResponse<DeletePartResultDto>.ConflictResponse(
+                "This part cannot be deleted because it still has stock on hand. Adjust the stock to zero first.");
+        }
+
+        var hasPurchaseHistory = await purchaseInvoiceItemRepository
+            .FindByCondition(item => item.PartId == id)
+            .AnyAsync();
+
+        var hasSalesHistory = await salesInvoiceItemRepository
+            .FindByCondition(item => item.PartId == id)
+            .AnyAsync();
+
+        var hasTransactionHistory = await partTransactionRepository
+            .FindByCondition(transaction => transaction.PartId == id)
+            .AnyAsync();
+
+        if (hasPurchaseHistory || hasSalesHistory || hasTransactionHistory)
+        {
+            return ApiResponse<DeletePartResultDto>.ConflictResponse(
+                "This part cannot be deleted because it already has purchase, sales, or stock transaction history.");
         }
 
         part.IsDeleted = true;

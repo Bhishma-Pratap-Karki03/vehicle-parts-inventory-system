@@ -1,4 +1,3 @@
-import type { ApiResponse } from '../../shared/interfaces/api.interface'
 import type {
   BackendPartStatus,
   InventorySummaryData,
@@ -150,57 +149,4 @@ export function getApiErrorMessage(message?: string, errors?: string[]) {
 
 export function getRequestErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback
-}
-
-export async function readApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
-  try {
-    const payload = await response.json()
-
-    if (
-      payload &&
-      typeof payload === 'object' &&
-      'title' in payload &&
-      !('success' in payload)
-    ) {
-      const flattenedErrors =
-        payload.errors && typeof payload.errors === 'object'
-          ? Object.values(payload.errors as Record<string, string[]>).flat()
-          : undefined
-
-      return {
-        success: false,
-        message:
-          (typeof payload.detail === 'string' && payload.detail) ||
-          (typeof payload.title === 'string' && payload.title) ||
-          `Request failed with status ${response.status}.`,
-        errors: flattenedErrors,
-        statusCode: typeof payload.status === 'number' ? payload.status : response.status,
-      }
-    }
-
-    if (payload && typeof payload === 'object' && 'success' in payload) {
-      return payload as ApiResponse<T>
-    }
-
-    if (!response.ok) {
-      return {
-        success: false,
-        message: `Request failed with status ${response.status}.`,
-        statusCode: response.status,
-      }
-    }
-
-    return {
-      success: true,
-      message: 'Request completed successfully.',
-      data: payload as T,
-      statusCode: response.status,
-    }
-  } catch {
-    return {
-      success: false,
-      message: `Request failed with status ${response.status}.`,
-      statusCode: response.status,
-    }
-  }
 }

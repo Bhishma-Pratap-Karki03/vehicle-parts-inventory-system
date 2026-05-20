@@ -9,7 +9,7 @@ namespace Coursework.Controllers;
 [ApiController]
 [Route("api/admin/staff")]
 [Authorize]
-//[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin")]
 public class StaffController : ControllerBase
 {
     private readonly IStaffService _service;

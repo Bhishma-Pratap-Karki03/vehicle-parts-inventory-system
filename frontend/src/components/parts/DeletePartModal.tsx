@@ -14,7 +14,7 @@ function DeletePartModal({ part, isDeleting, onCancel, onConfirm }: DeletePartMo
       confirmLabel={isDeleting ? 'Deleting Part...' : 'Delete Part'}
       description={(
         <>
-          <span className="font-semibold text-[#123052]">{part.partName}</span> will be removed from the active inventory view. You can still bring it back into view later with the
+          <span className="font-semibold text-[#123052]">{part.partName}</span> will be removed from the active inventory view only if it has no remaining stock and no purchase, sales, or stock-history records. You can still bring it back into view later with the
           <span className="font-semibold text-[#123052]"> Include deleted parts </span>
           filter.
         </>

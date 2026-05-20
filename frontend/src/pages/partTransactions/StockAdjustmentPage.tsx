@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { apiRequest } from '../../shared/utils/api'
 import { mapPartFromApi } from '../../components/parts/parts.helpers'
 import StockAdjustmentForm from '../../components/partTransactions/StockAdjustmentForm'
 import {
@@ -9,9 +10,7 @@ import {
   getApiErrorMessage,
   getRequestErrorMessage,
   mapPartTransactionFromApi,
-  readApiResponse,
 } from '../../components/partTransactions/partTransactions.helpers'
-import backendUrl from '../../config'
 import type { PagedResult } from '../../shared/interfaces/api.interface'
 import type { PartApiModel, PartRecord } from '../../shared/interfaces/parts.interface'
 import type { PartTransactionApiModel, StockAdjustmentFormValues } from '../../shared/interfaces/partTransactions.interface'
@@ -48,8 +47,7 @@ function StockAdjustmentPage() {
             pageSize: '100',
           })
 
-          const response = await fetch(`${backendUrl}/api/Parts?${query.toString()}`)
-          const result = await readApiResponse<PagedResult<PartApiModel>>(response)
+          const result = await apiRequest<PagedResult<PartApiModel>>(`/api/Parts?${query.toString()}`)
 
           if (!result.success || !result.data) {
             throw new Error(getApiErrorMessage(result.message, result.errors))
@@ -94,15 +92,10 @@ function StockAdjustmentPage() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch(`${backendUrl}/api/part-transactions/adjust-stock`, {
+      const result = await apiRequest<PartTransactionApiModel>('/api/part-transactions/adjust-stock', {
+        body: buildAdjustStockPayload(values),
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(buildAdjustStockPayload(values)),
       })
-
-      const result = await readApiResponse<PartTransactionApiModel>(response)
 
       if (!result.success || !result.data) {
         toast.error(getApiErrorMessage(result.message, result.errors))

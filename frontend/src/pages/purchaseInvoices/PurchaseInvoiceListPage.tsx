@@ -12,8 +12,8 @@ import {
   getRequestErrorMessage,
   mapPurchaseInvoiceDetailFromApi,
   mapPurchaseInvoiceListFromApi,
-  readApiResponse,
 } from '../../components/purchaseInvoices/purchaseInvoices.helpers'
+import { apiRequest, apiRequestBlob, downloadBlob } from '../../shared/utils/api'
 import type { PagedResult } from '../../shared/interfaces/api.interface'
 import type {
   PurchaseInvoiceDetailApiModel,
@@ -22,8 +22,6 @@ import type {
   PurchaseInvoiceListItemApiModel,
   PurchaseInvoiceListItemRecord,
 } from '../../shared/interfaces/purchaseInvoices.interface'
-
-import backendUrl from '../../config';
 
 function createEmptyPagination(pageNumber: number, pageSize: number): PagedResult<PurchaseInvoiceListItemRecord> {
   return {
@@ -80,8 +78,7 @@ function PurchaseInvoiceListPage() {
       setErrorMessage(null)
 
       try {
-        const response = await fetch(`${backendUrl}/api/purchase-invoices${queryString}`)
-        const result = await readApiResponse<PagedResult<PurchaseInvoiceListItemApiModel>>(response)
+        const result = await apiRequest<PagedResult<PurchaseInvoiceListItemApiModel>>(`/api/purchase-invoices${queryString}`)
 
         if (isCancelled) {
           return
@@ -122,8 +119,7 @@ function PurchaseInvoiceListPage() {
     setPreparingInvoiceId(invoice.purchaseInvoiceId)
 
     try {
-      const response = await fetch(`${backendUrl}/api/purchase-invoices/${invoice.purchaseInvoiceId}`)
-      const result = await readApiResponse<PurchaseInvoiceDetailApiModel>(response)
+      const result = await apiRequest<PurchaseInvoiceDetailApiModel>(`/api/purchase-invoices/${invoice.purchaseInvoiceId}`)
 
       if (!result.success || !result.data) {
         toast.error(getApiErrorMessage(result.message, result.errors))
@@ -146,11 +142,9 @@ function PurchaseInvoiceListPage() {
     setSendingInvoiceId(invoicePendingEmail.purchaseInvoiceId)
 
     try {
-      const response = await fetch(`${backendUrl}/api/purchase-invoices/${invoicePendingEmail.purchaseInvoiceId}/send-email`, {
+      const result = await apiRequest<string>(`/api/purchase-invoices/${invoicePendingEmail.purchaseInvoiceId}/send-email`, {
         method: 'POST',
       })
-
-      const result = await readApiResponse<string>(response)
 
       if (!result.success) {
         toast.error(getApiErrorMessage(result.message, result.errors))
@@ -171,23 +165,13 @@ function PurchaseInvoiceListPage() {
     setDownloadingInvoiceId(invoice.purchaseInvoiceId)
 
     try {
-      const response = await fetch(`${backendUrl}/api/purchase-invoices/${invoice.purchaseInvoiceId}/download-pdf`)
+      const result = await apiRequestBlob(`/api/purchase-invoices/${invoice.purchaseInvoiceId}/download-pdf`)
 
-      if (!response.ok) {
-        const result = await readApiResponse<never>(response)
+      if (!result.success || !result.data) {
         throw new Error(getApiErrorMessage(result.message, result.errors))
       }
 
-      const pdfBlob = await response.blob()
-      const objectUrl = window.URL.createObjectURL(pdfBlob)
-      const downloadLink = document.createElement('a')
-
-      downloadLink.href = objectUrl
-      downloadLink.download = `${invoice.invoiceNumber || `purchase-invoice-${invoice.purchaseInvoiceId}`}.pdf`
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      downloadLink.remove()
-      window.URL.revokeObjectURL(objectUrl)
+      downloadBlob(result.data, `${invoice.invoiceNumber || `purchase-invoice-${invoice.purchaseInvoiceId}`}.pdf`)
     } catch (error) {
       toast.error(getRequestErrorMessage(error, 'Unable to download this purchase invoice PDF.'))
     } finally {

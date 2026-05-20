@@ -13,7 +13,7 @@ public class PartRepository(ApplicationDbContext context)
         bool trackChanges = false)
     {
         return await FindByCondition(
-                p => p.IsActive && p.StockQuantity < threshold,
+                p => p.IsActive && !p.IsDeleted && p.StockQuantity < threshold,
                 trackChanges)
             .OrderBy(p => p.StockQuantity)
             .ThenBy(p => p.PartName)

@@ -14,9 +14,8 @@ import {
   getRequestErrorMessage,
   mapSalesInvoiceDetailFromApi,
   mapSalesInvoiceListFromApi,
-  readApiResponse,
 } from '../../components/salesInvoices/salesInvoices.helpers'
-import backendUrl from '../../config'
+import { apiRequest, apiRequestBlob, downloadBlob } from '../../shared/utils/api'
 import type { PagedResult } from '../../shared/interfaces/api.interface'
 import type {
   SalesInvoiceDetailApiModel,
@@ -83,8 +82,7 @@ function SalesInvoiceListPage() {
       setErrorMessage(null)
 
       try {
-        const response = await fetch(`${backendUrl}/api/sales-invoices${queryString}`)
-        const result = await readApiResponse<PagedResult<SalesInvoiceListItemApiModel>>(response)
+        const result = await apiRequest<PagedResult<SalesInvoiceListItemApiModel>>(`/api/sales-invoices${queryString}`)
 
         if (isCancelled) {
           return
@@ -125,8 +123,7 @@ function SalesInvoiceListPage() {
     setPreparingInvoiceId(invoice.salesInvoiceId)
 
     try {
-      const response = await fetch(`${backendUrl}/api/sales-invoices/${invoice.salesInvoiceId}`)
-      const result = await readApiResponse<SalesInvoiceDetailApiModel>(response)
+      const result = await apiRequest<SalesInvoiceDetailApiModel>(`/api/sales-invoices/${invoice.salesInvoiceId}`)
 
       if (!result.success || !result.data) {
         toast.error(getApiErrorMessage(result.message, result.errors))
@@ -149,15 +146,10 @@ function SalesInvoiceListPage() {
     setSendingInvoiceId(invoicePendingEmail.salesInvoiceId)
 
     try {
-      const response = await fetch(`${backendUrl}/api/sales-invoices/${invoicePendingEmail.salesInvoiceId}/email`, {
+      const result = await apiRequest<string>(`/api/sales-invoices/${invoicePendingEmail.salesInvoiceId}/email`, {
+        body: buildSendSalesInvoiceEmailPayload(values),
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(buildSendSalesInvoiceEmailPayload(values)),
       })
-
-      const result = await readApiResponse<string>(response)
 
       if (!result.success) {
         toast.error(getApiErrorMessage(result.message, result.errors))
@@ -178,23 +170,13 @@ function SalesInvoiceListPage() {
     setDownloadingInvoiceId(invoice.salesInvoiceId)
 
     try {
-      const response = await fetch(`${backendUrl}/api/sales-invoices/${invoice.salesInvoiceId}/download-pdf`)
+      const result = await apiRequestBlob(`/api/sales-invoices/${invoice.salesInvoiceId}/download-pdf`)
 
-      if (!response.ok) {
-        const result = await readApiResponse<never>(response)
+      if (!result.success || !result.data) {
         throw new Error(getApiErrorMessage(result.message, result.errors))
       }
 
-      const pdfBlob = await response.blob()
-      const objectUrl = window.URL.createObjectURL(pdfBlob)
-      const downloadLink = document.createElement('a')
-
-      downloadLink.href = objectUrl
-      downloadLink.download = `${invoice.invoiceNumber || `sales-invoice-${invoice.salesInvoiceId}`}.pdf`
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      downloadLink.remove()
-      window.URL.revokeObjectURL(objectUrl)
+      downloadBlob(result.data, `${invoice.invoiceNumber || `sales-invoice-${invoice.salesInvoiceId}`}.pdf`)
     } catch (error) {
       toast.error(getRequestErrorMessage(error, 'Unable to download this sales invoice PDF.'))
     } finally {

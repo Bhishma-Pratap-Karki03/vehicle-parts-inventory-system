@@ -11,9 +11,8 @@ import {
   getApiErrorMessage,
   getRequestErrorMessage,
   mapSalesInvoiceDetailFromApi,
-  readApiResponse,
 } from '../../components/salesInvoices/salesInvoices.helpers'
-import backendUrl from '../../config'
+import { apiRequest, apiRequestBlob, downloadBlob } from '../../shared/utils/api'
 import type {
   SalesInvoiceDetailApiModel,
   SalesInvoiceDetailRecord,
@@ -82,8 +81,7 @@ function SalesInvoiceDetailsPage() {
       setIsNotFound(false)
 
       try {
-        const response = await fetch(`${backendUrl}/api/sales-invoices/${invoiceIdToLoad}`)
-        const result = await readApiResponse<SalesInvoiceDetailApiModel>(response)
+        const result = await apiRequest<SalesInvoiceDetailApiModel>(`/api/sales-invoices/${invoiceIdToLoad}`)
 
         if (isCancelled) {
           return
@@ -134,8 +132,7 @@ function SalesInvoiceDetailsPage() {
       setPdfErrorMessage(null)
 
       try {
-        const response = await fetch(`${backendUrl}/api/sales-invoices/${invoice.salesInvoiceId}/download`)
-        const result = await readApiResponse<string>(response)
+        const result = await apiRequest<string>(`/api/sales-invoices/${invoice.salesInvoiceId}/download`)
 
         if (isCancelled) {
           return
@@ -177,15 +174,10 @@ function SalesInvoiceDetailsPage() {
     setIsSendingEmail(true)
 
     try {
-      const response = await fetch(`${backendUrl}/api/sales-invoices/${invoice.salesInvoiceId}/email`, {
+      const result = await apiRequest<string>(`/api/sales-invoices/${invoice.salesInvoiceId}/email`, {
+        body: buildSendSalesInvoiceEmailPayload(values),
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(buildSendSalesInvoiceEmailPayload(values)),
       })
-
-      const result = await readApiResponse<string>(response)
 
       if (!result.success) {
         toast.error(getApiErrorMessage(result.message, result.errors))
@@ -211,23 +203,13 @@ function SalesInvoiceDetailsPage() {
     setIsDownloadingPdf(true)
 
     try {
-      const response = await fetch(`${backendUrl}/api/sales-invoices/${invoice.salesInvoiceId}/download-pdf`)
+      const result = await apiRequestBlob(`/api/sales-invoices/${invoice.salesInvoiceId}/download-pdf`)
 
-      if (!response.ok) {
-        const result = await readApiResponse<never>(response)
+      if (!result.success || !result.data) {
         throw new Error(getApiErrorMessage(result.message, result.errors))
       }
 
-      const pdfBlob = await response.blob()
-      const objectUrl = window.URL.createObjectURL(pdfBlob)
-      const downloadLink = document.createElement('a')
-
-      downloadLink.href = objectUrl
-      downloadLink.download = `${invoice.invoiceNumber || `sales-invoice-${invoice.salesInvoiceId}`}.pdf`
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      downloadLink.remove()
-      window.URL.revokeObjectURL(objectUrl)
+      downloadBlob(result.data, `${invoice.invoiceNumber || `sales-invoice-${invoice.salesInvoiceId}`}.pdf`)
     } catch (error) {
       toast.error(getRequestErrorMessage(error, 'Unable to download this invoice PDF right now.'))
     } finally {
@@ -243,15 +225,10 @@ function SalesInvoiceDetailsPage() {
     setIsRecordingPayment(true)
 
     try {
-      const response = await fetch(`${backendUrl}/api/sales-invoices/${invoice.salesInvoiceId}/payments`, {
+      const result = await apiRequest<SalesInvoiceDetailApiModel>(`/api/sales-invoices/${invoice.salesInvoiceId}/payments`, {
+        body: buildSalesInvoicePaymentPayload(values),
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(buildSalesInvoicePaymentPayload(values)),
       })
-
-      const result = await readApiResponse<SalesInvoiceDetailApiModel>(response)
 
       if (!result.success || !result.data) {
         toast.error(getApiErrorMessage(result.message, result.errors))
@@ -471,7 +448,50 @@ function SalesInvoiceDetailsPage() {
                 </div>
               </section>
 
-              <section className="rounded-[28px] border border-[#DCE5EF] bg-white p-6 shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
+              
+            </div>
+
+            <aside className="space-y-6">
+              <section className="overflow-hidden rounded-[28px] border border-[#DCE5EF] bg-white shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
+                <div className="bg-[#143F6B] px-6 py-5 text-white">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">Invoice summary</p>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-[22px] font-semibold leading-tight [font-family:var(--font-display)]">Snapshot</h2>
+                      <p className="mt-1 text-[14px] text-white/80">Key totals and payment progress.</p>
+                    </div>
+                    <span className={`inline-flex min-h-8 items-center justify-center rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.12em] ${paymentStatusClasses[invoice.paymentStatus]}`}>
+                      {invoice.paymentStatus}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-4 px-6 py-6">
+                  <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Final Amount</p>
+                    <p className="mt-3 text-[19px] font-semibold text-[#112B49]">{formatRupees(invoice.finalAmount)}</p>
+                    <p className="mt-1 text-[13px] text-[#627A93]">{invoice.items.length} line items in this invoice.</p>
+                  </div>
+
+                  <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Payment Progress</p>
+                    <p className="mt-2 text-[18px] font-semibold text-[#112B49]">{formatRupees(invoice.paidAmount)} paid</p>
+                    <p className="mt-1 text-[13px] text-[#627A93]">{formatRupees(invoice.remainingAmount)} remaining</p>
+                  </div>
+
+                  <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">
+                    <div className="space-y-3 text-[14px] text-[#4F6881]">
+                      <p><span className="font-semibold text-[#123052]">Customer:</span> {invoice.customerName}</p>
+                      <p><span className="font-semibold text-[#123052]">Vehicle:</span> {invoice.vehicleNumber}</p>
+                      <p><span className="font-semibold text-[#123052]">Due Date:</span> {formatDateLabel(invoice.dueDate)}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </aside>
+          </div>
+
+          <section className="rounded-[28px] border border-[#DCE5EF] bg-white p-6 shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
                 <div className="mb-5 flex items-center gap-3 border-b border-[#E6EEF5] pb-4">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#EEF5FC] text-[#15558D]">
                     <span aria-hidden className="material-symbols-outlined inline-flex select-none items-center justify-center leading-none text-[20px] not-italic">
@@ -525,47 +545,6 @@ function SalesInvoiceDetailsPage() {
                   </div>
                 )}
               </section>
-            </div>
-
-            <aside className="space-y-6">
-              <section className="overflow-hidden rounded-[28px] border border-[#DCE5EF] bg-white shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
-                <div className="bg-[#143F6B] px-6 py-5 text-white">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">Invoice summary</p>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <div>
-                      <h2 className="text-[22px] font-semibold leading-tight [font-family:var(--font-display)]">Snapshot</h2>
-                      <p className="mt-1 text-[14px] text-white/80">Key totals and payment progress.</p>
-                    </div>
-                    <span className={`inline-flex min-h-8 items-center justify-center rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.12em] ${paymentStatusClasses[invoice.paymentStatus]}`}>
-                      {invoice.paymentStatus}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-4 px-6 py-6">
-                  <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Final Amount</p>
-                    <p className="mt-3 text-[19px] font-semibold text-[#112B49]">{formatRupees(invoice.finalAmount)}</p>
-                    <p className="mt-1 text-[13px] text-[#627A93]">{invoice.items.length} line items in this invoice.</p>
-                  </div>
-
-                  <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#70849A]">Payment Progress</p>
-                    <p className="mt-2 text-[18px] font-semibold text-[#112B49]">{formatRupees(invoice.paidAmount)} paid</p>
-                    <p className="mt-1 text-[13px] text-[#627A93]">{formatRupees(invoice.remainingAmount)} remaining</p>
-                  </div>
-
-                  <div className="rounded-[22px] border border-[#E3EAF2] bg-[#F8FBFE] p-4">
-                    <div className="space-y-3 text-[14px] text-[#4F6881]">
-                      <p><span className="font-semibold text-[#123052]">Customer:</span> {invoice.customerName}</p>
-                      <p><span className="font-semibold text-[#123052]">Vehicle:</span> {invoice.vehicleNumber}</p>
-                      <p><span className="font-semibold text-[#123052]">Due Date:</span> {formatDateLabel(invoice.dueDate)}</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </aside>
-          </div>
 
           <section className="rounded-[28px] border border-[#DCE5EF] bg-white p-6 shadow-[0_20px_48px_rgba(18,43,74,0.07)]">
             <div className="mb-5 flex items-center gap-3 border-b border-[#E6EEF5] pb-4">

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { apiRequest } from '../../shared/utils/api'
 import NotFoundPage from '../NotFoundPage'
 import {
   formatDateLabel,
@@ -8,9 +9,7 @@ import {
   getApiErrorMessage,
   getRequestErrorMessage,
   mapPartTransactionFromApi,
-  readApiResponse,
 } from '../../components/partTransactions/partTransactions.helpers'
-import backendUrl from '../../config'
 import type { PartTransactionApiModel, PartTransactionRecord, PartTransactionTypeLabel } from '../../shared/interfaces/partTransactions.interface'
 
 const typeClasses: Record<PartTransactionTypeLabel, string> = {
@@ -61,8 +60,7 @@ function PartTransactionDetailsPage() {
       setIsNotFound(false)
 
       try {
-        const response = await fetch(`${backendUrl}/api/part-transactions/${transactionIdToLoad}`)
-        const result = await readApiResponse<PartTransactionApiModel>(response)
+        const result = await apiRequest<PartTransactionApiModel>(`/api/part-transactions/${transactionIdToLoad}`)
 
         if (isCancelled) {
           return
@@ -82,7 +80,7 @@ function PartTransactionDetailsPage() {
         }
 
         setTransaction(undefined)
-        setIsNotFound(false)
+        setIsNotFound(error instanceof Error && error.message.includes('404'))
         setErrorMessage(getRequestErrorMessage(error, 'Unable to load this stock transaction from the backend.'))
       } finally {
         if (!isCancelled) {

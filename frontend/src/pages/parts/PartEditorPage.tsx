@@ -7,12 +7,10 @@ import {
   getApiErrorMessage,
   getRequestErrorMessage,
   mapPartFromApi,
-  readApiResponse,
 } from '../../components/parts/parts.helpers'
 import NotFoundPage from '../../pages/NotFoundPage'
 import type { CategoryOption, PartApiModel, PartEditorFormValues, PartRecord, UploadPartImageResult, VendorOption } from '../../shared/interfaces/parts.interface'
-
-import backendUrl from '../../config';
+import { apiRequest } from '../../shared/utils/api'
 
 function PartEditorPage() {
   const navigate = useNavigate()
@@ -63,8 +61,7 @@ function PartEditorPage() {
       setIsNotFound(false)
 
       try {
-        const response = await fetch(`${backendUrl}/api/Parts/${partIdToLoad}`)
-        const result = await readApiResponse<PartApiModel>(response)
+        const result = await apiRequest<PartApiModel>(`/api/Parts/${partIdToLoad}`)
 
         if (isCancelled) {
           return
@@ -107,13 +104,10 @@ function PartEditorPage() {
       setIsOptionsLoading(true)
 
       try {
-        const [vendorsResponse, categoriesResponse] = await Promise.all([
-          fetch(`${backendUrl}/api/Parts/vendors/options`),
-          fetch(`${backendUrl}/api/Parts/categories/options`),
+        const [vendorsResult, categoriesResult] = await Promise.all([
+          apiRequest<VendorOption[]>('/api/Parts/vendors/options'),
+          apiRequest<CategoryOption[]>('/api/Parts/categories/options'),
         ])
-
-        const vendorsResult = await readApiResponse<VendorOption[]>(vendorsResponse)
-        const categoriesResult = await readApiResponse<CategoryOption[]>(categoriesResponse)
 
         if (isCancelled) {
           return
@@ -147,15 +141,10 @@ function PartEditorPage() {
     const isEditingExistingPart = Boolean(partId && part)
 
     try {
-      const response = await fetch(`${backendUrl}/api/Parts${isEditingExistingPart ? `/${part!.partId}` : ''}`, {
+      const result = await apiRequest<PartApiModel>(`/api/Parts${isEditingExistingPart ? `/${part!.partId}` : ''}`, {
         method: isEditingExistingPart ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        body: payload,
       })
-
-      const result = await readApiResponse<PartApiModel>(response)
 
       if (!result.success || !result.data) {
         toast.error(getApiErrorMessage(result.message, result.errors))
@@ -168,12 +157,10 @@ function PartEditorPage() {
         const imageFormData = new FormData()
         imageFormData.append('image', imageFile)
 
-        const imageResponse = await fetch(`${backendUrl}/api/Parts/${savedPart.partId}/image`, {
+        const imageResult = await apiRequest<UploadPartImageResult>(`/api/Parts/${savedPart.partId}/image`, {
           method: part?.imagePublicId ? 'PATCH' : 'POST',
           body: imageFormData,
         })
-
-        const imageResult = await readApiResponse<UploadPartImageResult>(imageResponse)
 
         if (!imageResult.success || !imageResult.data) {
           toast.warn(`Part saved, but image upload failed. ${getApiErrorMessage(imageResult.message, imageResult.errors)}`)
@@ -204,11 +191,9 @@ function PartEditorPage() {
     setIsDeletingImage(true)
 
     try {
-      const response = await fetch(`${backendUrl}/api/Parts/${part.partId}/image`, {
+      const result = await apiRequest<string>(`/api/Parts/${part.partId}/image`, {
         method: 'DELETE',
       })
-
-      const result = await readApiResponse<string>(response)
 
       if (!result.success) {
         toast.error(getApiErrorMessage(result.message, result.errors))
